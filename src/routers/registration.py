@@ -8,19 +8,19 @@ from fastapi import Depends, APIRouter
 
 from database import get_db
 from services import create_user, get_user
+from config import settings
 
 router = APIRouter(
     tags=["registration"],
 )
 
-CONF_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
 config = Config("src/.env")
 oauth = OAuth(config)
 
 oauth.register(
     name="google",
-    server_metadata_url=CONF_URL,
+    server_metadata_url=settings.CONF_URL,
     client_kwargs={
         "scope": "openid email profile",
         "prompt": "select_account",
@@ -44,15 +44,14 @@ async def auth(request: Request, db: Session = Depends(get_db)):
     if user:
         request.session["user"] = dict(user)
         db_user = get_user(db, login=user["email"])
-        if db_user:
-            return RedirectResponse(url="/")
-        create_user(
-            db=db,
-            login=user["email"],
-            first_name=user["given_name"],
-            last_name=user["family_name"],
-            picture=user["picture"],
-        )
+        if not db_user:
+            create_user(
+                db=db,
+                login=user["email"],
+                first_name=user["given_name"],
+                last_name=user["family_name"],
+                picture=user["picture"],
+            )
     return RedirectResponse(url="/")
 
 

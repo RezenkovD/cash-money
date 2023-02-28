@@ -11,4 +11,4 @@ class User(Base):
     login = Column(String, unique=True, nullable=False)
     first_name = Column(String, unique=False, nullable=False)
     last_name = Column(String, unique=False, nullable=False)
-    picture = Column(URLType, unique=True, nullable=False)
+    picture = Column(URLType, unique=True, nullable=True)
