@@ -1,30 +1,15 @@
 from authlib.integrations.base_client import OAuthError
-from authlib.integrations.starlette_client import OAuth
 from sqlalchemy.orm import Session
-from starlette.config import Config
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from fastapi import Depends, APIRouter
 
 from database import get_db
+from dependencies import oauth
 from services import create_user, get_user
-from config import settings
 
 router = APIRouter(
     tags=["registration"],
-)
-
-
-config = Config("src/.env")
-oauth = OAuth(config)
-
-oauth.register(
-    name="google",
-    server_metadata_url=settings.CONF_URL,
-    client_kwargs={
-        "scope": "openid email profile",
-        "prompt": "select_account",
-    },
 )
 
 
@@ -41,18 +26,17 @@ async def auth(request: Request, db: Session = Depends(get_db)):
     except OAuthError as error:
         return error.error
     user = token["userinfo"]
-    if user:
-        request.session["user"] = dict(user)
-        db_user = get_user(db, login=user["email"])
-        if not db_user:
-            create_user(
-                db=db,
-                login=user["email"],
-                first_name=user["given_name"],
-                last_name=user["family_name"],
-                picture=user["picture"],
-            )
-    return RedirectResponse(url="/")
+    request.session["user"] = dict(user)
+    db_user = get_user(db, login=user["email"])
+    if not db_user:
+        create_user(
+            db=db,
+            login=user["email"],
+            first_name=user["given_name"],
+            last_name=user["family_name"],
+            picture=user["picture"],
+        )
+    return get_user(db, login=user["email"])
 
 
 @router.get("/logout")

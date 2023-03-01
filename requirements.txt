@@ -8,3 +8,5 @@ uvicorn==0.20.0
 uvloop==0.17.0
 alembic~=1.9.4
 Authlib~=1.2.0
+pytest~=7.2.1
+factory-boy==3.2.1
