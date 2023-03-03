@@ -29,14 +29,14 @@ async def auth(request: Request, db: Session = Depends(get_db)):
     request.session["user"] = dict(user)
     db_user = get_user(db, login=user["email"])
     if not db_user:
-        create_user(
+        db_user = create_user(
             db=db,
             login=user["email"],
             first_name=user["given_name"],
             last_name=user["family_name"],
             picture=user["picture"],
         )
-    return get_user(db, login=user["email"])
+    return db_user
 
 
 @router.get("/logout")

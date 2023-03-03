@@ -9,7 +9,7 @@ from config import settings
 from database import Base, get_db
 from main import app as main_app
 
-engine = create_engine(settings.TEST_SQLALCHEMY_DATABASE_URI)
+engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -57,13 +57,15 @@ def session():
 
 @pytest.fixture(scope="session", autouse=True)
 def create_test_database():
+    if not "test" in settings.SQLALCHEMY_DATABASE_URI:
+        raise ValueError("Please connect the test database!")
     try:
-        if database_exists(settings.TEST_SQLALCHEMY_DATABASE_URI):
-            drop_database(settings.TEST_SQLALCHEMY_DATABASE_URI)
-        create_database(settings.TEST_SQLALCHEMY_DATABASE_URI)
+        if database_exists(settings.SQLALCHEMY_DATABASE_URI):
+            drop_database(settings.SQLALCHEMY_DATABASE_URI)
+        create_database(settings.SQLALCHEMY_DATABASE_URI)
         yield
     finally:
-        drop_database(settings.TEST_SQLALCHEMY_DATABASE_URI)
+        drop_database(settings.SQLALCHEMY_DATABASE_URI)
 
 
 client = TestClient(main_app)
