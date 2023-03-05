@@ -6,7 +6,8 @@ from fastapi import Depends, APIRouter
 
 from database import get_db
 from dependencies import oauth
-from services import create_user, get_user
+from models import User
+from services import get_user
 
 router = APIRouter(
     tags=["registration"],
@@ -29,14 +30,17 @@ async def auth(request: Request, db: Session = Depends(get_db)):
     request.session["user"] = dict(user)
     db_user = get_user(db, login=user["email"])
     if not db_user:
-        db_user = create_user(
-            db=db,
+        db_user = User(
             login=user["email"],
             first_name=user["given_name"],
             last_name=user["family_name"],
             picture=user["picture"],
         )
-    return db_user
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    return RedirectResponse(url="/")
 
 
 @router.get("/logout")
