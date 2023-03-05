@@ -39,7 +39,6 @@ async def auth(request: Request, db: Session = Depends(get_db)):
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-        return db_user
     return RedirectResponse(url="/")
 
 
