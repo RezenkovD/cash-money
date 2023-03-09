@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 from sqlalchemy_utils import URLType
 
 from database import Base
@@ -12,3 +13,6 @@ class User(Base):
     first_name = Column(String, unique=False, nullable=False)
     last_name = Column(String, unique=False, nullable=False)
     picture = Column(URLType, nullable=True)
+
+    groups = relationship("Group", back_populates="admin")
+    user_groups = relationship("UserGroup", back_populates="user")
