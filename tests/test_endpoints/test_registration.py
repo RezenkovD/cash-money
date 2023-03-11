@@ -1,17 +1,10 @@
-import asyncio
 from unittest.mock import Mock
 
 from dependencies import oauth
 from models import User
 from services import get_user
-from tests.conftest import client
+from tests.conftest import client, async_return
 from tests.factories import UserFactory
-
-
-def async_return(result):
-    as_res = asyncio.Future()
-    as_res.set_result(result)
-    return as_res
 
 
 def test_auth_registration(session):

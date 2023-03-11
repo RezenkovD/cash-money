@@ -55,7 +55,7 @@ def read_users_group(db: Session, group_id: int, user_id: int) -> schemas.UsersG
     return db_query
 
 
-def read_user_groups(db: Session, user_id: int) -> schemas.Group:
+def read_user_groups(db: Session, user_id: int) -> schemas.UserGroups:
     db_query = (
         db.query(models.User)
         .options(joinedload(models.User.user_groups))
