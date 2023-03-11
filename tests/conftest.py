@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 
 from fastapi.testclient import TestClient
@@ -69,3 +70,9 @@ def create_test_database():
 
 
 client = TestClient(main_app)
+
+
+def async_return(result):
+    as_res = asyncio.Future()
+    as_res.set_result(result)
+    return as_res
