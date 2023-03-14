@@ -16,13 +16,18 @@ class CreateGroup(OurBaseModel):
     description: str
 
 
-class Group(CreateGroup):
+class BaseGroup(CreateGroup):
+    status: str
+
+
+class Group(BaseGroup):
     id: int
     admin: User
 
 
 class AboutUsers(OurBaseModel):
     user: User
+    status: str
     date_join: date
 
 
@@ -31,7 +36,8 @@ class UsersGroup(OurBaseModel):
 
 
 class AboutGroups(OurBaseModel):
-    group: CreateGroup
+    group: BaseGroup
+    status: str
     date_join: date
 
 

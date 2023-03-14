@@ -12,7 +12,7 @@ import models
 def create_group(
     db: Session, group: schemas.CreateGroup, user_id: int
 ) -> schemas.Group:
-    db_group = models.Group(**group.dict(), admin_id=user_id)
+    db_group = models.Group(**group.dict(), admin_id=user_id, status=models.Status.ACTIVE)
     db.add(db_group)
     db.commit()
     db.refresh(db_group)
@@ -22,7 +22,8 @@ def create_group(
 
 def add_user_in_group(db: Session, group_id: int, user_id: int) -> None:
     db_user_group = models.UserGroup(
-        user_id=user_id, group_id=group_id, date_join=datetime.date.today()
+        user_id=user_id, group_id=group_id, date_join=datetime.date.today(),
+        status=models.Status.ACTIVE
     )
     db.add(db_user_group)
     db.commit()
