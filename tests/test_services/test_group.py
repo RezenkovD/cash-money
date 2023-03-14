@@ -42,8 +42,8 @@ def test_add_user_in_group(session) -> None:
     )
     assert data.user_id == user.id
     assert data.group_id == group.id
-    assert data.date_join.strftime("%Y %m %d") == datetime.date.today().strftime(
-        "%Y %m %d"
+    assert data.date_join.strftime("%Y-%m-%d") == datetime.date.today().strftime(
+        "%Y-%m-%d"
     )
 
 
@@ -54,11 +54,11 @@ def test_read_users_group(session) -> None:
     add_user_in_group(session, group.id, first_user.id)
     add_user_in_group(session, group.id, second_user.id)
     data = read_users_group(session, group.id, first_user.id)
-    list_user = [first_user, second_user]
-    for x, y in zip(data.users_group, list_user):
-        assert x.user.login == y.login
-        assert x.date_join.strftime("%Y %m %d") == datetime.date.today().strftime(
-            "%Y %m %d"
+    users = [first_user, second_user]
+    for data, user in zip(data.users_group, users):
+        assert data.user.login == user.login
+        assert data.date_join.strftime("%Y-%m-%d") == datetime.date.today().strftime(
+            "%Y-%m-%d"
         )
 
 
@@ -71,6 +71,6 @@ def test_read_user_groups(session) -> None:
     add_user_in_group(session, first_group.id, first_user.id)
     add_user_in_group(session, second_group.id, first_user.id)
     data = read_user_groups(session, first_user.id)
-    list_group = [first_group, second_group]
-    for x, y in zip(data.user_groups, list_group):
-        assert x.group.title == y.title
+    groups = [first_group, second_group]
+    for data, group in zip(data.user_groups, groups):
+        assert data.group.title == group.title

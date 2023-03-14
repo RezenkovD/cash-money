@@ -8,7 +8,7 @@ from database import Base
 
 
 class ResponseStatus(str, enum.Enum):
-    AWAITING = "awaiting"
+    PENDING = "pending"
     ACCEPTED = "accepted"
     DENIED = "denied"
     OVERDUE = "OVERDUE"

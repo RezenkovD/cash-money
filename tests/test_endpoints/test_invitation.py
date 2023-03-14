@@ -76,7 +76,7 @@ class InvitationTestCase(unittest.TestCase):
         data = data.json()
         invitation_data = {
             "id": data["id"],
-            "status": "awaiting",
+            "status": models.ResponseStatus.PENDING,
             "recipient": {
                 "id": self.second_user.id,
                 "login": self.second_user.login,
@@ -154,8 +154,8 @@ class InvitationTestCase(unittest.TestCase):
         assert data.json() == invitation_data
 
         users = [self.second_user, self.first_user]
-        data = client.get(f"/groups/{self.second_group.id}/users")
-        assert data.status_code == 200
-        data = data.json()["users_group"]
-        for x, y in zip(data, users):
-            assert x["user"]["id"] == y.id
+        group_users = client.get(f"/groups/{self.second_group.id}/users")
+        assert group_users.status_code == 200
+        group_users = group_users.json()["users_group"]
+        for group_user, user in zip(group_users, users):
+            assert group_user["user"]["id"] == user.id

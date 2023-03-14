@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
+from schemas import CreateGroup
 from tests.conftest import client, async_return
 from tests.factories import UserFactory, GroupFactory, UserGroupFactory
 
@@ -26,14 +27,15 @@ class GroupTestCase(unittest.TestCase):
         self.user_group = UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
     def test_create_group(self) -> None:
+        group = CreateGroup(title="string", description="string")
         data = client.post(
-            "/groups/", json={"title": "string", "description": "string"}
+            "/groups/", json={"title": group.title, "description": group.description}
         )
         group_data = data.json()
         group_data = {
             "id": group_data["id"],
-            "title": "string",
-            "description": "string",
+            "title": group.title,
+            "description": group.description,
             "admin": {
                 "id": self.user.id,
                 "login": self.user_dict["userinfo"]["email"],

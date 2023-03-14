@@ -20,7 +20,7 @@ def response_invitation(
             .filter(
                 and_(
                     Invitation.recipient_id == user_id,
-                    Invitation.status == ResponseStatus.AWAITING,
+                    Invitation.status == ResponseStatus.PENDING,
                     Invitation.id == invitation_id,
                 )
             )
@@ -44,7 +44,7 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
         .filter(
             and_(
                 Invitation.recipient_id == user_id,
-                Invitation.status == ResponseStatus.AWAITING,
+                Invitation.status == ResponseStatus.PENDING,
                 Invitation.creation_time + datetime.timedelta(days=1)
                 < datetime.datetime.now(),
             )
@@ -59,7 +59,7 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
         .filter(
             and_(
                 Invitation.recipient_id == user_id,
-                Invitation.status == ResponseStatus.AWAITING,
+                Invitation.status == ResponseStatus.PENDING,
             )
         )
         .all()
@@ -105,7 +105,7 @@ def create_invitation(
         db.query(Invitation)
         .filter(
             and_(
-                Invitation.status == ResponseStatus.AWAITING,
+                Invitation.status == ResponseStatus.PENDING,
                 Invitation.recipient_id == data.recipient_id,
                 Invitation.group_id == data.group_id,
             )
@@ -118,7 +118,7 @@ def create_invitation(
             detail="The invitation has already been sent. Wait for a reply!",
         )
     db_invitation = Invitation(
-        status="awaiting",
+        status=ResponseStatus.PENDING,
         sender_id=user_id,
         recipient_id=data.recipient_id,
         group_id=data.group_id,

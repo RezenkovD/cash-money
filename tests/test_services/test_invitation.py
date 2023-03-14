@@ -3,6 +3,7 @@ import datetime
 import pytest
 from starlette.exceptions import HTTPException
 
+from models import ResponseStatus
 from schemas import CreateInvitation
 from services import (
     add_user_in_group,
@@ -25,11 +26,11 @@ def test_create_invitation(session) -> None:
     assert "You are not admin in this group!" in str(ex_info.value.detail)
 
     data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
-    data = create_invitation(session, data, first_user.id)
-    assert data.status == "awaiting"
-    assert data.recipient.id == second_user.id
-    assert data.group.id == group.id
-    assert data.group.admin.id == first_user.id
+    invitation = create_invitation(session, data, first_user.id)
+    assert invitation.status == ResponseStatus.PENDING
+    assert invitation.recipient.id == second_user.id
+    assert invitation.group.id == group.id
+    assert invitation.group.admin.id == first_user.id
 
     data = CreateInvitation(recipient_id=second_user.id, group_id=9999)
     with pytest.raises(HTTPException) as ex_info:
@@ -56,15 +57,15 @@ def test_read_invitations(session) -> None:
     add_user_in_group(session, group.id, first_user.id)
     data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
     create_invitation(session, data, first_user.id)
-    data = read_invitations(session, second_user.id)
-    list_group = [group]
-    for d, group in zip(data, list_group):
-        assert d.status == "awaiting"
-        assert d.group.id == group.id
-        assert d.group.admin.id == group.admin_id
-        assert d.creation_time.strftime("%Y %m %d") == datetime.date.today().strftime(
-            "%Y %m %d"
-        )
+    invitations = read_invitations(session, second_user.id)
+    groups = [group]
+    for invitation, group in zip(invitations, groups):
+        assert invitation.status == ResponseStatus.PENDING
+        assert invitation.group.id == group.id
+        assert invitation.group.admin.id == group.admin_id
+        assert invitation.creation_time.strftime(
+            "%Y-%m-%d"
+        ) == datetime.date.today().strftime("%Y-%m-%d")
 
 
 def test_response_invitation(session) -> None:
@@ -79,35 +80,39 @@ def test_response_invitation(session) -> None:
     assert len_users_group == 1
 
     invitation = create_invitation(session, data, first_user.id)
-    data = response_invitation(session, "denied", invitation.id, second_user.id)
-    assert data.id == invitation.id
-    assert data.status == "denied"
-    assert data.group.id == group.id
-    assert data.group.admin.id == first_user.id
-    assert data.creation_time.strftime("%Y-%m-%d") == datetime.date.today().strftime(
-        "%Y-%m-%d"
+    invitation = response_invitation(
+        session, ResponseStatus.DENIED, invitation.id, second_user.id
     )
-    assert data.recipient.id == second_user.id
-    users_group = read_users_group(session, group.id, first_user.id).users_group
+    assert invitation.id == invitation.id
+    assert invitation.status == ResponseStatus.DENIED
+    assert invitation.group.id == group.id
+    assert invitation.group.admin.id == first_user.id
+    assert invitation.creation_time.strftime(
+        "%Y-%m-%d"
+    ) == datetime.date.today().strftime("%Y-%m-%d")
+    assert invitation.recipient.id == second_user.id
 
+    users_group = read_users_group(session, group.id, first_user.id).users_group
     users = [first_user]
-    for x, y in zip(users_group, users):
-        assert x.user.id == y.id
+    for user_group, user in zip(users_group, users):
+        assert user_group.user.id == user.id
 
     invitation = create_invitation(session, data, first_user.id)
-    data = response_invitation(session, "accepted", invitation.id, second_user.id)
-    assert data.id == invitation.id
-    assert data.status == "accepted"
-    assert data.group.id == group.id
-    assert data.group.admin.id == first_user.id
-    assert data.creation_time.strftime("%Y-%m-%d") == datetime.date.today().strftime(
-        "%Y-%m-%d"
+    invitation = response_invitation(
+        session, ResponseStatus.ACCEPTED, invitation.id, second_user.id
     )
+    assert invitation.id == invitation.id
+    assert invitation.status == ResponseStatus.ACCEPTED
+    assert invitation.group.id == group.id
+    assert invitation.group.admin.id == first_user.id
+    assert invitation.creation_time.strftime(
+        "%Y-%m-%d"
+    ) == datetime.date.today().strftime("%Y-%m-%d")
+    assert invitation.recipient.id == second_user.id
 
-    assert data.recipient.id == second_user.id
     users.append(second_user)
-    for x, y in zip(users_group, users):
-        assert x.user.id == y.id
+    for user_group, user in zip(users_group, users):
+        assert user_group.user.id == user.id
 
     with pytest.raises(HTTPException) as ex_info:
         create_invitation(session, data, first_user.id)

@@ -12,7 +12,7 @@ import services
 
 router = APIRouter(
     prefix="/invitations",
-    tags=["invitation"],
+    tags=["invitations"],
 )
 
 
