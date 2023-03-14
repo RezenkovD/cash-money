@@ -17,6 +17,7 @@ class CreateGroup(OurBaseModel):
 
 
 class Group(CreateGroup):
+    id: int
     admin: User
 
 

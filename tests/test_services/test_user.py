@@ -2,7 +2,7 @@ from services import get_user
 from tests.factories import UserFactory
 
 
-def test_get_user(session):
+def test_get_user(session) -> None:
     data = get_user(session, "test_user")
     assert data is None
     user = UserFactory()
