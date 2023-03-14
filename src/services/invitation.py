@@ -7,7 +7,7 @@ from starlette import status
 from starlette.exceptions import HTTPException
 
 import schemas
-from models import Invitation, ResponseStatus, UserGroup, User, Group
+from models import Invitation, ResponseStatus, UserGroup, User, Group, Status
 from services import add_user_in_group
 
 
@@ -71,13 +71,20 @@ def create_invitation(
     db: Session, data: schemas.CreateInvitation, user_id: int
 ) -> schemas.Invitation:
     try:
-        db.query(Group).filter(
-            and_(Group.admin_id == user_id, Group.id == data.group_id)
-        ).one()
+        group = (
+            db.query(Group)
+            .filter(and_(Group.admin_id == user_id, Group.id == data.group_id))
+            .one()
+        )
     except exc.NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You are not admin in this group!",
+        )
+    if group.status == Status.INACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            detail="The group is inactive",
         )
     try:
         db.query(User).filter_by(id=data.recipient_id).one()

@@ -119,3 +119,10 @@ def test_response_invitation(session) -> None:
     with pytest.raises(HTTPException) as ex_info:
         create_invitation(session, data, first_user.id)
     assert "The recipient is already in this group!" in str(ex_info.value.detail)
+
+    group = GroupFactory(admin_id=first_user.id, status=Status.INACTIVE)
+    add_user_in_group(session, group.id, first_user.id)
+    data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
+    with pytest.raises(HTTPException) as ex_info:
+        create_invitation(session, data, first_user.id)
+    assert "The group is inactive" in str(ex_info.value.detail)

@@ -121,6 +121,14 @@ class InvitationTestCase(unittest.TestCase):
         )
         assert data.status_code == 404
 
+        third_group = GroupFactory(admin_id=self.first_user.id, status=Status.INACTIVE)
+        UserGroupFactory(user_id=self.first_user.id, group_id=third_group.id)
+        data = client.post(
+            "/invitations/",
+            json={"group_id": third_group.id, "recipient_id": self.second_user.id},
+        )
+        assert data.status_code == 405
+
     def test_response_invitation(self) -> None:
         invitation = InvitationFactory(
             sender_id=self.second_user.id,
