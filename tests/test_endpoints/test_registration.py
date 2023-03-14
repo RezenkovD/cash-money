@@ -16,13 +16,13 @@ def test_auth_registration(session) -> None:
             "picture": None,
         }
     }
-    list_users = session.query(User).all()
-    assert len(list_users) == 0
+    db_list_users = session.query(User).all()
+    assert len(db_list_users) == 0
 
     oauth.google.authorize_access_token = Mock(return_value=async_return(user_dict))
     client.get("/auth/")
-    list_users = session.query(User).all()
-    assert len(list_users) == 1
+    db_list_users = session.query(User).all()
+    assert len(db_list_users) == 1
 
     db_user = get_user(session, login=user_dict["userinfo"]["email"])
     assert db_user.login == user_dict["userinfo"]["email"]
