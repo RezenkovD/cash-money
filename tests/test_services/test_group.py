@@ -1,7 +1,7 @@
 import datetime
 from operator import and_
 
-from models import UserGroup
+from models import UserGroup, Status
 from schemas import CreateGroup
 from services import create_group, add_user_in_group, read_users_group, read_user_groups
 from tests.factories import UserFactory, GroupFactory
@@ -19,6 +19,7 @@ def test_create_group(session) -> None:
     data = create_group(session, group, user.id)
     assert data.title == "test_title"
     assert data.description == "test_description"
+    assert data.status == Status.ACTIVE
     assert data.admin.login == user_data["login"]
     assert data.admin.first_name == user_data["first_name"]
     assert data.admin.last_name == user_data["last_name"]
@@ -41,6 +42,7 @@ def test_add_user_in_group(session) -> None:
         .one_or_none()
     )
     assert data.user_id == user.id
+    assert data.status == Status.ACTIVE
     assert data.group_id == group.id
     assert data.date_join.strftime("%Y-%m-%d") == datetime.date.today().strftime(
         "%Y-%m-%d"
@@ -57,6 +59,7 @@ def test_read_users_group(session) -> None:
     users = [first_user, second_user]
     for data, user in zip(data.users_group, users):
         assert data.user.login == user.login
+        assert data.status == Status.ACTIVE
         assert data.date_join.strftime("%Y-%m-%d") == datetime.date.today().strftime(
             "%Y-%m-%d"
         )
@@ -74,3 +77,4 @@ def test_read_user_groups(session) -> None:
     groups = [first_group, second_group]
     for data, group in zip(data.user_groups, groups):
         assert data.group.title == group.title
+        assert data.group.status == Status.ACTIVE

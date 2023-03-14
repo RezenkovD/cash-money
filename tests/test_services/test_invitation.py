@@ -3,7 +3,7 @@ import datetime
 import pytest
 from starlette.exceptions import HTTPException
 
-from models import ResponseStatus
+from models import ResponseStatus, Status
 from schemas import CreateInvitation
 from services import (
     add_user_in_group,
@@ -96,6 +96,7 @@ def test_response_invitation(session) -> None:
     users = [first_user]
     for user_group, user in zip(users_group, users):
         assert user_group.user.id == user.id
+        assert user_group.status == Status.ACTIVE
 
     invitation = create_invitation(session, data, first_user.id)
     invitation = response_invitation(
@@ -113,6 +114,7 @@ def test_response_invitation(session) -> None:
     users.append(second_user)
     for user_group, user in zip(users_group, users):
         assert user_group.user.id == user.id
+        assert user_group.status == Status.ACTIVE
 
     with pytest.raises(HTTPException) as ex_info:
         create_invitation(session, data, first_user.id)
