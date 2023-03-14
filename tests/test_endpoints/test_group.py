@@ -8,7 +8,7 @@ from tests.factories import UserFactory, GroupFactory, UserGroupFactory
 
 
 class GroupTestCase(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = UserFactory()
         self.user_dict = {
             "userinfo": {
@@ -25,14 +25,17 @@ class GroupTestCase(unittest.TestCase):
         self.group = GroupFactory(admin_id=self.user.id)
         self.user_group = UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
-    def test_create_group(self):
+    def test_create_group(self) -> None:
         data = client.post(
             "/groups/", json={"title": "string", "description": "string"}
         )
+        group_data = data.json()
         group_data = {
+            "id": group_data["id"],
             "title": "string",
             "description": "string",
             "admin": {
+                "id": self.user.id,
                 "login": self.user_dict["userinfo"]["email"],
                 "first_name": self.user_dict["userinfo"]["given_name"],
                 "last_name": self.user_dict["userinfo"]["family_name"],
@@ -42,7 +45,7 @@ class GroupTestCase(unittest.TestCase):
         assert data.status_code == 200
         assert data.json() == group_data
 
-    def test_read_users_group(self):
+    def test_read_users_group(self) -> None:
         data = client.get(f"/groups/{self.group.id}/users")
         assert data.status_code == 200
         data = data.json()
@@ -51,6 +54,7 @@ class GroupTestCase(unittest.TestCase):
                 {
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                     "user": {
+                        "id": self.user.id,
                         "first_name": self.user.first_name,
                         "last_name": self.user.last_name,
                         "login": self.user.login,

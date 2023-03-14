@@ -1,3 +1,4 @@
+import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
@@ -7,7 +8,7 @@ from tests.conftest import client, async_return
 from tests.factories import UserFactory
 
 
-def test_auth_registration(session):
+def test_auth_registration(session) -> None:
     user_dict = {
         "userinfo": {
             "email": "user_login",
@@ -31,7 +32,7 @@ def test_auth_registration(session):
     assert db_user.picture == user_dict["userinfo"]["picture"]
 
 
-def test_auth_login(session):
+def test_auth_login(session) -> None:
     user = UserFactory()
     user_dict = {
         "userinfo": {
@@ -46,6 +47,6 @@ def test_auth_login(session):
     assert data.headers["set-cookie"] is not None
 
 
-def test_logout(session):
+def test_logout(session) -> None:
     data = client.get("/logout/")
     assert "set-cookie" is not data.headers.keys()

@@ -7,7 +7,7 @@ from services import create_group, add_user_in_group, read_users_group, read_use
 from tests.factories import UserFactory, GroupFactory
 
 
-def test_create_group(session):
+def test_create_group(session) -> None:
     user = UserFactory()
     user_data = {
         "login": user.login,
@@ -25,7 +25,7 @@ def test_create_group(session):
     assert data.admin.picture == user_data["picture"]
 
 
-def test_add_user_in_group(session):
+def test_add_user_in_group(session) -> None:
     user = UserFactory()
     group = GroupFactory(admin_id=user.id)
     data = (
@@ -47,7 +47,7 @@ def test_add_user_in_group(session):
     )
 
 
-def test_read_users_group(session):
+def test_read_users_group(session) -> None:
     first_user = UserFactory()
     second_user = UserFactory()
     group = GroupFactory(admin_id=first_user.id)
@@ -62,7 +62,7 @@ def test_read_users_group(session):
         )
 
 
-def test_read_user_groups(session):
+def test_read_user_groups(session) -> None:
     first_user = UserFactory()
     first_group = GroupFactory(admin_id=first_user.id)
     second_group = GroupFactory(admin_id=first_user.id)
