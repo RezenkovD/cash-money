@@ -1,9 +1,21 @@
 import datetime
 from operator import and_
 
+import pytest
+from starlette.exceptions import HTTPException
+
+import models
 from models import UserGroup, Status
 from schemas import CreateGroup
-from services import create_group, add_user_in_group, read_users_group, read_user_groups
+from services import (
+    create_group,
+    add_user_in_group,
+    read_users_group,
+    read_user_groups,
+    leave_group,
+    remove_user,
+    disband_group,
+)
 from tests.factories import UserFactory, GroupFactory
 
 
@@ -78,3 +90,83 @@ def test_read_user_groups(session) -> None:
     for data, group in zip(db_data.user_groups, groups):
         assert data.group.title == group.title
         assert data.group.status == Status.ACTIVE
+
+
+def test_leave_group_user(session) -> None:
+    first_user = UserFactory()
+    second_user = UserFactory()
+    group = GroupFactory(admin_id=first_user.id)
+    add_user_in_group(session, group.id, first_user.id)
+    add_user_in_group(session, group.id, second_user.id)
+    users = read_users_group(session, group.id, first_user.id)
+    for user in users.users_group:
+        assert user.status == Status.ACTIVE
+    data = leave_group(session, group.id, second_user.id)
+    assert data.user.id == second_user.id
+    assert data.status == Status.INACTIVE
+
+    with pytest.raises(HTTPException) as ex_info:
+        leave_group(session, 9999, second_user.id)
+    assert "Group is not found" in str(ex_info.value.detail)
+
+
+def test_leave_group_admin(session) -> None:
+    first_user = UserFactory()
+    second_user = UserFactory()
+    group = GroupFactory(admin_id=first_user.id)
+    assert group.status == Status.ACTIVE
+    add_user_in_group(session, group.id, first_user.id)
+    add_user_in_group(session, group.id, second_user.id)
+    db_users = read_users_group(session, group.id, first_user.id)
+    for user in db_users.users_group:
+        assert user.status == Status.ACTIVE
+    leave_group(session, group.id, first_user.id)
+    db_users = read_users_group(session, group.id, first_user.id)
+    for user in db_users.users_group:
+        assert user.status == Status.INACTIVE
+    db_group = session.query(models.Group).filter_by(id=group.id).one()
+    assert db_group.status == Status.INACTIVE
+
+
+def test_disband_group(session):
+    first_user = UserFactory()
+    second_user = UserFactory()
+    group = GroupFactory(admin_id=first_user.id)
+    add_user_in_group(session, group.id, first_user.id)
+    add_user_in_group(session, group.id, second_user.id)
+    data = disband_group(session, group.id)
+    for user in data.users_group:
+        assert user.status == Status.INACTIVE
+    db_group = session.query(models.Group).filter_by(id=group.id).one()
+    assert db_group.status == Status.INACTIVE
+
+
+def test_remove_user(session):
+    first_user = UserFactory()
+    second_user = UserFactory()
+    group = GroupFactory(admin_id=first_user.id)
+    add_user_in_group(session, group.id, first_user.id)
+    add_user_in_group(session, group.id, second_user.id)
+    users = read_users_group(session, group.id, first_user.id)
+    for user in users.users_group:
+        assert user.status == Status.ACTIVE
+
+    with pytest.raises(HTTPException) as ex_info:
+        remove_user(session, group.id, first_user.id, second_user.id)
+    assert "You are not admin in this group!" in str(ex_info.value.detail)
+
+    data = remove_user(session, group.id, second_user.id, first_user.id)
+    assert data.user.id == second_user.id
+    assert data.status == Status.INACTIVE
+
+    with pytest.raises(HTTPException) as ex_info:
+        remove_user(session, group.id, second_user.id, first_user.id)
+    assert "The user is not active or does not exist in this group!" in str(ex_info.value.detail)
+
+    db_group = session.query(models.Group).filter_by(id=group.id).one()
+    assert db_group.status == Status.ACTIVE
+    data = remove_user(session, group.id, first_user.id, first_user.id)
+    for user in data.users_group:
+        assert user.status == Status.INACTIVE
+    db_group = session.query(models.Group).filter_by(id=group.id).one()
+    assert db_group.status == Status.INACTIVE
