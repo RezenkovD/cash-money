@@ -15,7 +15,7 @@ def response_invitation(
     db: Session, response: str, invitation_id: int, user_id: int
 ) -> schemas.Invitation:
     try:
-        invitation = (
+        db_invitation = (
             db.query(Invitation)
             .filter(
                 and_(
@@ -31,15 +31,15 @@ def response_invitation(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Invitation is not found",
         )
-    invitation.status = response
+    db_invitation.status = response
     db.commit()
     if response == ResponseStatus.ACCEPTED:
-        add_user_in_group(db, invitation.group_id, user_id)
-    return invitation
+        add_user_in_group(db, db_invitation.group_id, user_id)
+    return db_invitation
 
 
 def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
-    overdue_invitations = (
+    db_overdue_invitations = (
         db.query(Invitation)
         .filter(
             and_(
@@ -51,10 +51,10 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
         )
         .all()
     )
-    for invitation in overdue_invitations:
+    for invitation in db_overdue_invitations:
         invitation.status = ResponseStatus.OVERDUE
         db.commit()
-    invitations = (
+    db_invitations = (
         db.query(Invitation)
         .filter(
             and_(
@@ -64,14 +64,14 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
         )
         .all()
     )
-    return invitations
+    return db_invitations
 
 
 def create_invitation(
     db: Session, data: schemas.CreateInvitation, user_id: int
 ) -> schemas.Invitation:
     try:
-        group = (
+        db_group = (
             db.query(Group)
             .filter(and_(Group.admin_id == user_id, Group.id == data.group_id))
             .one()
@@ -81,7 +81,7 @@ def create_invitation(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You are not admin in this group!",
         )
-    if group.status == Status.INACTIVE:
+    if db_group.status == Status.INACTIVE:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="The group is inactive",
@@ -93,22 +93,23 @@ def create_invitation(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User is not found!",
         )
-    user = (
+    db_user = (
         db.query(UserGroup)
         .filter(
             and_(
                 UserGroup.user_id == data.recipient_id,
                 UserGroup.group_id == data.group_id,
+                UserGroup.status == Status.ACTIVE,
             )
         )
         .one_or_none()
     )
-    if user:
+    if db_user:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="The recipient is already in this group!",
         )
-    invitation = (
+    db_invitation = (
         db.query(Invitation)
         .filter(
             and_(
@@ -119,7 +120,7 @@ def create_invitation(
         )
         .one_or_none()
     )
-    if invitation:
+    if db_invitation:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="The invitation has already been sent. Wait for a reply!",
