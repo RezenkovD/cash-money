@@ -4,7 +4,6 @@ from unittest.mock import Mock
 
 import models
 from dependencies import oauth
-from models import Status
 from tests.conftest import client, async_return
 from tests.factories import (
     UserFactory,
@@ -55,7 +54,7 @@ class InvitationTestCase(unittest.TestCase):
                     "title": self.second_group.title,
                     "description": self.second_group.description,
                     "id": self.second_group.id,
-                    "status": Status.ACTIVE,
+                    "status": models.Status.ACTIVE,
                     "admin": {
                         "id": self.second_user.id,
                         "login": self.second_user.login,
@@ -90,7 +89,7 @@ class InvitationTestCase(unittest.TestCase):
                 "title": self.first_group.title,
                 "description": self.first_group.description,
                 "id": self.first_group.id,
-                "status": Status.ACTIVE,
+                "status": models.Status.ACTIVE,
                 "admin": {
                     "id": self.first_user.id,
                     "login": self.first_user.login,
@@ -121,7 +120,7 @@ class InvitationTestCase(unittest.TestCase):
         )
         assert data.status_code == 404
 
-        third_group = GroupFactory(admin_id=self.first_user.id, status=Status.INACTIVE)
+        third_group = GroupFactory(admin_id=self.first_user.id, status=models.Status.INACTIVE)
         UserGroupFactory(user_id=self.first_user.id, group_id=third_group.id)
         data = client.post(
             "/invitations/",
@@ -145,7 +144,7 @@ class InvitationTestCase(unittest.TestCase):
                 "title": self.second_group.title,
                 "description": self.second_group.description,
                 "id": self.second_group.id,
-                "status": Status.ACTIVE,
+                "status": models.Status.ACTIVE,
                 "admin": {
                     "id": self.second_user.id,
                     "login": self.second_user.login,
@@ -171,4 +170,4 @@ class InvitationTestCase(unittest.TestCase):
         group_users = group_users.json()["users_group"]
         for group_user, user in zip(group_users, users):
             assert group_user["user"]["id"] == user.id
-            assert group_user["status"] == Status.ACTIVE
+            assert group_user["status"] == models.Status.ACTIVE

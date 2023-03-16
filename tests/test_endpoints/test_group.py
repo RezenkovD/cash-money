@@ -122,7 +122,7 @@ class GroupTestCase(unittest.TestCase):
         second_user = UserFactory()
         UserGroupFactory(user_id=second_user.id, group_id=self.group.id)
         data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}")
-        user_data = {
+        user_group_data = {
             "user": {
                 "id": second_user.id,
                 "login": second_user.login,
@@ -134,14 +134,14 @@ class GroupTestCase(unittest.TestCase):
             "date_join": datetime.date.today().strftime("%Y-%m-%d")
         }
         assert data.status_code == 200
-        assert data.json() == user_data
+        assert data.json() == user_group_data
 
         data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}")
         assert data.status_code == 405
 
         data = client.post(f"/groups/{self.group.id}/remove/{self.user.id}")
         assert data.status_code == 200
-        user_data = {
+        users_group_data = {
             "users_group": [
                 {
                     "user": {
@@ -167,4 +167,4 @@ class GroupTestCase(unittest.TestCase):
                 }
             ]
         }
-        assert data.json() == user_data
+        assert data.json() == users_group_data

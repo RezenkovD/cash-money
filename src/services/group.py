@@ -22,44 +22,44 @@ def remove_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You are not admin in this group!",
         )
-    db_user = (
-        db.query(models.UserGroup)
-        .filter(
-            and_(
-                models.UserGroup.user_id == user_id,
-                models.UserGroup.group_id == group_id,
-                models.UserGroup.status == models.Status.ACTIVE,
+    try:
+        (
+            db.query(models.UserGroup)
+            .filter(
+                and_(
+                    models.UserGroup.user_id == user_id,
+                    models.UserGroup.group_id == group_id,
+                    models.UserGroup.status == models.Status.ACTIVE,
+                )
             )
+            .one()
         )
-        .one_or_none()
-    )
-    if db_user:
-        if admin_id == user_id:
-            return disband_group(db, group_id)
-        else:
-            return leave_group(db, group_id, user_id)
-    else:
+    except exc.NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="The user is not active or does not exist in this group!",
         )
+    if admin_id == user_id:
+        return disband_group(db, group_id)
+    else:
+        return leave_group(db, group_id, user_id)
 
 
 def disband_group(db: Session, group_id: int) -> schemas.UsersGroup:
     db_group = db.query(models.Group).filter_by(id=group_id).one()
     db_group.status = models.Status.INACTIVE
     db.commit()
-    users_group = db.query(models.UserGroup).filter_by(group_id=group_id).all()
-    for user in users_group:
+    db_users_group = db.query(models.UserGroup).filter_by(group_id=group_id).all()
+    for user in db_users_group:
         user.status = models.Status.INACTIVE
         db.commit()
-    db_query = (
+    db_users_group = (
         db.query(models.Group)
         .options(joinedload(models.Group.users_group))
         .where(models.Group.id == group_id)
         .one()
     )
-    return db_query
+    return db_users_group
 
 
 def leave_group(
@@ -107,7 +107,7 @@ def create_group(
 
 
 def add_user_in_group(db: Session, group_id: int, user_id: int) -> None:
-    db_user = (
+    db_user_group = (
         db.query(models.UserGroup)
         .filter(
             and_(
@@ -118,10 +118,10 @@ def add_user_in_group(db: Session, group_id: int, user_id: int) -> None:
         )
         .one_or_none()
     )
-    if db_user:
-        db_user.status = models.Status.ACTIVE
+    if db_user_group:
+        db_user_group.status = models.Status.ACTIVE
         db.commit()
-        db.refresh(db_user)
+        db.refresh(db_user_group)
     else:
         db_user_group = models.UserGroup(
             user_id=user_id,
