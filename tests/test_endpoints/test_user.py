@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
+from models import Status
 from tests.conftest import client, async_return
 from tests.factories import UserFactory, GroupFactory, UserGroupFactory
 
@@ -58,14 +59,18 @@ class UserTestCase(unittest.TestCase):
                     "group": {
                         "title": first_group.title,
                         "description": first_group.description,
+                        "status": Status.ACTIVE,
                     },
+                    "status": Status.ACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 },
                 {
                     "group": {
                         "title": second_group.title,
                         "description": second_group.description,
+                        "status": Status.ACTIVE,
                     },
+                    "status": Status.ACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 },
             ]

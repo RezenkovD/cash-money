@@ -54,6 +54,7 @@ class InvitationTestCase(unittest.TestCase):
                     "title": self.second_group.title,
                     "description": self.second_group.description,
                     "id": self.second_group.id,
+                    "status": models.Status.ACTIVE,
                     "admin": {
                         "id": self.second_user.id,
                         "login": self.second_user.login,
@@ -88,6 +89,7 @@ class InvitationTestCase(unittest.TestCase):
                 "title": self.first_group.title,
                 "description": self.first_group.description,
                 "id": self.first_group.id,
+                "status": models.Status.ACTIVE,
                 "admin": {
                     "id": self.first_user.id,
                     "login": self.first_user.login,
@@ -118,6 +120,14 @@ class InvitationTestCase(unittest.TestCase):
         )
         assert data.status_code == 404
 
+        third_group = GroupFactory(admin_id=self.first_user.id, status=models.Status.INACTIVE)
+        UserGroupFactory(user_id=self.first_user.id, group_id=third_group.id)
+        data = client.post(
+            "/invitations/",
+            json={"group_id": third_group.id, "recipient_id": self.second_user.id},
+        )
+        assert data.status_code == 405
+
     def test_response_invitation(self) -> None:
         invitation = InvitationFactory(
             sender_id=self.second_user.id,
@@ -134,6 +144,7 @@ class InvitationTestCase(unittest.TestCase):
                 "title": self.second_group.title,
                 "description": self.second_group.description,
                 "id": self.second_group.id,
+                "status": models.Status.ACTIVE,
                 "admin": {
                     "id": self.second_user.id,
                     "login": self.second_user.login,
@@ -159,3 +170,4 @@ class InvitationTestCase(unittest.TestCase):
         group_users = group_users.json()["users_group"]
         for group_user, user in zip(group_users, users):
             assert group_user["user"]["id"] == user.id
+            assert group_user["status"] == models.Status.ACTIVE
