@@ -25,7 +25,7 @@ class GroupTestCase(unittest.TestCase):
         )
         client.get("/auth/")
         self.group = GroupFactory(admin_id=self.user.id)
-        self.user_group = UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
+        UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
     def test_create_group(self) -> None:
         group = CreateGroup(title="string", description="string")

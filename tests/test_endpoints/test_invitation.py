@@ -30,13 +30,9 @@ class InvitationTestCase(unittest.TestCase):
         )
         client.get("/auth/")
         self.first_group = GroupFactory(admin_id=self.first_user.id)
-        self.first_user_group = UserGroupFactory(
-            user_id=self.first_user.id, group_id=self.first_group.id
-        )
+        UserGroupFactory(user_id=self.first_user.id, group_id=self.first_group.id)
         self.second_group = GroupFactory(admin_id=self.second_user.id)
-        self.second_user_group = UserGroupFactory(
-            user_id=self.second_user.id, group_id=self.second_group.id
-        )
+        UserGroupFactory(user_id=self.second_user.id, group_id=self.second_group.id)
 
     def test_read_invitations(self) -> None:
         invitation = InvitationFactory(

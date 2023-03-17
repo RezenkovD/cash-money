@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import Mock
 
+import models
 from dependencies import oauth
 from schemas import CreateCategory
 from tests.conftest import client, async_return
@@ -23,7 +24,7 @@ class CategoryTestCase(unittest.TestCase):
         )
         client.get("/auth/")
         self.group = GroupFactory(admin_id=self.user.id)
-        self.user_group = UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
+        UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
     def test_create_category(self) -> None:
         first_category = CategoryFactory()
@@ -44,3 +45,15 @@ class CategoryTestCase(unittest.TestCase):
             "id": first_category.id,
         }
         assert data.json() == category_data
+
+        data = client.post(
+            "/categories/9999/", json={"title": first_category.title}
+        )
+        assert data.status_code == 404
+
+        group = GroupFactory(admin_id=self.user.id, status=models.Status.INACTIVE)
+        UserGroupFactory(user_id=self.user.id, group_id=group.id, status=models.Status.INACTIVE)
+        data = client.post(
+            f"/categories/{group.id}/", json={"title": first_category.title}
+        )
+        assert data.status_code == 404
