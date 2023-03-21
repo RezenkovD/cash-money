@@ -14,9 +14,9 @@ from services import (
     read_user_groups,
     leave_group,
     remove_user,
-    disband_group,
+    disband_group, read_categories_group,
 )
-from tests.factories import UserFactory, GroupFactory
+from tests.factories import UserFactory, GroupFactory, CategoryFactory, CategoryGroupFactory
 
 
 def test_create_group(session) -> None:
@@ -170,3 +170,25 @@ def test_remove_user(session):
         assert user.status == Status.INACTIVE
     db_group = session.query(models.Group).filter_by(id=group.id).one()
     assert db_group.status == Status.INACTIVE
+
+
+def test_read_categories_group(session):
+    user = UserFactory()
+    group = GroupFactory(admin_id=user.id)
+    add_user_in_group(session, group.id, user.id)
+    category = CategoryFactory()
+    CategoryGroupFactory(category_id=category.id, group_id=group.id)
+
+    with pytest.raises(HTTPException) as ex_info:
+        read_categories_group(session, group.id, 9999)
+    assert "You are not a user of this group!" in str(ex_info.value.detail)
+
+    with pytest.raises(HTTPException) as ex_info:
+        read_categories_group(session, 9999, user.id)
+    assert "You are not a user of this group!" in str(ex_info.value.detail)
+
+    data = read_categories_group(session, group.id, user.id)
+    categories = [category]
+    for x, y in zip(data.categories_group, categories):
+        assert x.category.id == y.id
+        assert x.category.title == y.title

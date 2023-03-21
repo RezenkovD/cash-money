@@ -6,7 +6,7 @@ from dependencies import oauth
 from models import Status
 from schemas import CreateGroup
 from tests.conftest import client, async_return
-from tests.factories import UserFactory, GroupFactory, UserGroupFactory
+from tests.factories import UserFactory, GroupFactory, UserGroupFactory, CategoryFactory, CategoryGroupFactory
 
 
 class GroupTestCase(unittest.TestCase):
@@ -168,3 +168,27 @@ class GroupTestCase(unittest.TestCase):
             ]
         }
         assert data.json() == users_group_data
+
+    def test_read_categories_group(self) -> None:
+        data = client.get(f"/groups/{self.group.id}/categories/")
+        assert data.status_code == 200
+        assert data.json() == {"categories_group": []}
+
+        data = client.get(f"/groups/9999/categories/")
+        assert data.status_code == 405
+
+        category = CategoryFactory()
+        CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
+        data = client.get(f"/groups/{self.group.id}/categories/")
+        assert data.status_code == 200
+        categories_group_data = {
+            "categories_group": [
+                {
+                    "category": {
+                        "title": category.title,
+                        "id": category.id,
+                    }
+                }
+            ]
+        }
+        assert data.json() == categories_group_data
