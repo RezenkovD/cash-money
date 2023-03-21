@@ -32,3 +32,9 @@ def test_create_category(session) -> None:
     with pytest.raises(HTTPException) as ex_info:
         create_category(session, group.id, category, 9999)
     assert "You are not admin in this group!" in str(ex_info.value.detail)
+
+    group = GroupFactory(admin_id=user.id, status=models.Status.INACTIVE)
+    UserGroupFactory(user_id=user.id, group_id=group.id, status=models.Status.INACTIVE)
+    with pytest.raises(HTTPException) as ex_info:
+        create_category(session, group.id, category, user.id)
+    assert "Group is not active!" in str(ex_info.value.detail)
