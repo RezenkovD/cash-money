@@ -21,3 +21,4 @@ class CategoryGroups(Base):
 
     category = relationship("Category", back_populates="groups")
     group = relationship("Group", back_populates="categories_group")
+    expenses = relationship("Expense", back_populates="category_group")

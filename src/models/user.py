@@ -16,3 +16,4 @@ class User(Base):
 
     groups = relationship("Group", back_populates="admin")
     user_groups = relationship("UserGroup", back_populates="user")
+    expenses = relationship("Expense", back_populates="user")
