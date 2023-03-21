@@ -24,6 +24,7 @@ class Group(Base):
     admin = relationship("User", back_populates="groups")
     users_group = relationship("UserGroup", back_populates="group")
     invitations = relationship("Invitation", back_populates="group")
+    categories_group = relationship("CategoryGroups", back_populates="group")
 
 
 class UserGroup(Base):

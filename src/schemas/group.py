@@ -4,6 +4,7 @@ from typing import List
 from pydantic import BaseModel
 
 from schemas import User
+from schemas.category import Category
 
 
 class OurBaseModel(BaseModel):
@@ -43,3 +44,11 @@ class AboutGroups(OurBaseModel):
 
 class UserGroups(OurBaseModel):
     user_groups: List[AboutGroups]
+
+
+class AboutCategories(OurBaseModel):
+    category: Category
+
+
+class CategoriesGroup(OurBaseModel):
+    categories_group: List[AboutCategories]

@@ -7,5 +7,7 @@ from .group import (
     leave_group,
     remove_user,
     disband_group,
+    read_categories_group,
 )
 from .invitation import create_invitation, read_invitations, response_invitation
+from .category import create_category

@@ -14,9 +14,9 @@ from services import (
     read_user_groups,
     leave_group,
     remove_user,
-    disband_group,
+    disband_group, read_categories_group,
 )
-from tests.factories import UserFactory, GroupFactory
+from tests.factories import UserFactory, GroupFactory, CategoryFactory, CategoryGroupFactory, UserGroupFactory
 
 
 def test_create_group(session) -> None:
@@ -65,8 +65,8 @@ def test_read_users_group(session) -> None:
     first_user = UserFactory()
     second_user = UserFactory()
     group = GroupFactory(admin_id=first_user.id)
-    add_user_in_group(session, group.id, first_user.id)
-    add_user_in_group(session, group.id, second_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=group.id)
+    UserGroupFactory(user_id=second_user.id, group_id=group.id)
     db_users_group = read_users_group(session, group.id, first_user.id)
     users = [first_user, second_user]
     for data, user in zip(db_users_group.users_group, users):
@@ -83,8 +83,8 @@ def test_read_user_groups(session) -> None:
     second_group = GroupFactory(admin_id=first_user.id)
     db_users_group = read_user_groups(session, first_user.id)
     assert db_users_group.user_groups == []
-    add_user_in_group(session, first_group.id, first_user.id)
-    add_user_in_group(session, second_group.id, first_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=first_group.id)
+    UserGroupFactory(user_id=first_user.id, group_id=second_group.id)
     db_users_group = read_user_groups(session, first_user.id)
     groups = [first_group, second_group]
     for data, group in zip(db_users_group.user_groups, groups):
@@ -96,8 +96,8 @@ def test_leave_group_user(session) -> None:
     first_user = UserFactory()
     second_user = UserFactory()
     group = GroupFactory(admin_id=first_user.id)
-    add_user_in_group(session, group.id, first_user.id)
-    add_user_in_group(session, group.id, second_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=group.id)
+    UserGroupFactory(user_id=second_user.id, group_id=group.id)
     db_users_group = read_users_group(session, group.id, first_user.id)
     for user in db_users_group.users_group:
         assert user.status == Status.ACTIVE
@@ -115,8 +115,8 @@ def test_leave_group_admin(session) -> None:
     second_user = UserFactory()
     group = GroupFactory(admin_id=first_user.id)
     assert group.status == Status.ACTIVE
-    add_user_in_group(session, group.id, first_user.id)
-    add_user_in_group(session, group.id, second_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=group.id)
+    UserGroupFactory(user_id=second_user.id, group_id=group.id)
     db_users_group = read_users_group(session, group.id, first_user.id)
     for user in db_users_group.users_group:
         assert user.status == Status.ACTIVE
@@ -132,8 +132,8 @@ def test_disband_group(session):
     first_user = UserFactory()
     second_user = UserFactory()
     group = GroupFactory(admin_id=first_user.id)
-    add_user_in_group(session, group.id, first_user.id)
-    add_user_in_group(session, group.id, second_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=group.id)
+    UserGroupFactory(user_id=second_user.id, group_id=group.id)
     data = disband_group(session, group.id)
     for user in data.users_group:
         assert user.status == Status.INACTIVE
@@ -145,8 +145,8 @@ def test_remove_user(session):
     first_user = UserFactory()
     second_user = UserFactory()
     group = GroupFactory(admin_id=first_user.id)
-    add_user_in_group(session, group.id, first_user.id)
-    add_user_in_group(session, group.id, second_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=group.id)
+    UserGroupFactory(user_id=second_user.id, group_id=group.id)
     db_users_group = read_users_group(session, group.id, first_user.id)
     for user in db_users_group.users_group:
         assert user.status == Status.ACTIVE
@@ -170,3 +170,25 @@ def test_remove_user(session):
         assert user.status == Status.INACTIVE
     db_group = session.query(models.Group).filter_by(id=group.id).one()
     assert db_group.status == Status.INACTIVE
+
+
+def test_read_categories_group(session):
+    user = UserFactory()
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id)
+    category = CategoryFactory()
+    CategoryGroupFactory(category_id=category.id, group_id=group.id)
+
+    with pytest.raises(HTTPException) as ex_info:
+        read_categories_group(session, group.id, 9999)
+    assert "You are not a user of this group!" in str(ex_info.value.detail)
+
+    with pytest.raises(HTTPException) as ex_info:
+        read_categories_group(session, 9999, user.id)
+    assert "You are not a user of this group!" in str(ex_info.value.detail)
+
+    data = read_categories_group(session, group.id, user.id)
+    categories = [category]
+    for x, y in zip(data.categories_group, categories):
+        assert x.category.id == y.id
+        assert x.category.title == y.title

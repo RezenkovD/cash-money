@@ -7,7 +7,7 @@ from .base_factory import BaseFactory
 
 
 class GroupFactory(BaseFactory):
-    id = factory.Sequence(lambda n: n)
+    id = factory.Sequence(lambda n: n + 1)
     title = factory.Faker("word")
     description = factory.Faker("word")
     admin_id = None
