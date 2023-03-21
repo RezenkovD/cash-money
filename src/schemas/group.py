@@ -21,6 +21,11 @@ class BaseGroup(CreateGroup):
     status: str
 
 
+class ShortGroup(OurBaseModel):
+    id: int
+    title: str
+
+
 class Group(BaseGroup):
     id: int
     admin: User
