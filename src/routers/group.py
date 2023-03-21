@@ -53,3 +53,12 @@ def remove_user(
     db: Session = Depends(get_db),
 ) -> Union[schemas.AboutUsers, schemas.UsersGroup]:
     return services.remove_user(db, group_id, user_id, current_user.id)
+
+
+@router.get("/{group_id}/categories/", response_model=schemas.CategoriesGroup)
+def read_categories_group(
+    group_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> schemas.CategoriesGroup:
+    return services.read_categories_group(db, group_id, current_user.id)
