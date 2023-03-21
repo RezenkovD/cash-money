@@ -21,9 +21,7 @@ def create_category(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You are not admin in this group!",
         )
-    try:
-        group.status == models.Status.ACTIVE
-    except exc.NoResultFound:
+    if group.status == models.Status.INACTIVE:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="Group is not active!",

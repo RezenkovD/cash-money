@@ -56,4 +56,4 @@ class CategoryTestCase(unittest.TestCase):
         data = client.post(
             f"/categories/{group.id}/", json={"title": first_category.title}
         )
-        assert data.status_code == 404
+        assert data.status_code == 405
