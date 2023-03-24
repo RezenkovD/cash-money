@@ -1,3 +1,4 @@
+import datetime
 import unittest
 from unittest.mock import Mock
 
@@ -11,10 +12,11 @@ from tests.factories import (
     UserGroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
+    ExpenseFactory,
 )
 
 
-class CategoryTestCase(unittest.TestCase):
+class ExpensesTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.user = UserFactory()
         self.user_dict = {
@@ -105,3 +107,67 @@ class CategoryTestCase(unittest.TestCase):
             },
         )
         assert data.status_code == 404
+
+    def test_read_expenses_by_group_all_time_another_group(self) -> None:
+        data = client.get("/expenses/9999/all-time")
+        assert data.status_code == 404
+
+    def test_read_expenses_by_group_all_time(self) -> None:
+        first_expense = ExpenseFactory(
+            user_id=self.user.id, group_id=self.group.id, category_id=self.category.id
+        )
+        second_expense = ExpenseFactory(
+            user_id=self.user.id, group_id=self.group.id, category_id=self.category.id
+        )
+        data = client.get(f"/expenses/{self.group.id}/all-time")
+        assert data.status_code == 200
+        expenses_data = [
+            {
+                "id": first_expense.id,
+                "descriptions": first_expense.descriptions,
+                "amount": first_expense.amount,
+                "time": data.json()[0]["time"],
+                "category_group": {
+                    "group": {"id": self.group.id, "title": self.group.title},
+                    "category": {"title": self.category.title, "id": self.category.id},
+                },
+            },
+            {
+                "id": second_expense.id,
+                "descriptions": second_expense.descriptions,
+                "amount": second_expense.amount,
+                "time": data.json()[1]["time"],
+                "category_group": {
+                    "group": {"id": self.group.id, "title": self.group.title},
+                    "category": {"title": self.category.title, "id": self.category.id},
+                },
+            }
+        ]
+        assert data.json() == expenses_data
+
+    def test_read_expenses_by_group_month_422(self) -> None:
+        data = client.get(f"/expenses/{self.group.id}/11-2022")
+        assert data.status_code == 422
+
+    def test_read_expenses_by_group_month(self) -> None:
+        time = datetime.datetime(2022, 12, 12, 20, 10, 10)
+        data = client.get(f"/expenses/{self.group.id}/2022-12")
+        assert data.json() == []
+
+        expense = ExpenseFactory(
+            user_id=self.user.id, group_id=self.group.id, category_id=self.category.id, time=time
+        )
+        data = client.get(f"/expenses/{self.group.id}/2022-12")
+        expenses_data = [
+            {
+                "id": expense.id,
+                "descriptions": expense.descriptions,
+                "amount": expense.amount,
+                "time": data.json()[0]["time"],
+                "category_group": {
+                    "group": {"id": self.group.id, "title": self.group.title},
+                    "category": {"title": self.category.title, "id": self.category.id},
+                },
+            },
+        ]
+        assert data.json() == expenses_data

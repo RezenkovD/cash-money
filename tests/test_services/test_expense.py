@@ -60,7 +60,7 @@ def test_create_expense(session) -> None:
     assert data.category_group.group.id == first_group.id
 
 
-def test_read_expenses_by_group_all_time_another_group(session) -> None:
+def test_read_expenses_by_group_another_group(session) -> None:
     with pytest.raises(HTTPException) as ex_info:
         read_expenses_by_group(session, 9999, 9999)
     assert "You are not a user of this group!" in str(ex_info.value.detail)
