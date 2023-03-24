@@ -11,4 +11,4 @@ from .group import (
 )
 from .invitation import create_invitation, read_invitations, response_invitation
 from .category import create_category
-from .expense import create_expense
+from .expense import create_expense, read_expenses_by_group
