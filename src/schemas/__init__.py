@@ -11,4 +11,4 @@ from .group import (
 )
 from .invintation import Invitation, CreateInvitation, BaseInvitation
 from .category import Category, CreateCategory
-from .expense import CreateExpense, BaseExpense
+from .expense import CreateExpense, BaseExpense, UserExpense

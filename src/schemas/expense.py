@@ -28,3 +28,11 @@ class BaseExpense(OurBaseModel):
     time: datetime.datetime
     category_group: CategoryGroup
     user: BaseUser
+
+
+class UserExpense(OurBaseModel):
+    id: int
+    descriptions: str
+    amount: float
+    time: datetime.datetime
+    category_group: CategoryGroup
