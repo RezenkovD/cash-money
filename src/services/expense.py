@@ -91,6 +91,17 @@ def read_expenses(
                 db, group_id, user_id, start_date, end_date
             )
         return expenses
+    expenses = read_expenses_all_time(db, user_id)
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments!",
+        )
+    if filter_date:
+        expenses = read_expenses_month(db, user_id, filter_date)
+    if start_date and end_date:
+        expenses = read_expenses_time_range(db, user_id, start_date, end_date)
+    return expenses
 
 
 def read_expenses_by_group_all_time(
@@ -138,6 +149,54 @@ def read_expenses_by_group_time_range(
         .filter(
             models.Expense.user_id == user_id,
             models.Expense.group_id == group_id,
+            models.Expense.time >= start_date,
+            models.Expense.time <= end_date,
+        )
+        .all()
+    )
+    return expenses
+
+
+def read_expenses_all_time(db: Session, user_id: int) -> List[schemas.UserExpense]:
+    expenses = (
+        db.query(models.Expense)
+        .filter(
+            models.Expense.user_id == user_id,
+        )
+        .all()
+    )
+    return expenses
+
+
+def read_expenses_month(
+    db: Session, user_id: int, filter_date: date
+) -> List[schemas.UserExpense]:
+    expenses = (
+        db.query(models.Expense)
+        .filter(
+            and_(
+                models.Expense.user_id == user_id,
+                extract("year", models.Expense.time) == filter_date.year,
+                extract("month", models.Expense.time) == filter_date.month,
+            )
+        )
+        .all()
+    )
+    return expenses
+
+
+def read_expenses_time_range(
+    db: Session, user_id: int, start_date: date, end_date: date
+) -> List[schemas.UserExpense]:
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="The start date cannot be older than the end date!",
+        )
+    expenses = (
+        db.query(models.Expense)
+        .filter(
+            models.Expense.user_id == user_id,
             models.Expense.time >= start_date,
             models.Expense.time <= end_date,
         )
