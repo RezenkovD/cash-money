@@ -231,3 +231,24 @@ def test_read_expenses_by_group_time_range_date_exc(session):
     assert "The start date cannot be older than the end date!" in str(
         ex_info.value.detail
     )
+
+
+def test_read_expenses_by_group_many_arguments(session):
+    user = UserFactory()
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id)
+    filter_date = datetime.datetime(2022, 11, 10)
+    start_date = datetime.datetime(2022, 11, 10)
+    end_date = datetime.datetime(2022, 11, 10)
+    with pytest.raises(HTTPException) as ex_info:
+        read_expenses(
+            db=session,
+            group_id=group.id,
+            user_id=user.id,
+            filter_date=filter_date,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    assert "Too many arguments!" in str(
+        ex_info.value.detail
+    )
