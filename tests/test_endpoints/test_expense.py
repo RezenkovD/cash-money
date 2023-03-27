@@ -108,7 +108,7 @@ class ExpensesTestCase(unittest.TestCase):
         )
         assert data.status_code == 404
 
-    def test_read_expenses_by_group_all_time_another_group(self) -> None:
+    def test_read_expenses_by_another_group(self) -> None:
         data = client.get("/expenses/9999/all-time")
         assert data.status_code == 404
 
@@ -145,16 +145,20 @@ class ExpensesTestCase(unittest.TestCase):
         ]
         assert data.json() == expenses_data
 
-    def test_read_expenses_by_group_month_422(self) -> None:
+    def test_read_expenses_by_group_month_exc(self) -> None:
         data = client.get(f"/expenses/{self.group.id}/11-2022")
         assert data.status_code == 422
 
     def test_read_expenses_by_group_month(self) -> None:
-        time = datetime.datetime(2022, 12, 12, 20, 10, 10)
+        time = datetime.datetime(2022, 12, 1)
         data = client.get(f"/expenses/{self.group.id}/2022-12")
         assert data.json() == []
 
         expense = ExpenseFactory(
+            user_id=self.user.id, group_id=self.group.id, category_id=self.category.id, time=time
+        )
+        time = datetime.datetime(2022, 11, 12)
+        ExpenseFactory(
             user_id=self.user.id, group_id=self.group.id, category_id=self.category.id, time=time
         )
         data = client.get(f"/expenses/{self.group.id}/2022-12")
@@ -171,3 +175,31 @@ class ExpensesTestCase(unittest.TestCase):
             },
         ]
         assert data.json() == expenses_data
+
+    def test_read_expenses_by_group_time_range(self):
+        time = datetime.datetime(2022, 12, 12)
+        expense = ExpenseFactory(
+            user_id=self.user.id, group_id=self.group.id, category_id=self.category.id, time=time
+        )
+        time = datetime.datetime(2022, 11, 12)
+        ExpenseFactory(
+            user_id=self.user.id, group_id=self.group.id, category_id=self.category.id, time=time
+        )
+        data = client.get(f"/expenses/{self.group.id}/2022-12-09/2022-12-31/")
+        expenses_data = [
+            {
+                "id": expense.id,
+                "descriptions": expense.descriptions,
+                "amount": expense.amount,
+                "time": data.json()[0]["time"],
+                "category_group": {
+                    "group": {"id": self.group.id, "title": self.group.title},
+                    "category": {"title": self.category.title, "id": self.category.id},
+                },
+            },
+        ]
+        assert data.json() == expenses_data
+
+    def test_read_expenses_by_group_time_range_date_exc(self):
+        data = client.get(f"/expenses/{self.group.id}/2022-12-31/2022-12-09/")
+        assert data.status_code == 404
