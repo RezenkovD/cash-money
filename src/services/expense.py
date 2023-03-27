@@ -57,21 +57,45 @@ def create_expense(
     return db_expense
 
 
-def read_expenses_by_group(
-    db: Session, group_id: int, user_id: int, filter_date: Optional[date] = None
+def read_expenses(
+    db: Session,
+    user_id: int,
+    group_id: Optional[int] = None,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
 ) -> List[schemas.UserExpense]:
-    try:
-        db.query(models.UserGroup).filter(
-            and_(
-                models.UserGroup.group_id == group_id,
-                models.UserGroup.user_id == user_id,
+    if group_id:
+        try:
+            db.query(models.UserGroup).filter(
+                and_(
+                    models.UserGroup.group_id == group_id,
+                    models.UserGroup.user_id == user_id,
+                )
+            ).one()
+        except exc.NoResultFound:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="You are not a user of this group!",
             )
-        ).one()
-    except exc.NoResultFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not a user of this group!",
-        )
+        expenses = read_expenses_by_group_all_time(db, group_id, user_id)
+        if filter_date and start_date or filter_date and end_date:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Too many arguments!",
+            )
+        if filter_date:
+            expenses = read_expenses_by_group_month(db, group_id, user_id, filter_date)
+        if start_date and end_date:
+            expenses = read_expenses_by_group_time_range(
+                db, group_id, user_id, start_date, end_date
+            )
+        return expenses
+
+
+def read_expenses_by_group_all_time(
+    db: Session, group_id: int, user_id: int
+) -> List[schemas.UserExpense]:
     expenses = (
         db.query(models.Expense)
         .filter(
@@ -80,13 +104,43 @@ def read_expenses_by_group(
         )
         .all()
     )
-    if filter_date is not None:
-        expenses = db.query(models.Expense).filter(
+    return expenses
+
+
+def read_expenses_by_group_month(
+    db: Session, group_id: int, user_id: int, filter_date: date
+) -> List[schemas.UserExpense]:
+    expenses = (
+        db.query(models.Expense)
+        .filter(
             and_(
                 models.Expense.user_id == user_id,
                 models.Expense.group_id == group_id,
                 extract("year", models.Expense.time) == filter_date.year,
                 extract("month", models.Expense.time) == filter_date.month,
             )
-        ).all()
+        )
+        .all()
+    )
+    return expenses
+
+
+def read_expenses_by_group_time_range(
+    db: Session, group_id: int, user_id: int, start_date: date, end_date: date
+) -> List[schemas.UserExpense]:
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="The start date cannot be older than the end date!",
+        )
+    expenses = (
+        db.query(models.Expense)
+        .filter(
+            models.Expense.user_id == user_id,
+            models.Expense.group_id == group_id,
+            models.Expense.time >= start_date,
+            models.Expense.time <= end_date,
+        )
+        .all()
+    )
     return expenses
