@@ -51,3 +51,18 @@ def transform_date_or_422(date_: str) -> date:
             detail=f"{date_} has incorrect date format, but should be YYYY-MM",
         )
     return transformed_date
+
+
+def transform_exact_date_or_422(date_: str) -> date:
+    """
+    '2021-01-01' -> datetime.date(2021, 01, 01) else raise HTTP_422
+    """
+    try:
+        transformed_date = datetime.strptime(date_, "%Y-%m-%d").date()
+    except ValueError:
+        logging.info(f"{date_} has incorrect date format")
+        raise HTTPException(
+            status_code=422,
+            detail=f"{date_} has incorrect date format, but should be YYYY-MM-DD",
+        )
+    return transformed_date
