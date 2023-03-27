@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 
-@router.post("/{group_id}/", response_model=schemas.BaseExpense)
+@router.post("/group/{group_id}/", response_model=schemas.BaseExpense)
 def create_expense(
     group_id: int,
     expense: schemas.CreateExpense,
@@ -26,7 +26,7 @@ def create_expense(
     return services.create_expense(db, group_id, expense, current_user.id)
 
 
-@router.get("/{group_id}/all-time/", response_model=List[schemas.UserExpense])
+@router.get("/group/{group_id}/all-time/", response_model=List[schemas.UserExpense])
 def read_expenses_by_group_all_time(
     group_id: int,
     current_user: models.User = Depends(get_current_user),
@@ -35,7 +35,7 @@ def read_expenses_by_group_all_time(
     return services.read_expenses(db=db, group_id=group_id, user_id=current_user.id)
 
 
-@router.get("/{group_id}/{year_month}/", response_model=List[schemas.UserExpense])
+@router.get("/group/{group_id}/{year_month}/", response_model=List[schemas.UserExpense])
 def read_expenses_by_group_month(
     year_month: str,
     group_id: int,
@@ -49,7 +49,7 @@ def read_expenses_by_group_month(
 
 
 @router.get(
-    "/{group_id}/{start_date}/{end_date}/", response_model=List[schemas.UserExpense]
+    "/group/{group_id}/{start_date}/{end_date}/", response_model=List[schemas.UserExpense]
 )
 def read_expenses_by_group_time_range(
     start_date: str,
