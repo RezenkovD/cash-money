@@ -21,7 +21,7 @@ class Expense(Base):
     id = Column(Integer, primary_key=True, index=True)
     descriptions = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
-    time = Column(DateTime, default=datetime.datetime.utcnow())
+    time = Column(DateTime, default=datetime.datetime.utcnow(), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     group_id = Column(Integer, index=True, nullable=False)
     category_id = Column(Integer, index=True, nullable=False)

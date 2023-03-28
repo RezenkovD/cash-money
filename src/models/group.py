@@ -32,7 +32,7 @@ class UserGroup(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     group_id = Column(Integer, ForeignKey("groups.id"), primary_key=True)
-    date_join = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    date_join = Column(DateTime, default=datetime.datetime.utcnow(), nullable=False)
     status = Column(String, Enum(Status), nullable=False)
 
     user = relationship("User", back_populates="user_groups")

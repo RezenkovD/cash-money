@@ -46,7 +46,7 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
                 Invitation.recipient_id == user_id,
                 Invitation.status == ResponseStatus.PENDING,
                 Invitation.creation_time + datetime.timedelta(days=1)
-                < datetime.datetime.now(),
+                < datetime.datetime.utcnow(),
             )
         )
         .all()

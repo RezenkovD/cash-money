@@ -26,7 +26,7 @@ class Invitation(Base):
     sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     recipient_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
-    creation_time = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    creation_time = Column(DateTime, default=datetime.datetime.utcnow(), nullable=False)
     status = Column(String, Enum(ResponseStatus), nullable=False)
 
     group = relationship("Group", back_populates="invitations")
