@@ -1,4 +1,4 @@
-from .user import User
+from .user import User, BaseUser
 from .group import (
     CreateGroup,
     Group,
@@ -7,6 +7,8 @@ from .group import (
     AboutUsers,
     AboutCategories,
     CategoriesGroup,
+    ShortGroup,
 )
 from .invintation import Invitation, CreateInvitation, BaseInvitation
 from .category import Category, CreateCategory
+from .expense import CreateExpense, BaseExpense, UserExpense
