@@ -6,7 +6,13 @@ from dependencies import oauth
 from models import Status
 from schemas import CreateGroup
 from tests.conftest import client, async_return
-from tests.factories import UserFactory, GroupFactory, UserGroupFactory, CategoryFactory, CategoryGroupFactory
+from tests.factories import (
+    UserFactory,
+    GroupFactory,
+    UserGroupFactory,
+    CategoryFactory,
+    CategoryGroupFactory,
+)
 
 
 class GroupTestCase(unittest.TestCase):
@@ -86,7 +92,7 @@ class GroupTestCase(unittest.TestCase):
                 "picture": self.user.picture,
             },
             "status": Status.INACTIVE,
-            "date_join": datetime.date.today().strftime("%Y-%m-%d")
+            "date_join": datetime.date.today().strftime("%Y-%m-%d"),
         }
         data = data.json()
         assert data == user_group_data
@@ -109,7 +115,7 @@ class GroupTestCase(unittest.TestCase):
                         "picture": self.user.picture,
                     },
                     "status": Status.INACTIVE,
-                    "date_join": datetime.date.today().strftime("%Y-%m-%d")
+                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 }
             ]
         }
@@ -128,10 +134,10 @@ class GroupTestCase(unittest.TestCase):
                 "login": second_user.login,
                 "first_name": second_user.first_name,
                 "last_name": second_user.last_name,
-                "picture": second_user.picture
+                "picture": second_user.picture,
             },
             "status": Status.INACTIVE,
-            "date_join": datetime.date.today().strftime("%Y-%m-%d")
+            "date_join": datetime.date.today().strftime("%Y-%m-%d"),
         }
         assert data.status_code == 200
         assert data.json() == user_group_data
@@ -152,7 +158,7 @@ class GroupTestCase(unittest.TestCase):
                         "picture": self.user.picture,
                     },
                     "status": Status.INACTIVE,
-                    "date_join": datetime.date.today().strftime("%Y-%m-%d")
+                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 },
                 {
                     "user": {
@@ -160,11 +166,11 @@ class GroupTestCase(unittest.TestCase):
                         "login": second_user.login,
                         "first_name": second_user.first_name,
                         "last_name": second_user.last_name,
-                        "picture": second_user.picture
+                        "picture": second_user.picture,
                     },
                     "status": Status.INACTIVE,
-                    "date_join": datetime.date.today().strftime("%Y-%m-%d")
-                }
+                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
+                },
             ]
         }
         assert data.json() == users_group_data

@@ -46,13 +46,13 @@ class CategoryTestCase(unittest.TestCase):
         }
         assert data.json() == category_data
 
-        data = client.post(
-            "/categories/9999/", json={"title": first_category.title}
-        )
+        data = client.post("/categories/9999/", json={"title": first_category.title})
         assert data.status_code == 404
 
         group = GroupFactory(admin_id=self.user.id, status=models.Status.INACTIVE)
-        UserGroupFactory(user_id=self.user.id, group_id=group.id, status=models.Status.INACTIVE)
+        UserGroupFactory(
+            user_id=self.user.id, group_id=group.id, status=models.Status.INACTIVE
+        )
         data = client.post(
             f"/categories/{group.id}/", json={"title": first_category.title}
         )

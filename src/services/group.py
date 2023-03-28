@@ -170,12 +170,16 @@ def read_user_groups(db: Session, user_id: int) -> schemas.UserGroups:
     return db_query
 
 
-def read_categories_group(db: Session, group_id: int, user_id: int) -> schemas.CategoriesGroup:
+def read_categories_group(
+    db: Session, group_id: int, user_id: int
+) -> schemas.CategoriesGroup:
     try:
-        db.query(models.UserGroup).filter(and_(
-            models.UserGroup.group_id == group_id,
-            models.UserGroup.user_id == user_id,
-        )).one()
+        db.query(models.UserGroup).filter(
+            and_(
+                models.UserGroup.group_id == group_id,
+                models.UserGroup.user_id == user_id,
+            )
+        ).one()
     except exc.NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,

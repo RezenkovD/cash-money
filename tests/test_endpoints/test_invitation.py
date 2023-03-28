@@ -116,7 +116,9 @@ class InvitationTestCase(unittest.TestCase):
         )
         assert data.status_code == 404
 
-        third_group = GroupFactory(admin_id=self.first_user.id, status=models.Status.INACTIVE)
+        third_group = GroupFactory(
+            admin_id=self.first_user.id, status=models.Status.INACTIVE
+        )
         UserGroupFactory(user_id=self.first_user.id, group_id=third_group.id)
         data = client.post(
             "/invitations/",

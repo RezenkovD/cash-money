@@ -45,7 +45,10 @@ def leave_group(
     return services.leave_group(db, group_id, current_user.id)
 
 
-@router.post("/{group_id}/remove/{user_id}", response_model=Union[schemas.AboutUsers, schemas.UsersGroup])
+@router.post(
+    "/{group_id}/remove/{user_id}",
+    response_model=Union[schemas.AboutUsers, schemas.UsersGroup],
+)
 def remove_user(
     group_id: int,
     user_id: int,

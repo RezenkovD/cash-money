@@ -14,9 +14,16 @@ from services import (
     read_user_groups,
     leave_group,
     remove_user,
-    disband_group, read_categories_group,
+    disband_group,
+    read_categories_group,
 )
-from tests.factories import UserFactory, GroupFactory, CategoryFactory, CategoryGroupFactory, UserGroupFactory
+from tests.factories import (
+    UserFactory,
+    GroupFactory,
+    CategoryFactory,
+    CategoryGroupFactory,
+    UserGroupFactory,
+)
 
 
 def test_create_group(session) -> None:
@@ -56,9 +63,9 @@ def test_add_user_in_group(session) -> None:
     assert db_user_group.user_id == user.id
     assert db_user_group.status == Status.ACTIVE
     assert db_user_group.group_id == group.id
-    assert db_user_group.date_join.strftime("%Y-%m-%d") == datetime.date.today().strftime(
+    assert db_user_group.date_join.strftime(
         "%Y-%m-%d"
-    )
+    ) == datetime.date.today().strftime("%Y-%m-%d")
 
 
 def test_read_users_group(session) -> None:
@@ -161,7 +168,9 @@ def test_remove_user(session):
 
     with pytest.raises(HTTPException) as ex_info:
         remove_user(session, group.id, second_user.id, first_user.id)
-    assert "The user is not active or does not exist in this group!" in str(ex_info.value.detail)
+    assert "The user is not active or does not exist in this group!" in str(
+        ex_info.value.detail
+    )
 
     db_group = session.query(models.Group).filter_by(id=group.id).one()
     assert db_group.status == Status.ACTIVE
