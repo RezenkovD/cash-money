@@ -1,20 +1,15 @@
-from pydantic import BaseModel
 from pydantic.schema import date
 
 from schemas import User, Group
+from schemas.base_model import BaseModel
 
 
-class OurBaseModel(BaseModel):
-    class Config:
-        orm_mode = True
-
-
-class CreateInvitation(OurBaseModel):
+class CreateInvitation(BaseModel):
     recipient_id: int
     group_id: int
 
 
-class BaseInvitation(OurBaseModel):
+class BaseInvitation(BaseModel):
     id: int
     status: str
     group: Group

@@ -1,12 +1,7 @@
-from pydantic import BaseModel
+from schemas.base_model import BaseModel
 
 
-class OurBaseModel(BaseModel):
-    class Config:
-        orm_mode = True
-
-
-class CreateCategory(OurBaseModel):
+class CreateCategory(BaseModel):
     title: str
 
 

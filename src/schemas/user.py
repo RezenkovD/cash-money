@@ -1,14 +1,11 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from schemas.base_model import BaseModel
 
 
 class BaseUser(BaseModel):
     id: int
     login: str
-
-    class Config:
-        orm_mode = True
 
 
 class User(BaseModel):
@@ -17,6 +14,3 @@ class User(BaseModel):
     first_name: str
     last_name: str
     picture: Optional[str]
-
-    class Config:
-        orm_mode = True
