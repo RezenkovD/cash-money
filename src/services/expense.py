@@ -12,7 +12,7 @@ import models
 
 
 def create_expense(
-    db: Session, group_id: int, expense: schemas.CreateExpense, user_id: int
+    db: Session, user_id: int, group_id: int, expense: schemas.CreateExpense
 ) -> schemas.BaseExpense:
     try:
         db_user_group = (
@@ -65,6 +65,11 @@ def read_expenses(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
 ) -> List[schemas.UserExpense]:
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments!",
+        )
     if group_id:
         try:
             db.query(models.UserGroup).filter(
@@ -79,11 +84,6 @@ def read_expenses(
                 detail="You are not a user of this group!",
             )
         expenses = read_expenses_by_group_all_time(db, group_id, user_id)
-        if filter_date and start_date or filter_date and end_date:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Too many arguments!",
-            )
         if filter_date:
             expenses = read_expenses_by_group_month(db, group_id, user_id, filter_date)
         if start_date and end_date:
@@ -92,11 +92,6 @@ def read_expenses(
             )
         return expenses
     expenses = read_expenses_all_time(db, user_id)
-    if filter_date and start_date or filter_date and end_date:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Too many arguments!",
-        )
     if filter_date:
         expenses = read_expenses_month(db, user_id, filter_date)
     if start_date and end_date:
