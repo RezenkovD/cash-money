@@ -1,27 +1,21 @@
 import datetime
 
-from pydantic import BaseModel
-
 from schemas import BaseUser, ShortGroup, Category
+from schemas.base_model import BaseModel
 
 
-class OurBaseModel(BaseModel):
-    class Config:
-        orm_mode = True
-
-
-class CreateExpense(OurBaseModel):
+class CreateExpense(BaseModel):
     descriptions: str
     amount: float
     category_id: int
 
 
-class CategoryGroup(OurBaseModel):
+class CategoryGroup(BaseModel):
     group: ShortGroup
     category: Category
 
 
-class BaseExpense(OurBaseModel):
+class BaseExpense(BaseModel):
     id: int
     descriptions: str
     amount: float
@@ -30,7 +24,7 @@ class BaseExpense(OurBaseModel):
     user: BaseUser
 
 
-class UserExpense(OurBaseModel):
+class UserExpense(BaseModel):
     id: int
     descriptions: str
     amount: float
