@@ -46,7 +46,7 @@ def leave_group(
 
 
 @router.post(
-    "/{group_id}/remove/{user_id}",
+    "/{group_id}/remove/{user_id}/",
     response_model=Union[schemas.AboutUsers, schemas.UsersGroup],
 )
 def remove_user(

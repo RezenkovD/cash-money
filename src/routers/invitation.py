@@ -33,7 +33,7 @@ def read_invitation(
     return services.read_invitations(db, current_user.id)
 
 
-@router.post("/response/{invitation_id}", response_model=schemas.Invitation)
+@router.post("/response/{invitation_id}/", response_model=schemas.Invitation)
 def response_invitation(
     response: models.UserResponse,
     invitation_id: int,

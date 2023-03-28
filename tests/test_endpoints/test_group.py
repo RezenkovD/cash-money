@@ -56,7 +56,7 @@ class GroupTestCase(unittest.TestCase):
         assert data.json() == group_data
 
     def test_read_users_group(self) -> None:
-        data = client.get(f"/groups/{self.group.id}/users")
+        data = client.get(f"/groups/{self.group.id}/users/")
         assert data.status_code == 200
         data = data.json()
         users_group_data = {
@@ -127,7 +127,7 @@ class GroupTestCase(unittest.TestCase):
     def test_remove_user(self) -> None:
         second_user = UserFactory()
         UserGroupFactory(user_id=second_user.id, group_id=self.group.id)
-        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}")
+        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}/")
         user_group_data = {
             "user": {
                 "id": second_user.id,
@@ -142,10 +142,10 @@ class GroupTestCase(unittest.TestCase):
         assert data.status_code == 200
         assert data.json() == user_group_data
 
-        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}")
+        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}/")
         assert data.status_code == 405
 
-        data = client.post(f"/groups/{self.group.id}/remove/{self.user.id}")
+        data = client.post(f"/groups/{self.group.id}/remove/{self.user.id}/")
         assert data.status_code == 200
         users_group_data = {
             "users_group": [
