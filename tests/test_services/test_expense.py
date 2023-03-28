@@ -11,53 +11,69 @@ from tests.factories import (
     GroupFactory,
     UserGroupFactory,
     CategoryFactory,
-    CategoryGroupFactory, ExpenseFactory,
+    CategoryGroupFactory,
+    ExpenseFactory,
 )
 
 
 def test_create_expense(session) -> None:
     user = UserFactory()
-    first_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=first_group.id)
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id)
     category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=first_group.id)
-
-    first_expense = CreateExpense(
+    CategoryGroupFactory(category_id=category.id, group_id=group.id)
+    expense = CreateExpense(
         descriptions="descriptions", amount=999.9, category_id=category.id
     )
+    data = create_expense(session, user.id, group.id, expense)
+    db_expenses = session.query(models.Expense).all()
+    assert len(db_expenses) == 1
+    assert data.descriptions == expense.descriptions
+    assert data.amount == expense.amount
+    assert data.time.strftime("%Y-%m-%d %H:%M") == datetime.datetime.utcnow().strftime(
+        "%Y-%m-%d %H:%M"
+    )
+    assert data.user.id == user.id
+    assert data.category_group.category.id == category.id
+    assert data.category_group.group.id == group.id
 
-    with pytest.raises(HTTPException) as ex_info:
-        create_expense(session, 9999, first_expense, user.id)
-    assert "You are not a user of this group!" in str(ex_info.value.detail)
 
-    second_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(
-        user_id=user.id, group_id=second_group.id, status=models.Status.INACTIVE
+def test_create_expense_another_group(session) -> None:
+    user = UserFactory()
+    category = CategoryFactory()
+    expense = CreateExpense(
+        descriptions="descriptions", amount=999.9, category_id=category.id
     )
     with pytest.raises(HTTPException) as ex_info:
-        create_expense(session, second_group.id, first_expense, user.id)
+        create_expense(session, user.id, 9999, expense)
+    assert "You are not a user of this group!" in str(ex_info.value.detail)
+
+
+def test_create_expense_inactive_user(session) -> None:
+    user = UserFactory()
+    category = CategoryFactory()
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id, status=models.Status.INACTIVE)
+    expense = CreateExpense(
+        descriptions="descriptions", amount=999.9, category_id=category.id
+    )
+    with pytest.raises(HTTPException) as ex_info:
+        create_expense(session, user.id, group.id, expense)
     assert "The user is not active in this group!" in str(ex_info.value.detail)
 
-    second_expense = CreateExpense(
+
+def test_create_expense_another_category(session) -> None:
+    user = UserFactory()
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id)
+    expense = CreateExpense(
         descriptions="descriptions",
         amount=999.9,
         category_id=9999,
     )
     with pytest.raises(HTTPException) as ex_info:
-        create_expense(session, first_group.id, second_expense, user.id)
+        create_expense(session, user.id, group.id, expense)
     assert "The group has no such category!" in str(ex_info.value.detail)
-
-    data = create_expense(session, first_group.id, first_expense, user.id)
-
-    db_expenses = session.query(models.Expense).all()
-    assert len(db_expenses) == 1
-
-    assert data.descriptions == first_expense.descriptions
-    assert data.amount == first_expense.amount
-    assert data.time.strftime("%Y-%m-%d %H:%M") == datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
-    assert data.user.id == user.id
-    assert data.category_group.category.id == category.id
-    assert data.category_group.group.id == first_group.id
 
 
 def test_read_expenses_by_another_group(session) -> None:
@@ -123,11 +139,12 @@ def test_read_expenses_by_group_month(session) -> None:
         user_id=user.id,
         filter_date=datetime.date.today(),
     )
-    assert data == []
+    assert not data
+
     data = read_expenses(
         db=session, group_id=group.id, user_id=user.id, filter_date=time
     )
-    assert data == []
+    assert not data
 
     first_expense = ExpenseFactory(
         user_id=user.id, group_id=group.id, category_id=category.id
@@ -233,7 +250,7 @@ def test_read_expenses_by_group_time_range_date_exc(session):
     )
 
 
-def test_read_expenses_by_group_many_arguments(session):
+def test_read_expenses_many_arguments(session):
     user = UserFactory()
     group = GroupFactory(admin_id=user.id)
     UserGroupFactory(user_id=user.id, group_id=group.id)
@@ -249,9 +266,7 @@ def test_read_expenses_by_group_many_arguments(session):
             start_date=start_date,
             end_date=end_date,
         )
-    assert "Too many arguments!" in str(
-        ex_info.value.detail
-    )
+    assert "Too many arguments!" in str(ex_info.value.detail)
 
 
 def test_read_expenses_all_time(session):
@@ -272,7 +287,10 @@ def test_read_expenses_all_time(session):
     )
 
     data = read_expenses(db=session, user_id=user.id)
-    expenses = [first_expense, second_expense, ]
+    expenses = [
+        first_expense,
+        second_expense,
+    ]
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
         assert data.id == expense.id
@@ -321,9 +339,7 @@ def test_read_expenses_month(session):
         assert data.category_group.category.id == expense.category_id
 
     expenses = [second_expense, third_expense]
-    data = read_expenses(
-        db=session, user_id=user.id, filter_date=time
-    )
+    data = read_expenses(db=session, user_id=user.id, filter_date=time)
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
         assert data.id == expense.id
@@ -349,10 +365,16 @@ def test_read_expenses_time_range(session):
 
     ExpenseFactory(user_id=user.id, group_id=first_group.id, category_id=category.id)
     second_expense = ExpenseFactory(
-        user_id=user.id, group_id=second_group.id, category_id=category.id, time=second_date
+        user_id=user.id,
+        group_id=second_group.id,
+        category_id=category.id,
+        time=second_date,
     )
     third_expense = ExpenseFactory(
-        user_id=user.id, group_id=first_group.id, category_id=category.id, time=third_date
+        user_id=user.id,
+        group_id=first_group.id,
+        category_id=category.id,
+        time=third_date,
     )
 
     expenses = [second_expense, third_expense]

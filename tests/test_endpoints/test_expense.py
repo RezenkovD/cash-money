@@ -37,7 +37,9 @@ class ExpensesTestCase(unittest.TestCase):
         CategoryGroupFactory(category_id=self.category.id, group_id=self.first_group.id)
         self.second_group = GroupFactory(admin_id=self.user.id)
         UserGroupFactory(user_id=self.user.id, group_id=self.second_group.id)
-        CategoryGroupFactory(category_id=self.category.id, group_id=self.second_group.id)
+        CategoryGroupFactory(
+            category_id=self.category.id, group_id=self.second_group.id
+        )
 
     def test_create_expense(self) -> None:
         expense = CreateExpense(
@@ -117,10 +119,14 @@ class ExpensesTestCase(unittest.TestCase):
 
     def test_read_expenses_by_group_all_time(self) -> None:
         first_expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
         )
-        second_expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id
+        ExpenseFactory(
+            user_id=self.user.id,
+            group_id=self.second_group.id,
+            category_id=self.category.id,
         )
         data = client.get(f"/expenses/group/{self.first_group.id}/all-time")
         assert data.status_code == 200
@@ -131,20 +137,13 @@ class ExpensesTestCase(unittest.TestCase):
                 "amount": first_expense.amount,
                 "time": data.json()[0]["time"],
                 "category_group": {
-                    "group": {"id": self.first_group.id, "title": self.first_group.title},
+                    "group": {
+                        "id": self.first_group.id,
+                        "title": self.first_group.title,
+                    },
                     "category": {"title": self.category.title, "id": self.category.id},
                 },
             },
-            {
-                "id": second_expense.id,
-                "descriptions": second_expense.descriptions,
-                "amount": second_expense.amount,
-                "time": data.json()[1]["time"],
-                "category_group": {
-                    "group": {"id": self.first_group.id, "title": self.first_group.title},
-                    "category": {"title": self.category.title, "id": self.category.id},
-                },
-            }
         ]
         assert data.json() == expenses_data
 
@@ -155,15 +154,22 @@ class ExpensesTestCase(unittest.TestCase):
     def test_read_expenses_by_group_month(self) -> None:
         time = datetime.datetime(2022, 12, 1)
         data = client.get(f"/expenses/group/{self.first_group.id}/2022-12")
-        assert data.json() == []
-
+        assert not data.json()
         expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+            time=time,
         )
+
         time = datetime.datetime(2022, 11, 12)
         ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+            time=time,
         )
+
         data = client.get(f"/expenses/group/{self.first_group.id}/2022-12")
         expenses_data = [
             {
@@ -172,7 +178,10 @@ class ExpensesTestCase(unittest.TestCase):
                 "amount": expense.amount,
                 "time": data.json()[0]["time"],
                 "category_group": {
-                    "group": {"id": self.first_group.id, "title": self.first_group.title},
+                    "group": {
+                        "id": self.first_group.id,
+                        "title": self.first_group.title,
+                    },
                     "category": {"title": self.category.title, "id": self.category.id},
                 },
             },
@@ -182,13 +191,21 @@ class ExpensesTestCase(unittest.TestCase):
     def test_read_expenses_by_group_time_range(self):
         time = datetime.datetime(2022, 12, 12)
         expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+            time=time,
         )
         time = datetime.datetime(2022, 11, 12)
         ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+            time=time,
         )
-        data = client.get(f"/expenses/group/{self.first_group.id}/2022-12-09/2022-12-31/")
+        data = client.get(
+            f"/expenses/group/{self.first_group.id}/2022-12-09/2022-12-31/"
+        )
         expenses_data = [
             {
                 "id": expense.id,
@@ -196,7 +213,10 @@ class ExpensesTestCase(unittest.TestCase):
                 "amount": expense.amount,
                 "time": data.json()[0]["time"],
                 "category_group": {
-                    "group": {"id": self.first_group.id, "title": self.first_group.title},
+                    "group": {
+                        "id": self.first_group.id,
+                        "title": self.first_group.title,
+                    },
                     "category": {"title": self.category.title, "id": self.category.id},
                 },
             },
@@ -204,15 +224,21 @@ class ExpensesTestCase(unittest.TestCase):
         assert data.json() == expenses_data
 
     def test_read_expenses_by_group_time_range_date_exc(self):
-        data = client.get(f"/expenses/group/{self.first_group.id}/2022-12-31/2022-12-09/")
+        data = client.get(
+            f"/expenses/group/{self.first_group.id}/2022-12-31/2022-12-09/"
+        )
         assert data.status_code == 404
 
     def test_read_expenses_all_time(self) -> None:
         first_expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
         )
         second_expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.second_group.id, category_id=self.category.id
+            user_id=self.user.id,
+            group_id=self.second_group.id,
+            category_id=self.category.id,
         )
         data = client.get(f"/expenses/all-time")
         assert data.status_code == 200
@@ -223,7 +249,10 @@ class ExpensesTestCase(unittest.TestCase):
                 "amount": first_expense.amount,
                 "time": data.json()[0]["time"],
                 "category_group": {
-                    "group": {"id": self.first_group.id, "title": self.first_group.title},
+                    "group": {
+                        "id": self.first_group.id,
+                        "title": self.first_group.title,
+                    },
                     "category": {"title": self.category.title, "id": self.category.id},
                 },
             },
@@ -233,10 +262,13 @@ class ExpensesTestCase(unittest.TestCase):
                 "amount": second_expense.amount,
                 "time": data.json()[1]["time"],
                 "category_group": {
-                    "group": {"id": self.second_group.id, "title": self.second_group.title},
+                    "group": {
+                        "id": self.second_group.id,
+                        "title": self.second_group.title,
+                    },
                     "category": {"title": self.category.title, "id": self.category.id},
                 },
-            }
+            },
         ]
         assert data.json() == expenses_data
 
@@ -247,18 +279,27 @@ class ExpensesTestCase(unittest.TestCase):
     def test_read_expenses_month(self) -> None:
         time = datetime.datetime(2022, 12, 1)
         data = client.get(f"/expenses/2022-12")
-        assert data.json() == []
+        assert not data.json()
 
         first_expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+            time=time,
         )
         second_expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.second_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.second_group.id,
+            category_id=self.category.id,
+            time=time,
         )
 
         time = datetime.datetime(2022, 11, 12)
         ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+            time=time,
         )
 
         data = client.get(f"/expenses/2022-12")
@@ -269,7 +310,10 @@ class ExpensesTestCase(unittest.TestCase):
                 "amount": first_expense.amount,
                 "time": data.json()[0]["time"],
                 "category_group": {
-                    "group": {"id": self.first_group.id, "title": self.first_group.title},
+                    "group": {
+                        "id": self.first_group.id,
+                        "title": self.first_group.title,
+                    },
                     "category": {"title": self.category.title, "id": self.category.id},
                 },
             },
@@ -279,7 +323,10 @@ class ExpensesTestCase(unittest.TestCase):
                 "amount": second_expense.amount,
                 "time": data.json()[1]["time"],
                 "category_group": {
-                    "group": {"id": self.second_group.id, "title": self.second_group.title},
+                    "group": {
+                        "id": self.second_group.id,
+                        "title": self.second_group.title,
+                    },
                     "category": {"title": self.category.title, "id": self.category.id},
                 },
             },
@@ -289,18 +336,27 @@ class ExpensesTestCase(unittest.TestCase):
     def test_read_expenses_time_range(self):
         time = datetime.datetime(2022, 12, 1)
         data = client.get(f"/expenses/2022-12-1/2022-12-12")
-        assert data.json() == []
+        assert not data.json()
 
         first_expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+            time=time,
         )
         second_expense = ExpenseFactory(
-            user_id=self.user.id, group_id=self.second_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.second_group.id,
+            category_id=self.category.id,
+            time=time,
         )
 
         time = datetime.datetime(2022, 11, 13)
         ExpenseFactory(
-            user_id=self.user.id, group_id=self.first_group.id, category_id=self.category.id, time=time
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+            time=time,
         )
 
         data = client.get(f"/expenses/2022-12-1/2022-12-12")
@@ -311,7 +367,10 @@ class ExpensesTestCase(unittest.TestCase):
                 "amount": first_expense.amount,
                 "time": data.json()[0]["time"],
                 "category_group": {
-                    "group": {"id": self.first_group.id, "title": self.first_group.title},
+                    "group": {
+                        "id": self.first_group.id,
+                        "title": self.first_group.title,
+                    },
                     "category": {"title": self.category.title, "id": self.category.id},
                 },
             },
@@ -321,7 +380,10 @@ class ExpensesTestCase(unittest.TestCase):
                 "amount": second_expense.amount,
                 "time": data.json()[1]["time"],
                 "category_group": {
-                    "group": {"id": self.second_group.id, "title": self.second_group.title},
+                    "group": {
+                        "id": self.second_group.id,
+                        "title": self.second_group.title,
+                    },
                     "category": {"title": self.category.title, "id": self.category.id},
                 },
             },
