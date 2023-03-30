@@ -11,9 +11,30 @@ from models import Invitation, ResponseStatus, UserGroup, User, Group, Status
 from services import add_user_in_group
 
 
+def update_invitation_info(db: Session, user_id: int) -> None:
+    db.query(Invitation).filter(
+        and_(
+            Invitation.recipient_id == user_id,
+            Invitation.status == ResponseStatus.PENDING,
+            Invitation.creation_time + datetime.timedelta(days=1)
+            < datetime.datetime.utcnow(),
+        )
+    ).update({Invitation.status: ResponseStatus.OVERDUE})
+    groups = db.query(Group.id).filter(Group.status == Status.INACTIVE)
+    db.query(Invitation).filter(
+        and_(
+            Invitation.recipient_id == user_id,
+            Invitation.status == ResponseStatus.PENDING,
+            Invitation.group_id.in_(groups),
+        )
+    ).update({Invitation.status: ResponseStatus.OVERDUE})
+    db.commit()
+
+
 def response_invitation(
     db: Session, user_id: int, invitation_id: int, response: str
 ) -> schemas.Invitation:
+    update_invitation_info(db, user_id)
     try:
         db_invitation = (
             db.query(Invitation)
@@ -39,15 +60,7 @@ def response_invitation(
 
 
 def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
-    db.query(Invitation).filter(
-        and_(
-            Invitation.recipient_id == user_id,
-            Invitation.status == ResponseStatus.PENDING,
-            Invitation.creation_time + datetime.timedelta(days=1)
-            < datetime.datetime.utcnow(),
-        )
-    ).update({Invitation.status: ResponseStatus.OVERDUE})
-    db.commit()
+    update_invitation_info(db, user_id)
     db_invitations = (
         db.query(Invitation)
         .filter(
