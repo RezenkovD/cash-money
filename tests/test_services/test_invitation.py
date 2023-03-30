@@ -24,41 +24,68 @@ def test_create_invitation(session) -> None:
     second_user = UserFactory()
     group = GroupFactory(admin_id=first_user.id)
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
-    data = CreateInvitation(recipient_id=first_user.id, group_id=group.id)
-    with pytest.raises(HTTPException) as ex_info:
-        create_invitation(session, data, second_user.id)
-    assert "You are not admin in this group!" in str(ex_info.value.detail)
-
     data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
-    db_invitation = create_invitation(session, data, first_user.id)
-    assert db_invitation.status == ResponseStatus.PENDING
-    assert db_invitation.recipient.id == second_user.id
-    assert db_invitation.group.id == group.id
-    assert db_invitation.group.admin.id == first_user.id
+    invitation = create_invitation(session, first_user.id, data)
+    assert invitation.status == ResponseStatus.PENDING
+    assert invitation.recipient.id == second_user.id
+    assert invitation.group.id == group.id
+    assert invitation.group.admin.id == first_user.id
 
+
+def test_create_invitation_as_non_admin(session) -> None:
+    first_user = UserFactory()
+    second_user = UserFactory()
     data = CreateInvitation(recipient_id=second_user.id, group_id=9999)
     with pytest.raises(HTTPException) as ex_info:
-        create_invitation(session, data, first_user.id)
+        create_invitation(session, first_user.id, data)
     assert "You are not admin in this group!" in str(ex_info.value.detail)
 
-    data = CreateInvitation(recipient_id=9999, group_id=group.id)
-    with pytest.raises(HTTPException) as ex_info:
-        create_invitation(session, data, first_user.id)
-    assert "User is not found!" in str(ex_info.value.detail)
 
-    data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
-    with pytest.raises(HTTPException) as ex_info:
-        create_invitation(session, data, first_user.id)
-    assert "The invitation has already been sent. Wait for a reply!" in str(
-        ex_info.value.detail
-    )
-
+def test_create_invitation_to_inactive_group(session) -> None:
+    first_user = UserFactory()
+    second_user = UserFactory()
     group = GroupFactory(admin_id=first_user.id, status=Status.INACTIVE)
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
     data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
     with pytest.raises(HTTPException) as ex_info:
-        create_invitation(session, data, first_user.id)
+        create_invitation(session, first_user.id, data)
     assert "The group is inactive" in str(ex_info.value.detail)
+
+
+def test_create_invitation_to_nonexistent_user(session) -> None:
+    user = UserFactory()
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id)
+    data = CreateInvitation(recipient_id=9999, group_id=group.id)
+    with pytest.raises(HTTPException) as ex_info:
+        create_invitation(session, user.id, data)
+    assert "User is not found!" in str(ex_info.value.detail)
+
+
+def test_create_invitation_to_group_user(session) -> None:
+    first_user = UserFactory()
+    second_user = UserFactory()
+    group = GroupFactory(admin_id=first_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=group.id)
+    UserGroupFactory(user_id=second_user.id, group_id=group.id)
+    data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
+    with pytest.raises(HTTPException) as ex_info:
+        create_invitation(session, first_user.id, data)
+    assert "The recipient is already in this group!" in str(ex_info.value.detail)
+
+
+def test_create_invitation_twice(session) -> None:
+    first_user = UserFactory()
+    second_user = UserFactory()
+    group = GroupFactory(admin_id=first_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=group.id)
+    data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
+    create_invitation(session, first_user.id, data)
+    with pytest.raises(HTTPException) as ex_info:
+        create_invitation(session, first_user.id, data)
+    assert "The invitation has already been sent. Wait for a reply!" in str(
+        ex_info.value.detail
+    )
 
 
 def test_read_invitations(session) -> None:
@@ -69,9 +96,10 @@ def test_read_invitations(session) -> None:
     InvitationFactory(
         sender_id=first_user.id, recipient_id=second_user.id, group_id=group.id
     )
-    db_invitations = read_invitations(session, second_user.id)
+    invitations = read_invitations(session, second_user.id)
     groups = [group]
-    for invitation, group in zip(db_invitations, groups):
+    assert len(invitations) == len(groups)
+    for invitation, group in zip(invitations, groups):
         assert invitation.status == ResponseStatus.PENDING
         assert invitation.group.id == group.id
         assert invitation.group.admin.id == group.admin_id
@@ -86,53 +114,57 @@ def test_response_invitation(session) -> None:
     group = GroupFactory(admin_id=first_user.id)
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
 
-    len_users_group = len(
-        read_users_group(session, group.id, first_user.id).users_group
-    )
-    assert len_users_group == 1
+    users_group = read_users_group(session, group.id, first_user.id).users_group
 
-    invitation = InvitationFactory(
+    assert len(users_group) == 1
+
+    data = InvitationFactory(
         sender_id=first_user.id, recipient_id=second_user.id, group_id=group.id
     )
-    db_invitation = response_invitation(
-        session, ResponseStatus.DENIED, invitation.id, second_user.id
+    invitation = response_invitation(
+        session, second_user.id, data.id, ResponseStatus.DENIED
     )
-    assert db_invitation.id == db_invitation.id
-    assert db_invitation.status == ResponseStatus.DENIED
-    assert db_invitation.group.id == group.id
-    assert db_invitation.group.admin.id == first_user.id
-    assert db_invitation.creation_time.strftime(
+    assert invitation.id == data.id
+    assert invitation.status == ResponseStatus.DENIED
+    assert invitation.group.id == group.id
+    assert invitation.group.admin.id == first_user.id
+    assert invitation.creation_time.strftime(
         "%Y-%m-%d"
     ) == datetime.date.today().strftime("%Y-%m-%d")
-    assert db_invitation.recipient.id == second_user.id
+    assert invitation.recipient.id == second_user.id
 
-    db_users_group = read_users_group(session, group.id, first_user.id).users_group
+    users_group = read_users_group(session, group.id, first_user.id).users_group
     users = [first_user]
-    for user_group, user in zip(db_users_group, users):
+    assert len(users_group) == len(users)
+    for user_group, user in zip(users_group, users):
         assert user_group.user.id == user.id
         assert user_group.status == Status.ACTIVE
 
-    invitation = InvitationFactory(
+    data = InvitationFactory(
         sender_id=first_user.id, recipient_id=second_user.id, group_id=group.id
     )
-    db_invitation = response_invitation(
-        session, ResponseStatus.ACCEPTED, invitation.id, second_user.id
+    invitation = response_invitation(
+        session, second_user.id, data.id, ResponseStatus.ACCEPTED
     )
-    assert db_invitation.id == db_invitation.id
-    assert db_invitation.status == ResponseStatus.ACCEPTED
-    assert db_invitation.group.id == group.id
-    assert db_invitation.group.admin.id == first_user.id
-    assert db_invitation.creation_time.strftime(
+    assert invitation.id == invitation.id
+    assert invitation.status == ResponseStatus.ACCEPTED
+    assert invitation.group.id == group.id
+    assert invitation.group.admin.id == first_user.id
+    assert invitation.creation_time.strftime(
         "%Y-%m-%d"
     ) == datetime.date.today().strftime("%Y-%m-%d")
-    assert db_invitation.recipient.id == second_user.id
+    assert invitation.recipient.id == second_user.id
 
     users.append(second_user)
-    for user_group, user in zip(db_users_group, users):
+    users_group = read_users_group(session, group.id, first_user.id).users_group
+    assert len(users_group) == len(users)
+    for user_group, user in zip(users_group, users):
         assert user_group.user.id == user.id
         assert user_group.status == Status.ACTIVE
 
-    data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
+
+def test_response_invitation_not_found(session) -> None:
+    user = UserFactory()
     with pytest.raises(HTTPException) as ex_info:
-        create_invitation(session, data, first_user.id)
-    assert "The recipient is already in this group!" in str(ex_info.value.detail)
+        response_invitation(session, user.id, 9999, ResponseStatus.DENIED)
+    assert "Invitation is not found" in str(ex_info.value.detail)

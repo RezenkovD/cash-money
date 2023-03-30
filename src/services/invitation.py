@@ -12,7 +12,7 @@ from services import add_user_in_group
 
 
 def response_invitation(
-    db: Session, response: str, invitation_id: int, user_id: int
+    db: Session, user_id: int, invitation_id: int, response: str
 ) -> schemas.Invitation:
     try:
         db_invitation = (
@@ -68,7 +68,7 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
 
 
 def create_invitation(
-    db: Session, data: schemas.CreateInvitation, user_id: int
+    db: Session, user_id: int, data: schemas.CreateInvitation
 ) -> schemas.Invitation:
     try:
         db_group = (

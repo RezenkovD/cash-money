@@ -34,36 +34,6 @@ class InvitationTestCase(unittest.TestCase):
         self.second_group = GroupFactory(admin_id=self.second_user.id)
         UserGroupFactory(user_id=self.second_user.id, group_id=self.second_group.id)
 
-    def test_read_invitations(self) -> None:
-        invitation = InvitationFactory(
-            sender_id=self.second_user.id,
-            recipient_id=self.first_user.id,
-            group_id=self.second_group.id,
-        )
-        data = client.get("invitations/list/")
-        assert data.status_code == 200
-        data_invitation = [
-            {
-                "id": invitation.id,
-                "status": invitation.status,
-                "group": {
-                    "title": self.second_group.title,
-                    "description": self.second_group.description,
-                    "id": self.second_group.id,
-                    "status": models.Status.ACTIVE,
-                    "admin": {
-                        "id": self.second_user.id,
-                        "login": self.second_user.login,
-                        "first_name": self.second_user.first_name,
-                        "last_name": self.second_user.last_name,
-                        "picture": self.second_user.picture,
-                    },
-                },
-                "creation_time": datetime.date.today().strftime("%Y-%m-%d"),
-            }
-        ]
-        assert data_invitation == data.json()
-
     def test_create_invitation(self) -> None:
         data = client.post(
             "/invitations/",
@@ -98,24 +68,14 @@ class InvitationTestCase(unittest.TestCase):
         }
         assert data == invitation_data
 
-        data = client.post(
-            "/invitations/",
-            json={"group_id": self.first_group.id, "recipient_id": self.second_user.id},
-        )
-        assert data.status_code == 405
-
-        data = client.post(
-            "/invitations/",
-            json={"group_id": self.first_group.id, "recipient_id": 9999},
-        )
-        assert data.status_code == 404
-
+    def test_create_invitation_as_non_admin(self) -> None:
         data = client.post(
             "/invitations/",
             json={"group_id": 9999, "recipient_id": self.second_user.id},
         )
         assert data.status_code == 404
 
+    def test_create_invitation_to_inactive_group(self) -> None:
         third_group = GroupFactory(
             admin_id=self.first_user.id, status=models.Status.INACTIVE
         )
@@ -125,6 +85,63 @@ class InvitationTestCase(unittest.TestCase):
             json={"group_id": third_group.id, "recipient_id": self.second_user.id},
         )
         assert data.status_code == 405
+
+    def test_create_invitation_to_nonexistent_user(self) -> None:
+        data = client.post(
+            "/invitations/",
+            json={"group_id": self.first_group.id, "recipient_id": 9999},
+        )
+        assert data.status_code == 404
+
+    def test_create_invitation_to_group_user(self) -> None:
+        UserGroupFactory(user_id=self.second_user.id, group_id=self.first_group.id)
+        data = client.post(
+            "/invitations/",
+            json={"group_id": self.first_group.id, "recipient_id": self.second_user.id},
+        )
+        assert data.status_code == 405
+
+    def test_create_invitation_twice(self) -> None:
+        data = client.post(
+            "/invitations/",
+            json={"group_id": self.first_group.id, "recipient_id": self.second_user.id},
+        )
+        assert data.status_code == 200
+        data = client.post(
+            "/invitations/",
+            json={"group_id": self.first_group.id, "recipient_id": self.second_user.id},
+        )
+        assert data.status_code == 405
+
+    def test_read_invitations(self) -> None:
+        invitation = InvitationFactory(
+            sender_id=self.second_user.id,
+            recipient_id=self.first_user.id,
+            group_id=self.second_group.id,
+        )
+        data = client.get("invitations/list/")
+        assert data.status_code == 200
+        data_invitation = [
+            {
+                "id": invitation.id,
+                "status": invitation.status,
+                "group": {
+                    "title": self.second_group.title,
+                    "description": self.second_group.description,
+                    "id": self.second_group.id,
+                    "status": models.Status.ACTIVE,
+                    "admin": {
+                        "id": self.second_user.id,
+                        "login": self.second_user.login,
+                        "first_name": self.second_user.first_name,
+                        "last_name": self.second_user.last_name,
+                        "picture": self.second_user.picture,
+                    },
+                },
+                "creation_time": datetime.date.today().strftime("%Y-%m-%d"),
+            }
+        ]
+        assert data_invitation == data.json()
 
     def test_response_invitation(self) -> None:
         invitation = InvitationFactory(
@@ -166,6 +183,12 @@ class InvitationTestCase(unittest.TestCase):
         group_users = client.get(f"/groups/{self.second_group.id}/users/")
         assert group_users.status_code == 200
         group_users = group_users.json()["users_group"]
+        assert len(group_users) == len(users)
         for group_user, user in zip(group_users, users):
             assert group_user["user"]["id"] == user.id
             assert group_user["status"] == models.Status.ACTIVE
+
+    def test_response_invitation_not_found(self) -> None:
+        response = models.UserResponse.ACCEPTED
+        data = client.post(f"invitations/response/{9999}?response={response}")
+        assert data.status_code == 404

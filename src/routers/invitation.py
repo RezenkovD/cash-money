@@ -18,26 +18,28 @@ router = APIRouter(
 
 @router.post("/", response_model=schemas.Invitation)
 def create_invitation(
-    data: schemas.CreateInvitation,
-    current_user: models.User = Depends(get_current_user),
+    *,
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+    data: schemas.CreateInvitation,
 ) -> schemas.Invitation:
-    return services.create_invitation(db, data, current_user.id)
+    return services.create_invitation(db, current_user.id, data)
 
 
 @router.get("/list/", response_model=List[schemas.BaseInvitation])
 def read_invitation(
-    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ) -> List[schemas.BaseInvitation]:
     return services.read_invitations(db, current_user.id)
 
 
 @router.post("/response/{invitation_id}/", response_model=schemas.Invitation)
 def response_invitation(
-    response: models.UserResponse,
-    invitation_id: int,
-    current_user: models.User = Depends(get_current_user),
+    *,
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+    invitation_id: int,
+    response: models.UserResponse,
 ) -> schemas.Invitation:
-    return services.response_invitation(db, response, invitation_id, current_user.id)
+    return services.response_invitation(db, current_user.id, invitation_id, response)
