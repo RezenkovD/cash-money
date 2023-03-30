@@ -49,10 +49,10 @@ def disband_group(db: Session, group_id: int) -> schemas.UsersGroup:
     db_group = db.query(models.Group).filter_by(id=group_id).one()
     db_group.status = models.Status.INACTIVE
     db.commit()
-    db_users_group = db.query(models.UserGroup).filter_by(group_id=group_id).all()
-    for user in db_users_group:
-        user.status = models.Status.INACTIVE
-        db.commit()
+    db.query(models.UserGroup).filter_by(group_id=group_id).update(
+        {models.UserGroup.status: models.Status.INACTIVE}
+    )
+    db.commit()
     db_users_group = (
         db.query(models.Group)
         .options(joinedload(models.Group.users_group))

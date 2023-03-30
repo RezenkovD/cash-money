@@ -39,21 +39,15 @@ def response_invitation(
 
 
 def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
-    db_overdue_invitations = (
-        db.query(Invitation)
-        .filter(
-            and_(
-                Invitation.recipient_id == user_id,
-                Invitation.status == ResponseStatus.PENDING,
-                Invitation.creation_time + datetime.timedelta(days=1)
-                < datetime.datetime.utcnow(),
-            )
+    db.query(Invitation).filter(
+        and_(
+            Invitation.recipient_id == user_id,
+            Invitation.status == ResponseStatus.PENDING,
+            Invitation.creation_time + datetime.timedelta(days=1)
+            < datetime.datetime.utcnow(),
         )
-        .all()
-    )
-    for invitation in db_overdue_invitations:
-        invitation.status = ResponseStatus.OVERDUE
-        db.commit()
+    ).update({Invitation.status: ResponseStatus.OVERDUE})
+    db.commit()
     db_invitations = (
         db.query(Invitation)
         .filter(
