@@ -21,7 +21,7 @@ async def login(request: Request):
 
 
 @router.get("/auth/")
-async def auth(request: Request, db: Session = Depends(get_db)):
+async def auth(*, db: Session = Depends(get_db), request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as error:
