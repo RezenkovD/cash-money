@@ -34,7 +34,7 @@ def response_invitation(
     db_invitation.status = response
     db.commit()
     if response == ResponseStatus.ACCEPTED:
-        add_user_in_group(db, db_invitation.group_id, user_id)
+        add_user_in_group(db, user_id, db_invitation.group_id)
     return db_invitation
 
 

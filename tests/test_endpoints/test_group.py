@@ -97,6 +97,7 @@ class GroupTestCase(unittest.TestCase):
         data = data.json()
         assert data == user_group_data
 
+    def test_leave_group_not_found(self) -> None:
         data = client.post(f"/groups/9999/leave/")
         assert data.status_code == 404
 
@@ -121,9 +122,6 @@ class GroupTestCase(unittest.TestCase):
         }
         assert data == user_group_data
 
-        data = client.post(f"/groups/9999/leave/")
-        assert data.status_code == 404
-
     def test_remove_user(self) -> None:
         second_user = UserFactory()
         UserGroupFactory(user_id=second_user.id, group_id=self.group.id)
@@ -142,9 +140,17 @@ class GroupTestCase(unittest.TestCase):
         assert data.status_code == 200
         assert data.json() == user_group_data
 
+    def test_remove_inactive_user(self) -> None:
+        second_user = UserFactory()
+        UserGroupFactory(
+            user_id=second_user.id, group_id=self.group.id, status=Status.INACTIVE
+        )
         data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}/")
         assert data.status_code == 405
 
+    def test_remove_admin(self) -> None:
+        second_user = UserFactory()
+        UserGroupFactory(user_id=second_user.id, group_id=self.group.id)
         data = client.post(f"/groups/{self.group.id}/remove/{self.user.id}/")
         assert data.status_code == 200
         users_group_data = {
@@ -175,14 +181,16 @@ class GroupTestCase(unittest.TestCase):
         }
         assert data.json() == users_group_data
 
+    def test_remove_user_as_non_admin(self) -> None:
+        second_user = UserFactory()
+        second_group = GroupFactory(admin_id=second_user.id)
+        data = client.post(f"/groups/{second_group.id}/remove/{second_user.id}/")
+        assert data.status_code == 404
+
     def test_read_categories_group(self) -> None:
         data = client.get(f"/groups/{self.group.id}/categories/")
         assert data.status_code == 200
         assert data.json() == {"categories_group": []}
-
-        data = client.get(f"/groups/9999/categories/")
-        assert data.status_code == 405
-
         category = CategoryFactory()
         CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
         data = client.get(f"/groups/{self.group.id}/categories/")
@@ -198,3 +206,7 @@ class GroupTestCase(unittest.TestCase):
             ]
         }
         assert data.json() == categories_group_data
+
+    def test_read_categories_group_as_non_user_group(self) -> None:
+        data = client.get(f"/groups/9999/categories/")
+        assert data.status_code == 405

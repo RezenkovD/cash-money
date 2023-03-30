@@ -114,7 +114,7 @@ def test_response_invitation(session) -> None:
     group = GroupFactory(admin_id=first_user.id)
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
 
-    users_group = read_users_group(session, group.id, first_user.id).users_group
+    users_group = read_users_group(session, first_user.id, group.id).users_group
 
     assert len(users_group) == 1
 
@@ -133,7 +133,7 @@ def test_response_invitation(session) -> None:
     ) == datetime.date.today().strftime("%Y-%m-%d")
     assert invitation.recipient.id == second_user.id
 
-    users_group = read_users_group(session, group.id, first_user.id).users_group
+    users_group = read_users_group(session, first_user.id, group.id).users_group
     users = [first_user]
     assert len(users_group) == len(users)
     for user_group, user in zip(users_group, users):
@@ -156,7 +156,7 @@ def test_response_invitation(session) -> None:
     assert invitation.recipient.id == second_user.id
 
     users.append(second_user)
-    users_group = read_users_group(session, group.id, first_user.id).users_group
+    users_group = read_users_group(session, first_user.id, group.id).users_group
     assert len(users_group) == len(users)
     for user_group, user in zip(users_group, users):
         assert user_group.user.id == user.id
