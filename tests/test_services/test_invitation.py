@@ -9,7 +9,7 @@ from services import (
     create_invitation,
     read_invitations,
     response_invitation,
-    read_users_group,
+    read_users_group, leave_group,
 )
 from tests.factories import (
     UserFactory,
@@ -167,4 +167,20 @@ def test_response_invitation_not_found(session) -> None:
     user = UserFactory()
     with pytest.raises(HTTPException) as ex_info:
         response_invitation(session, user.id, 9999, ResponseStatus.DENIED)
+    assert "Invitation is not found" in str(ex_info.value.detail)
+
+
+def test_response_invitation_in_inactive_group(session) -> None:
+    first_user = UserFactory()
+    second_user = UserFactory()
+    group = GroupFactory(admin_id=first_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=group.id)
+    invitation = InvitationFactory(
+        sender_id=first_user.id,
+        recipient_id=second_user.id,
+        group_id=group.id,
+    )
+    leave_group(session, first_user.id, group.id)
+    with pytest.raises(HTTPException) as ex_info:
+        response_invitation(session, second_user.id, invitation.id, ResponseStatus.ACCEPTED)
     assert "Invitation is not found" in str(ex_info.value.detail)

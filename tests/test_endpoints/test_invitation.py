@@ -192,3 +192,28 @@ class InvitationTestCase(unittest.TestCase):
         response = models.UserResponse.ACCEPTED
         data = client.post(f"invitations/response/{9999}?response={response}")
         assert data.status_code == 404
+
+    def test_response_invitation_in_inactive_group(self) -> None:
+        group = GroupFactory(admin_id=self.first_user.id)
+        UserGroupFactory(user_id=self.first_user.id, group_id=group.id)
+        invitation = InvitationFactory(
+            sender_id=self.first_user.id,
+            recipient_id=self.second_user.id,
+            group_id=group.id,
+        )
+        data = client.post(f"/groups/{group.id}/leave/")
+        assert data.status_code == 200
+
+        user_dict = {
+            "userinfo": {
+                "email": self.second_user.login,
+                "given_name": self.second_user.first_name,
+                "family_name": self.second_user.last_name,
+                "picture": self.second_user.picture,
+            }
+        }
+        oauth.google.authorize_access_token = Mock(return_value=async_return(user_dict))
+        client.get("/auth/")
+        response = models.UserResponse.ACCEPTED
+        data = client.post(f"invitations/response/{invitation.id}?response={response}")
+        assert data.status_code == 404
