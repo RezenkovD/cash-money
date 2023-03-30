@@ -14,13 +14,13 @@ router = APIRouter(
 )
 
 
-@router.get("/login/")
+@router.get("/login")
 async def login(request: Request):
     redirect_uri = request.url_for("auth")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
-@router.get("/auth/")
+@router.get("/auth")
 async def auth(*, db: Session = Depends(get_db), request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
@@ -42,7 +42,7 @@ async def auth(*, db: Session = Depends(get_db), request: Request):
     return RedirectResponse(url="/")
 
 
-@router.get("/logout/")
+@router.get("/logout")
 async def logout(request: Request):
     request.session.pop("user", None)
     return RedirectResponse(url="/")
