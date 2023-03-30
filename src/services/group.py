@@ -11,7 +11,7 @@ import models
 
 
 def remove_user(
-    db: Session, group_id: int, user_id: int, admin_id: int
+    db: Session, admin_id: int, group_id: int, user_id: int
 ) -> Union[schemas.AboutUsers, schemas.UsersGroup]:
     try:
         db.query(models.Group).filter(
@@ -42,17 +42,17 @@ def remove_user(
     if admin_id == user_id:
         return disband_group(db, group_id)
     else:
-        return leave_group(db, group_id, user_id)
+        return leave_group(db, user_id, group_id)
 
 
 def disband_group(db: Session, group_id: int) -> schemas.UsersGroup:
     db_group = db.query(models.Group).filter_by(id=group_id).one()
     db_group.status = models.Status.INACTIVE
     db.commit()
-    db_users_group = db.query(models.UserGroup).filter_by(group_id=group_id).all()
-    for user in db_users_group:
-        user.status = models.Status.INACTIVE
-        db.commit()
+    db.query(models.UserGroup).filter_by(group_id=group_id).update(
+        {models.UserGroup.status: models.Status.INACTIVE}
+    )
+    db.commit()
     db_users_group = (
         db.query(models.Group)
         .options(joinedload(models.Group.users_group))
@@ -63,7 +63,7 @@ def disband_group(db: Session, group_id: int) -> schemas.UsersGroup:
 
 
 def leave_group(
-    db: Session, group_id: int, user_id: int
+    db: Session, user_id: int, group_id: int
 ) -> Union[schemas.AboutUsers, schemas.UsersGroup]:
     db_admin_group = (
         db.query(models.Group)
@@ -94,7 +94,7 @@ def leave_group(
 
 
 def create_group(
-    db: Session, group: schemas.CreateGroup, user_id: int
+    db: Session, user_id: int, group: schemas.CreateGroup
 ) -> schemas.Group:
     db_group = models.Group(
         **group.dict(), admin_id=user_id, status=models.Status.ACTIVE
@@ -102,11 +102,11 @@ def create_group(
     db.add(db_group)
     db.commit()
     db.refresh(db_group)
-    add_user_in_group(db, db_group.id, user_id)
+    add_user_in_group(db, user_id, db_group.id)
     return db_group
 
 
-def add_user_in_group(db: Session, group_id: int, user_id: int) -> None:
+def add_user_in_group(db: Session, user_id: int, group_id: int) -> None:
     db_user_group = (
         db.query(models.UserGroup)
         .filter(
@@ -134,7 +134,7 @@ def add_user_in_group(db: Session, group_id: int, user_id: int) -> None:
         db.refresh(db_user_group)
 
 
-def read_users_group(db: Session, group_id: int, user_id: int) -> schemas.UsersGroup:
+def read_users_group(db: Session, user_id: int, group_id: int) -> schemas.UsersGroup:
     try:
         (
             db.query(models.UserGroup)
@@ -170,12 +170,16 @@ def read_user_groups(db: Session, user_id: int) -> schemas.UserGroups:
     return db_query
 
 
-def read_categories_group(db: Session, group_id: int, user_id: int) -> schemas.CategoriesGroup:
+def read_categories_group(
+    db: Session, user_id: int, group_id: int
+) -> schemas.CategoriesGroup:
     try:
-        db.query(models.UserGroup).filter(and_(
-            models.UserGroup.group_id == group_id,
-            models.UserGroup.user_id == user_id,
-        )).one()
+        db.query(models.UserGroup).filter(
+            and_(
+                models.UserGroup.group_id == group_id,
+                models.UserGroup.user_id == user_id,
+            )
+        ).one()
     except exc.NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,

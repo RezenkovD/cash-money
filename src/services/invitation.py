@@ -12,7 +12,7 @@ from services import add_user_in_group
 
 
 def response_invitation(
-    db: Session, response: str, invitation_id: int, user_id: int
+    db: Session, user_id: int, invitation_id: int, response: str
 ) -> schemas.Invitation:
     try:
         db_invitation = (
@@ -34,26 +34,20 @@ def response_invitation(
     db_invitation.status = response
     db.commit()
     if response == ResponseStatus.ACCEPTED:
-        add_user_in_group(db, db_invitation.group_id, user_id)
+        add_user_in_group(db, user_id, db_invitation.group_id)
     return db_invitation
 
 
 def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
-    db_overdue_invitations = (
-        db.query(Invitation)
-        .filter(
-            and_(
-                Invitation.recipient_id == user_id,
-                Invitation.status == ResponseStatus.PENDING,
-                Invitation.creation_time + datetime.timedelta(days=1)
-                < datetime.datetime.now(),
-            )
+    db.query(Invitation).filter(
+        and_(
+            Invitation.recipient_id == user_id,
+            Invitation.status == ResponseStatus.PENDING,
+            Invitation.creation_time + datetime.timedelta(days=1)
+            < datetime.datetime.utcnow(),
         )
-        .all()
-    )
-    for invitation in db_overdue_invitations:
-        invitation.status = ResponseStatus.OVERDUE
-        db.commit()
+    ).update({Invitation.status: ResponseStatus.OVERDUE})
+    db.commit()
     db_invitations = (
         db.query(Invitation)
         .filter(
@@ -68,7 +62,7 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
 
 
 def create_invitation(
-    db: Session, data: schemas.CreateInvitation, user_id: int
+    db: Session, user_id: int, data: schemas.CreateInvitation
 ) -> schemas.Invitation:
     try:
         db_group = (

@@ -5,7 +5,7 @@ from fastapi import Depends, APIRouter
 
 from database import get_db
 from dependencies import get_current_user
-import models
+from models import User
 import schemas
 import services
 
@@ -17,12 +17,12 @@ router = APIRouter(
 
 @router.get("/", response_model=List[schemas.User])
 def read_users(db: Session = Depends(get_db)) -> List[schemas.User]:
-    return db.query(models.User).all()
+    return db.query(User).all()
 
 
 @router.get("/groups/", response_model=schemas.UserGroups)
 def read_user_groups(
-    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> schemas.UserGroups:
     return services.read_user_groups(db, current_user.id)

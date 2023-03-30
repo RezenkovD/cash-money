@@ -8,7 +8,7 @@ import models
 
 
 def create_category(
-    db: Session, group_id: int, category: schemas.CreateCategory, user_id: int
+    db: Session, user_id: int, group_id: int, category: schemas.CreateCategory
 ) -> schemas.Category:
     try:
         group = (

@@ -1,18 +1,13 @@
 from datetime import date
 from typing import List
 
-from pydantic import BaseModel
 
 from schemas import User
+from schemas.base_model import BaseModel
 from schemas.category import Category
 
 
-class OurBaseModel(BaseModel):
-    class Config:
-        orm_mode = True
-
-
-class CreateGroup(OurBaseModel):
+class CreateGroup(BaseModel):
     title: str
     description: str
 
@@ -21,7 +16,7 @@ class BaseGroup(CreateGroup):
     status: str
 
 
-class ShortGroup(OurBaseModel):
+class ShortGroup(BaseModel):
     id: int
     title: str
 
@@ -31,29 +26,29 @@ class Group(BaseGroup):
     admin: User
 
 
-class AboutUsers(OurBaseModel):
+class AboutUsers(BaseModel):
     user: User
     status: str
     date_join: date
 
 
-class UsersGroup(OurBaseModel):
+class UsersGroup(BaseModel):
     users_group: List[AboutUsers]
 
 
-class AboutGroups(OurBaseModel):
+class AboutGroup(BaseModel):
     group: BaseGroup
     status: str
     date_join: date
 
 
-class UserGroups(OurBaseModel):
-    user_groups: List[AboutGroups]
+class UserGroups(BaseModel):
+    user_groups: List[AboutGroup]
 
 
-class AboutCategories(OurBaseModel):
+class AboutCategories(BaseModel):
     category: Category
 
 
-class CategoriesGroup(OurBaseModel):
+class CategoriesGroup(BaseModel):
     categories_group: List[AboutCategories]

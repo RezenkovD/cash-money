@@ -6,7 +6,13 @@ from dependencies import oauth
 from models import Status
 from schemas import CreateGroup
 from tests.conftest import client, async_return
-from tests.factories import UserFactory, GroupFactory, UserGroupFactory, CategoryFactory, CategoryGroupFactory
+from tests.factories import (
+    UserFactory,
+    GroupFactory,
+    UserGroupFactory,
+    CategoryFactory,
+    CategoryGroupFactory,
+)
 
 
 class GroupTestCase(unittest.TestCase):
@@ -50,7 +56,7 @@ class GroupTestCase(unittest.TestCase):
         assert data.json() == group_data
 
     def test_read_users_group(self) -> None:
-        data = client.get(f"/groups/{self.group.id}/users")
+        data = client.get(f"/groups/{self.group.id}/users/")
         assert data.status_code == 200
         data = data.json()
         users_group_data = {
@@ -86,11 +92,12 @@ class GroupTestCase(unittest.TestCase):
                 "picture": self.user.picture,
             },
             "status": Status.INACTIVE,
-            "date_join": datetime.date.today().strftime("%Y-%m-%d")
+            "date_join": datetime.date.today().strftime("%Y-%m-%d"),
         }
         data = data.json()
         assert data == user_group_data
 
+    def test_leave_group_not_found(self) -> None:
         data = client.post(f"/groups/9999/leave/")
         assert data.status_code == 404
 
@@ -109,37 +116,42 @@ class GroupTestCase(unittest.TestCase):
                         "picture": self.user.picture,
                     },
                     "status": Status.INACTIVE,
-                    "date_join": datetime.date.today().strftime("%Y-%m-%d")
+                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 }
             ]
         }
         assert data == user_group_data
 
-        data = client.post(f"/groups/9999/leave/")
-        assert data.status_code == 404
-
     def test_remove_user(self) -> None:
         second_user = UserFactory()
         UserGroupFactory(user_id=second_user.id, group_id=self.group.id)
-        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}")
+        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}/")
         user_group_data = {
             "user": {
                 "id": second_user.id,
                 "login": second_user.login,
                 "first_name": second_user.first_name,
                 "last_name": second_user.last_name,
-                "picture": second_user.picture
+                "picture": second_user.picture,
             },
             "status": Status.INACTIVE,
-            "date_join": datetime.date.today().strftime("%Y-%m-%d")
+            "date_join": datetime.date.today().strftime("%Y-%m-%d"),
         }
         assert data.status_code == 200
         assert data.json() == user_group_data
 
-        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}")
+    def test_remove_inactive_user(self) -> None:
+        second_user = UserFactory()
+        UserGroupFactory(
+            user_id=second_user.id, group_id=self.group.id, status=Status.INACTIVE
+        )
+        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}/")
         assert data.status_code == 405
 
-        data = client.post(f"/groups/{self.group.id}/remove/{self.user.id}")
+    def test_remove_admin(self) -> None:
+        second_user = UserFactory()
+        UserGroupFactory(user_id=second_user.id, group_id=self.group.id)
+        data = client.post(f"/groups/{self.group.id}/remove/{self.user.id}/")
         assert data.status_code == 200
         users_group_data = {
             "users_group": [
@@ -152,7 +164,7 @@ class GroupTestCase(unittest.TestCase):
                         "picture": self.user.picture,
                     },
                     "status": Status.INACTIVE,
-                    "date_join": datetime.date.today().strftime("%Y-%m-%d")
+                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 },
                 {
                     "user": {
@@ -160,23 +172,25 @@ class GroupTestCase(unittest.TestCase):
                         "login": second_user.login,
                         "first_name": second_user.first_name,
                         "last_name": second_user.last_name,
-                        "picture": second_user.picture
+                        "picture": second_user.picture,
                     },
                     "status": Status.INACTIVE,
-                    "date_join": datetime.date.today().strftime("%Y-%m-%d")
-                }
+                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
+                },
             ]
         }
         assert data.json() == users_group_data
+
+    def test_remove_user_as_non_admin(self) -> None:
+        second_user = UserFactory()
+        second_group = GroupFactory(admin_id=second_user.id)
+        data = client.post(f"/groups/{second_group.id}/remove/{second_user.id}/")
+        assert data.status_code == 404
 
     def test_read_categories_group(self) -> None:
         data = client.get(f"/groups/{self.group.id}/categories/")
         assert data.status_code == 200
         assert data.json() == {"categories_group": []}
-
-        data = client.get(f"/groups/9999/categories/")
-        assert data.status_code == 405
-
         category = CategoryFactory()
         CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
         data = client.get(f"/groups/{self.group.id}/categories/")
@@ -192,3 +206,7 @@ class GroupTestCase(unittest.TestCase):
             ]
         }
         assert data.json() == categories_group_data
+
+    def test_read_categories_group_as_non_user_group(self) -> None:
+        data = client.get(f"/groups/9999/categories/")
+        assert data.status_code == 405
