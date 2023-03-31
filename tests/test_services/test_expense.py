@@ -29,7 +29,7 @@ def test_create_expense(session) -> None:
     db_expenses = session.query(models.Expense).all()
     assert len(db_expenses) == 1
     assert data.descriptions == expense.descriptions
-    assert data.amount == expense.amount
+    assert float(data.amount) == expense.amount
     assert data.time.strftime("%Y-%m-%d %H:%M") == datetime.datetime.utcnow().strftime(
         "%Y-%m-%d %H:%M"
     )

@@ -12,7 +12,9 @@ class CreateGroup(BaseModel):
     description: str
 
 
-class BaseGroup(CreateGroup):
+class BaseGroup(BaseModel):
+    title: str
+    description: str
     status: str
 
 
@@ -26,14 +28,14 @@ class Group(BaseGroup):
     admin: User
 
 
-class AboutUsers(BaseModel):
+class AboutUser(BaseModel):
     user: User
     status: str
     date_join: date
 
 
 class UsersGroup(BaseModel):
-    users_group: List[AboutUsers]
+    users_group: List[AboutUser]
 
 
 class AboutGroup(BaseModel):
@@ -46,9 +48,9 @@ class UserGroups(BaseModel):
     user_groups: List[AboutGroup]
 
 
-class AboutCategories(BaseModel):
+class AboutCategory(BaseModel):
     category: Category
 
 
 class CategoriesGroup(BaseModel):
-    categories_group: List[AboutCategories]
+    categories_group: List[AboutCategory]

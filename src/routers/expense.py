@@ -9,10 +9,9 @@ from dependencies import (
     transform_date_or_422,
     transform_exact_date_or_422,
 )
-import models
-import schemas
+from schemas import BaseExpense, CreateExpense, UserExpense
+from models import User
 import services
-
 
 router = APIRouter(
     prefix="/expenses",
@@ -20,35 +19,35 @@ router = APIRouter(
 )
 
 
-@router.post("/group/{group_id}/", response_model=schemas.BaseExpense)
+@router.post("/group/{group_id}/", response_model=BaseExpense)
 def create_expense(
     *,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     group_id: int,
-    expense: schemas.CreateExpense,
-) -> schemas.BaseExpense:
+    expense: CreateExpense,
+) -> BaseExpense:
     return services.create_expense(db, current_user.id, group_id, expense)
 
 
-@router.get("/group/{group_id}/all-time/", response_model=List[schemas.UserExpense])
+@router.get("/group/{group_id}/all-time/", response_model=List[UserExpense])
 def read_expenses_by_group_all_time(
     *,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     group_id: int,
-) -> List[schemas.UserExpense]:
+) -> List[UserExpense]:
     return services.read_expenses(db=db, user_id=current_user.id, group_id=group_id)
 
 
-@router.get("/group/{group_id}/{year_month}/", response_model=List[schemas.UserExpense])
+@router.get("/group/{group_id}/{year_month}/", response_model=List[UserExpense])
 def read_expenses_by_group_month(
     *,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     group_id: int,
     year_month: str,
-) -> List[schemas.UserExpense]:
+) -> List[UserExpense]:
     filter_date = transform_date_or_422(year_month)
     return services.read_expenses(
         db=db, user_id=current_user.id, group_id=group_id, filter_date=filter_date
@@ -57,16 +56,16 @@ def read_expenses_by_group_month(
 
 @router.get(
     "/group/{group_id}/{start_date}/{end_date}/",
-    response_model=List[schemas.UserExpense],
+    response_model=List[UserExpense],
 )
 def read_expenses_by_group_time_range(
     *,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     group_id: int,
     start_date: str,
     end_date: str,
-) -> List[schemas.UserExpense]:
+) -> List[UserExpense]:
     start_date = transform_exact_date_or_422(start_date)
     end_date = transform_exact_date_or_422(end_date)
     return services.read_expenses(
@@ -78,35 +77,35 @@ def read_expenses_by_group_time_range(
     )
 
 
-@router.get("/all-time/", response_model=List[schemas.UserExpense])
+@router.get("/all-time/", response_model=List[UserExpense])
 def read_expenses_all_time(
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
-) -> List[schemas.UserExpense]:
+    current_user: User = Depends(get_current_user),
+) -> List[UserExpense]:
     return services.read_expenses(db=db, user_id=current_user.id)
 
 
-@router.get("/{year_month}/", response_model=List[schemas.UserExpense])
+@router.get("/{year_month}/", response_model=List[UserExpense])
 def read_expenses_month(
     *,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     year_month: str,
-) -> List[schemas.UserExpense]:
+) -> List[UserExpense]:
     filter_date = transform_date_or_422(year_month)
     return services.read_expenses(
         db=db, user_id=current_user.id, filter_date=filter_date
     )
 
 
-@router.get("/{start_date}/{end_date}/", response_model=List[schemas.UserExpense])
+@router.get("/{start_date}/{end_date}/", response_model=List[UserExpense])
 def read_expenses_time_range(
     *,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     start_date: str,
     end_date: str,
-) -> List[schemas.UserExpense]:
+) -> List[UserExpense]:
     start_date = transform_exact_date_or_422(start_date)
     end_date = transform_exact_date_or_422(end_date)
     return services.read_expenses(

@@ -1,6 +1,6 @@
-from pydantic import BaseModel as BM
+from pydantic import BaseModel as BaseSchema
 
 
-class BaseModel(BM):
+class BaseModel(BaseSchema):
     class Config:
         orm_mode = True

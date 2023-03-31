@@ -134,7 +134,7 @@ class ExpensesTestCase(unittest.TestCase):
             {
                 "id": first_expense.id,
                 "descriptions": first_expense.descriptions,
-                "amount": first_expense.amount,
+                "amount": float(first_expense.amount),
                 "time": data.json()[0]["time"],
                 "category_group": {
                     "group": {
@@ -175,7 +175,7 @@ class ExpensesTestCase(unittest.TestCase):
             {
                 "id": expense.id,
                 "descriptions": expense.descriptions,
-                "amount": expense.amount,
+                "amount": float(expense.amount),
                 "time": data.json()[0]["time"],
                 "category_group": {
                     "group": {
@@ -210,7 +210,7 @@ class ExpensesTestCase(unittest.TestCase):
             {
                 "id": expense.id,
                 "descriptions": expense.descriptions,
-                "amount": expense.amount,
+                "amount": float(expense.amount),
                 "time": data.json()[0]["time"],
                 "category_group": {
                     "group": {
@@ -246,7 +246,7 @@ class ExpensesTestCase(unittest.TestCase):
             {
                 "id": first_expense.id,
                 "descriptions": first_expense.descriptions,
-                "amount": first_expense.amount,
+                "amount": float(first_expense.amount),
                 "time": data.json()[0]["time"],
                 "category_group": {
                     "group": {
@@ -259,7 +259,7 @@ class ExpensesTestCase(unittest.TestCase):
             {
                 "id": second_expense.id,
                 "descriptions": second_expense.descriptions,
-                "amount": second_expense.amount,
+                "amount": float(second_expense.amount),
                 "time": data.json()[1]["time"],
                 "category_group": {
                     "group": {
@@ -307,7 +307,7 @@ class ExpensesTestCase(unittest.TestCase):
             {
                 "id": first_expense.id,
                 "descriptions": first_expense.descriptions,
-                "amount": first_expense.amount,
+                "amount": float(first_expense.amount),
                 "time": data.json()[0]["time"],
                 "category_group": {
                     "group": {
@@ -320,7 +320,7 @@ class ExpensesTestCase(unittest.TestCase):
             {
                 "id": second_expense.id,
                 "descriptions": second_expense.descriptions,
-                "amount": second_expense.amount,
+                "amount": float(second_expense.amount),
                 "time": data.json()[1]["time"],
                 "category_group": {
                     "group": {
@@ -364,7 +364,7 @@ class ExpensesTestCase(unittest.TestCase):
             {
                 "id": first_expense.id,
                 "descriptions": first_expense.descriptions,
-                "amount": first_expense.amount,
+                "amount": float(first_expense.amount),
                 "time": data.json()[0]["time"],
                 "category_group": {
                     "group": {
@@ -377,7 +377,7 @@ class ExpensesTestCase(unittest.TestCase):
             {
                 "id": second_expense.id,
                 "descriptions": second_expense.descriptions,
-                "amount": second_expense.amount,
+                "amount": float(second_expense.amount),
                 "time": data.json()[1]["time"],
                 "category_group": {
                     "group": {

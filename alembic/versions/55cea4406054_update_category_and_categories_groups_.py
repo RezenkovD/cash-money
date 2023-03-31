@@ -21,7 +21,7 @@ def upgrade() -> None:
     op.create_table(
         "categories",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("title", sa.String(), nullable=True),
+        sa.Column("title", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("title"),
     )

@@ -17,12 +17,7 @@ def create_expense(
     try:
         db_user_group = (
             db.query(models.UserGroup)
-            .filter(
-                and_(
-                    models.UserGroup.group_id == group_id,
-                    models.UserGroup.user_id == user_id,
-                )
-            )
+            .filter_by(group_id=group_id, user_id=user_id)
             .one()
         )
     except exc.NoResultFound:
@@ -36,11 +31,9 @@ def create_expense(
             detail="The user is not active in this group!",
         )
     try:
-        db.query(models.CategoryGroups).filter(
-            and_(
-                models.CategoryGroups.category_id == expense.category_id,
-                models.CategoryGroups.group_id == group_id,
-            )
+        db.query(models.CategoryGroups).filter_by(
+            category_id=expense.category_id,
+            group_id=group_id,
         ).one()
     except exc.NoResultFound:
         raise HTTPException(
@@ -68,15 +61,13 @@ def read_expenses(
     if filter_date and start_date or filter_date and end_date:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Too many arguments!",
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
         )
-    if group_id:
+    if group_id is not None:
         try:
-            db.query(models.UserGroup).filter(
-                and_(
-                    models.UserGroup.group_id == group_id,
-                    models.UserGroup.user_id == user_id,
-                )
+            db.query(models.UserGroup).filter_by(
+                group_id=group_id,
+                user_id=user_id,
             ).one()
         except exc.NoResultFound:
             raise HTTPException(
@@ -86,7 +77,7 @@ def read_expenses(
         expenses = read_expenses_by_group_all_time(db, group_id, user_id)
         if filter_date:
             expenses = read_expenses_by_group_month(db, group_id, user_id, filter_date)
-        if start_date and end_date:
+        elif start_date and end_date:
             expenses = read_expenses_by_group_time_range(
                 db, group_id, user_id, start_date, end_date
             )
@@ -94,7 +85,7 @@ def read_expenses(
     expenses = read_expenses_all_time(db, user_id)
     if filter_date:
         expenses = read_expenses_month(db, user_id, filter_date)
-    if start_date and end_date:
+    elif start_date and end_date:
         expenses = read_expenses_time_range(db, user_id, start_date, end_date)
     return expenses
 
@@ -103,12 +94,7 @@ def read_expenses_by_group_all_time(
     db: Session, group_id: int, user_id: int
 ) -> List[schemas.UserExpense]:
     expenses = (
-        db.query(models.Expense)
-        .filter(
-            models.Expense.user_id == user_id,
-            models.Expense.group_id == group_id,
-        )
-        .all()
+        db.query(models.Expense).filter_by(user_id=user_id, group_id=group_id).all()
     )
     return expenses
 
@@ -155,8 +141,8 @@ def read_expenses_by_group_time_range(
 def read_expenses_all_time(db: Session, user_id: int) -> List[schemas.UserExpense]:
     expenses = (
         db.query(models.Expense)
-        .filter(
-            models.Expense.user_id == user_id,
+        .filter_by(
+            user_id=user_id,
         )
         .all()
     )

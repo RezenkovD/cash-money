@@ -3,10 +3,9 @@ from fastapi import Depends, APIRouter
 
 from database import get_db
 from dependencies import get_current_user
-import models
-import schemas
+from models import User
+from schemas import CreateCategory, Category
 import services
-
 
 router = APIRouter(
     prefix="/categories",
@@ -14,12 +13,12 @@ router = APIRouter(
 )
 
 
-@router.post("/{group_id}/", response_model=schemas.Category)
+@router.post("/{group_id}/", response_model=Category)
 def create_category(
     *,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     group_id: int,
-    category: schemas.CreateCategory,
-) -> schemas.Category:
+    category: CreateCategory,
+) -> Category:
     return services.create_category(db, current_user.id, group_id, category)

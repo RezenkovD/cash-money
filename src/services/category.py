@@ -1,4 +1,4 @@
-from sqlalchemy import and_, exc
+from sqlalchemy import exc
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
@@ -11,11 +11,7 @@ def create_category(
     db: Session, user_id: int, group_id: int, category: schemas.CreateCategory
 ) -> schemas.Category:
     try:
-        group = (
-            db.query(models.Group)
-            .filter(and_(models.Group.id == group_id, models.Group.admin_id == user_id))
-            .one()
-        )
+        group = db.query(models.Group).filter_by(id=group_id, admin_id=user_id).one()
     except exc.NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -36,11 +32,9 @@ def create_category(
         db.refresh(db_category)
     db_category_group = (
         db.query(models.CategoryGroups)
-        .filter(
-            and_(
-                models.CategoryGroups.group_id == group_id,
-                models.CategoryGroups.category_id == db_category.id,
-            )
+        .filter_by(
+            group_id=group_id,
+            category_id=db_category.id,
         )
         .one_or_none()
     )

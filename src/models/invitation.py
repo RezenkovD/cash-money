@@ -8,15 +8,15 @@ from database import Base
 
 
 class ResponseStatus(str, enum.Enum):
-    PENDING = "pending"
-    ACCEPTED = "accepted"
-    DENIED = "denied"
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    DENIED = "DENIED"
     OVERDUE = "OVERDUE"
 
 
 class UserResponse(str, enum.Enum):
-    ACCEPTED = "accepted"
-    DENIED = "denied"
+    ACCEPTED = "ACCEPTED"
+    DENIED = "DENIED"
 
 
 class Invitation(Base):

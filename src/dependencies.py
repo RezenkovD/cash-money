@@ -11,6 +11,7 @@ from starlette.requests import Request
 
 from config import settings
 from database import get_db
+from models import User
 from services import get_user
 
 config = Config("src/.env")
@@ -26,7 +27,7 @@ oauth.register(
 )
 
 
-def get_current_user(request: Request, db: Session = Depends(get_db)):
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     try:
         user_info = request.session["user"]
     except KeyError:

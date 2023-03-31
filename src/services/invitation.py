@@ -7,7 +7,15 @@ from starlette import status
 from starlette.exceptions import HTTPException
 
 import schemas
-from models import Invitation, ResponseStatus, UserGroup, User, Group, Status
+from models import (
+    Invitation,
+    ResponseStatus,
+    UserGroup,
+    User,
+    Group,
+    Status,
+    UserResponse,
+)
 from services import add_user_in_group
 
 
@@ -16,11 +24,11 @@ def update_invitation_info(db: Session, user_id: int) -> None:
         and_(
             Invitation.recipient_id == user_id,
             Invitation.status == ResponseStatus.PENDING,
-            Invitation.creation_time + datetime.timedelta(days=1)
+            Invitation.creation_time + datetime.timedelta(hours=24)
             < datetime.datetime.utcnow(),
         )
     ).update({Invitation.status: ResponseStatus.OVERDUE})
-    groups = db.query(Group.id).filter(Group.status == Status.INACTIVE)
+    groups = db.query(Group.id).filter_by(status=Status.INACTIVE)
     db.query(Invitation).filter(
         and_(
             Invitation.recipient_id == user_id,
@@ -32,18 +40,16 @@ def update_invitation_info(db: Session, user_id: int) -> None:
 
 
 def response_invitation(
-    db: Session, user_id: int, invitation_id: int, response: str
+    db: Session, user_id: int, invitation_id: int, response: UserResponse
 ) -> schemas.Invitation:
     update_invitation_info(db, user_id)
     try:
         db_invitation = (
             db.query(Invitation)
-            .filter(
-                and_(
-                    Invitation.recipient_id == user_id,
-                    Invitation.status == ResponseStatus.PENDING,
-                    Invitation.id == invitation_id,
-                )
+            .filter_by(
+                recipient_id=user_id,
+                status=ResponseStatus.PENDING,
+                id=invitation_id,
             )
             .one()
         )
@@ -63,11 +69,9 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
     update_invitation_info(db, user_id)
     db_invitations = (
         db.query(Invitation)
-        .filter(
-            and_(
-                Invitation.recipient_id == user_id,
-                Invitation.status == ResponseStatus.PENDING,
-            )
+        .filter_by(
+            recipient_id=user_id,
+            status=ResponseStatus.PENDING,
         )
         .all()
     )
@@ -78,11 +82,7 @@ def create_invitation(
     db: Session, user_id: int, data: schemas.CreateInvitation
 ) -> schemas.Invitation:
     try:
-        db_group = (
-            db.query(Group)
-            .filter(and_(Group.admin_id == user_id, Group.id == data.group_id))
-            .one()
-        )
+        db_group = db.query(Group).filter_by(admin_id=user_id, id=data.group_id).one()
     except exc.NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -102,12 +102,10 @@ def create_invitation(
         )
     db_user = (
         db.query(UserGroup)
-        .filter(
-            and_(
-                UserGroup.user_id == data.recipient_id,
-                UserGroup.group_id == data.group_id,
-                UserGroup.status == Status.ACTIVE,
-            )
+        .filter_by(
+            user_id=data.recipient_id,
+            group_id=data.group_id,
+            status=Status.ACTIVE,
         )
         .one_or_none()
     )
@@ -118,12 +116,10 @@ def create_invitation(
         )
     db_invitation = (
         db.query(Invitation)
-        .filter(
-            and_(
-                Invitation.status == ResponseStatus.PENDING,
-                Invitation.recipient_id == data.recipient_id,
-                Invitation.group_id == data.group_id,
-            )
+        .filter_by(
+            status=ResponseStatus.PENDING,
+            recipient_id=data.recipient_id,
+            group_id=data.group_id,
         )
         .one_or_none()
     )

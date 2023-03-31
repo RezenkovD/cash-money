@@ -22,7 +22,7 @@ def upgrade() -> None:
         "expenses",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("descriptions", sa.String(), nullable=False),
-        sa.Column("amount", sa.Float(), nullable=False),
+        sa.Column("amount", sa.DECIMAL(), nullable=False),
         sa.Column("time", sa.DateTime(), nullable=True),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("group_id", sa.Integer(), nullable=False),

@@ -8,8 +8,8 @@ from database import Base
 
 
 class Status(str, enum.Enum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
 
 
 class Group(Base):

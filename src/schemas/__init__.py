@@ -4,8 +4,8 @@ from .group import (
     Group,
     UsersGroup,
     UserGroups,
-    AboutUsers,
-    AboutCategories,
+    AboutUser,
+    AboutCategory,
     CategoriesGroup,
     ShortGroup,
 )

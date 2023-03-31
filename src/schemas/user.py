@@ -8,9 +8,7 @@ class BaseUser(BaseModel):
     login: str
 
 
-class User(BaseModel):
-    id: int
-    login: str
+class User(BaseUser):
     first_name: str
     last_name: str
     picture: Optional[str]
