@@ -133,6 +133,7 @@ def test_read_user_groups(session) -> None:
     users_group = read_user_groups(session, first_user.id)
     groups = [first_group, second_group]
     for data, group in zip(users_group.user_groups, groups):
+        assert data.group.id == group.id
         assert data.group.title == group.title
         assert data.group.status == Status.ACTIVE
 

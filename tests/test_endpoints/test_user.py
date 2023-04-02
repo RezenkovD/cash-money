@@ -57,6 +57,7 @@ class UserTestCase(unittest.TestCase):
             "user_groups": [
                 {
                     "group": {
+                        "id": first_group.id,
                         "title": first_group.title,
                         "description": first_group.description,
                         "status": Status.ACTIVE,
@@ -66,6 +67,7 @@ class UserTestCase(unittest.TestCase):
                 },
                 {
                     "group": {
+                        "id": second_group.id,
                         "title": second_group.title,
                         "description": second_group.description,
                         "status": Status.ACTIVE,

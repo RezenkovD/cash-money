@@ -13,6 +13,7 @@ class CreateGroup(BaseModel):
 
 
 class BaseGroup(BaseModel):
+    id: int
     title: str
     description: str
     status: str
