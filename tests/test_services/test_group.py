@@ -55,6 +55,7 @@ def test_add_user_in_group(session) -> None:
     )
     assert db_user_group is None
     add_user_in_group(session, user.id, group.id)
+    session.commit()
     db_user_group = (
         session.query(UserGroup)
         .filter(and_(UserGroup.group_id == group.id, UserGroup.user_id == user.id))

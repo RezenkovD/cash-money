@@ -4,7 +4,7 @@ from starlette.exceptions import HTTPException
 import models
 from schemas import CreateCategory
 from services import create_category
-from tests.factories import UserFactory, GroupFactory, UserGroupFactory
+from tests.factories import UserFactory, GroupFactory, UserGroupFactory, CategoryFactory
 
 
 def test_create_category(session) -> None:
@@ -46,3 +46,17 @@ def test_create_category_exist(session) -> None:
     with pytest.raises(HTTPException) as ex_info:
         create_category(session, user.id, group.id, category)
     assert "The category is already in this group!" in str(ex_info.value.detail)
+
+
+def test_add_exist_category_in_group(session) -> None:
+    user = UserFactory()
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id)
+    CategoryFactory(title="BOOK")
+    db_category_group = session.query(models.Category).all()
+    assert len(db_category_group) == 1
+    category = CreateCategory(title="BOOK")
+    data = create_category(session, user.id, group.id, category)
+    assert data.title == category.title.lower()
+    db_category_group = session.query(models.CategoryGroups).all()
+    assert len(db_category_group) == 1

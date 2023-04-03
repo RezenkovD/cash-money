@@ -9,7 +9,8 @@ from services import (
     create_invitation,
     read_invitations,
     response_invitation,
-    read_users_group, leave_group,
+    read_users_group,
+    leave_group,
 )
 from tests.factories import (
     UserFactory,
@@ -182,5 +183,7 @@ def test_response_invitation_in_inactive_group(session) -> None:
     )
     leave_group(session, first_user.id, group.id)
     with pytest.raises(HTTPException) as ex_info:
-        response_invitation(session, second_user.id, invitation.id, ResponseStatus.ACCEPTED)
+        response_invitation(
+            session, second_user.id, invitation.id, ResponseStatus.ACCEPTED
+        )
     assert "Invitation is not found" in str(ex_info.value.detail)
