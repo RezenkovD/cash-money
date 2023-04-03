@@ -35,20 +35,29 @@ def remove_user(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="The user is not active or does not exist in this group!",
         )
-    if admin_id == user_id:
-        return disband_group(db, group_id)
+    try:
+        if admin_id == user_id:
+            data = disband_group(db, group_id)
+            db.commit()
+        else:
+            data = leave_group(db, user_id, group_id)
+            db.commit()
+    except:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while remove user",
+        )
     else:
-        return leave_group(db, user_id, group_id)
+        return data
 
 
 def disband_group(db: Session, group_id: int) -> schemas.UsersGroup:
     db_group = db.query(models.Group).filter_by(id=group_id).one()
     db_group.status = models.Status.INACTIVE
-    db.commit()
     db.query(models.UserGroup).filter_by(group_id=group_id).update(
         {models.UserGroup.status: models.Status.INACTIVE}
     )
-    db.commit()
     db_users_group = (
         db.query(models.Group)
         .options(joinedload(models.Group.users_group))
@@ -65,7 +74,17 @@ def leave_group(
         db.query(models.Group).filter_by(id=group_id, admin_id=user_id).one_or_none()
     )
     if db_admin_group:
-        return disband_group(db, group_id)
+        try:
+            db_users_group = disband_group(db, group_id)
+            db.commit()
+        except:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"An error occurred while leave group",
+            )
+        else:
+            return db_users_group
     try:
         db_user_group = (
             db.query(models.UserGroup)
@@ -81,8 +100,16 @@ def leave_group(
             detail="Group is not found",
         )
     db_user_group.status = models.Status.INACTIVE
-    db.commit()
-    return db_user_group
+    try:
+        db.commit()
+    except:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while leave group",
+        )
+    else:
+        return db_user_group
 
 
 def create_group(
@@ -92,10 +119,18 @@ def create_group(
         **group.dict(), admin_id=user_id, status=models.Status.ACTIVE
     )
     db.add(db_group)
-    db.commit()
-    db.refresh(db_group)
-    add_user_in_group(db, user_id, db_group.id)
-    return db_group
+    db.flush()
+    try:
+        add_user_in_group(db, user_id, db_group.id)
+        db.commit()
+    except:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while create group",
+        )
+    else:
+        return db_group
 
 
 def add_user_in_group(db: Session, user_id: int, group_id: int) -> None:
@@ -110,8 +145,6 @@ def add_user_in_group(db: Session, user_id: int, group_id: int) -> None:
     )
     if db_user_group:
         db_user_group.status = models.Status.ACTIVE
-        db.commit()
-        db.refresh(db_user_group)
     else:
         db_user_group = models.UserGroup(
             user_id=user_id,
@@ -120,8 +153,6 @@ def add_user_in_group(db: Session, user_id: int, group_id: int) -> None:
             status=models.Status.ACTIVE,
         )
         db.add(db_user_group)
-        db.commit()
-        db.refresh(db_user_group)
 
 
 def read_users_group(db: Session, user_id: int, group_id: int) -> schemas.UsersGroup:

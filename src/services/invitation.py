@@ -36,7 +36,6 @@ def update_invitation_info(db: Session, user_id: int) -> None:
             Invitation.group_id.in_(groups),
         )
     ).update({Invitation.status: ResponseStatus.OVERDUE})
-    db.commit()
 
 
 def response_invitation(
@@ -59,10 +58,18 @@ def response_invitation(
             detail="Invitation is not found",
         )
     db_invitation.status = response
-    db.commit()
-    if response == ResponseStatus.ACCEPTED:
-        add_user_in_group(db, user_id, db_invitation.group_id)
-    return db_invitation
+    try:
+        if response == ResponseStatus.ACCEPTED:
+            add_user_in_group(db, user_id, db_invitation.group_id)
+        db.commit()
+    except:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while response invitation",
+        )
+    else:
+        return db_invitation
 
 
 def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
@@ -136,6 +143,13 @@ def create_invitation(
         creation_time=datetime.datetime.utcnow(),
     )
     db.add(db_invitation)
-    db.commit()
-    db.refresh(db_invitation)
-    return db_invitation
+    try:
+        db.commit()
+    except:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while create invitation",
+        )
+    else:
+        return db_invitation

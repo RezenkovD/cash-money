@@ -28,25 +28,32 @@ def create_category(
     if db_category is None:
         db_category = models.Category(title=category.title.lower())
         db.add(db_category)
-        db.commit()
-        db.refresh(db_category)
-    db_category_group = (
-        db.query(models.CategoryGroups)
-        .filter_by(
-            group_id=group_id,
-            category_id=db_category.id,
+        db.flush()
+    else:
+        db_category_group = (
+            db.query(models.CategoryGroups)
+            .filter_by(
+                group_id=group_id,
+                category_id=db_category.id,
+            )
+            .one_or_none()
         )
-        .one_or_none()
-    )
-    if db_category_group:
-        raise HTTPException(
-            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-            detail="The category is already in this group!",
-        )
+        if db_category_group:
+            raise HTTPException(
+                status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                detail="The category is already in this group!",
+            )
     db_category_group = models.CategoryGroups(
         category_id=db_category.id, group_id=group_id
     )
     db.add(db_category_group)
-    db.commit()
-    db.refresh(db_category_group)
-    return db_category
+    try:
+        db.commit()
+    except:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while create category",
+        )
+    else:
+        return db_category

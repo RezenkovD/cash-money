@@ -1,5 +1,7 @@
 from authlib.integrations.base_client import OAuthError
 from sqlalchemy.orm import Session
+from starlette import status
+from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from fastapi import Depends, APIRouter
@@ -37,8 +39,15 @@ async def auth(*, db: Session = Depends(get_db), request: Request):
             picture=user["picture"],
         )
         db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
+        db.flush()
+        try:
+            db.commit()
+        except:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"An error occurred while create category",
+            )
     return RedirectResponse(url="/")
 
 

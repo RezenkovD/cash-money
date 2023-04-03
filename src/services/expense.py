@@ -45,9 +45,16 @@ def create_expense(
     db_expense.group_id = group_id
     db_expense.time = datetime.datetime.utcnow()
     db.add(db_expense)
-    db.commit()
-    db.refresh(db_expense)
-    return db_expense
+    try:
+        db.commit()
+    except:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while create expense",
+        )
+    else:
+        return db_expense
 
 
 def read_expenses(
