@@ -58,12 +58,17 @@ def response_invitation(
             detail="Invitation is not found",
         )
     db_invitation.status = response
-    try:
-        if response == ResponseStatus.ACCEPTED:
+    if response == ResponseStatus.ACCEPTED:
+        try:
             add_user_in_group(db, user_id, db_invitation.group_id)
+        except:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"An error occurred while add user in group",
+            )
+    try:
         db.commit()
     except:
-        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"An error occurred while response invitation",
@@ -146,7 +151,6 @@ def create_invitation(
     try:
         db.commit()
     except:
-        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"An error occurred while create invitation",

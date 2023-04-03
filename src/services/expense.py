@@ -48,7 +48,6 @@ def create_expense(
     try:
         db.commit()
     except:
-        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"An error occurred while create expense",
