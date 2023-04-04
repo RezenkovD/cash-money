@@ -91,7 +91,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
         ]
         assert data.json() == replenishments_data
 
-    def test_read_replenishments_time_range(self):
+    def test_read_replenishments_time_range(self) -> None:
         time = datetime.datetime(2022, 12, 1)
         data = client.get(f"/replenishments/2022-12-1/2022-12-12/")
         assert not data.json()
@@ -117,6 +117,6 @@ class ReplenishmentsTestCase(unittest.TestCase):
         ]
         assert data.json() == replenishments_data
 
-    def test_read_replenishments_time_range_date_exc(self):
+    def test_read_replenishments_time_range_date_exc(self) -> None:
         data = client.get(f"/replenishments/2022-12-31/2022-12-09/")
         assert data.status_code == 404
