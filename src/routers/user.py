@@ -26,3 +26,11 @@ def read_user_groups(
     current_user: User = Depends(get_current_user),
 ) -> schemas.UserGroups:
     return services.read_user_groups(db, current_user.id)
+
+
+@router.get("/current-balance/", response_model=schemas.CurrentBalance)
+def read_user_current_balance(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> schemas.CurrentBalance:
+    return services.read_user_current_balance(db, current_user.id)

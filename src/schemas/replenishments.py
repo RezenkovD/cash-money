@@ -17,3 +17,7 @@ class Replenishments(CreateReplenishments):
 
 class UserReplenishments(CreateReplenishments):
     time: datetime.datetime
+
+
+class CurrentBalance(BaseModel):
+    current_balance: float
