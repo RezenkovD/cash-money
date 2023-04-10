@@ -3,7 +3,7 @@ import datetime
 import pytest
 from starlette.exceptions import HTTPException
 
-from models import ResponseStatus, Status
+from models import ResponseStatusEnum, GroupStatusEnum
 from schemas import CreateInvitation
 from services import (
     create_invitation,
@@ -27,7 +27,7 @@ def test_create_invitation(session) -> None:
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
     data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
     invitation = create_invitation(session, first_user.id, data)
-    assert invitation.status == ResponseStatus.PENDING
+    assert invitation.status == ResponseStatusEnum.PENDING
     assert invitation.recipient.id == second_user.id
     assert invitation.group.id == group.id
     assert invitation.group.admin.id == first_user.id
@@ -45,7 +45,7 @@ def test_create_invitation_as_non_admin(session) -> None:
 def test_create_invitation_to_inactive_group(session) -> None:
     first_user = UserFactory()
     second_user = UserFactory()
-    group = GroupFactory(admin_id=first_user.id, status=Status.INACTIVE)
+    group = GroupFactory(admin_id=first_user.id, status=GroupStatusEnum.INACTIVE)
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
     data = CreateInvitation(recipient_id=second_user.id, group_id=group.id)
     with pytest.raises(HTTPException) as ex_info:
@@ -101,7 +101,7 @@ def test_read_invitations(session) -> None:
     groups = [group]
     assert len(invitations) == len(groups)
     for invitation, group in zip(invitations, groups):
-        assert invitation.status == ResponseStatus.PENDING
+        assert invitation.status == ResponseStatusEnum.PENDING
         assert invitation.group.id == group.id
         assert invitation.group.admin.id == group.admin_id
         assert invitation.creation_time.strftime(
@@ -123,10 +123,10 @@ def test_response_invitation(session) -> None:
         sender_id=first_user.id, recipient_id=second_user.id, group_id=group.id
     )
     invitation = response_invitation(
-        session, second_user.id, data.id, ResponseStatus.DENIED
+        session, second_user.id, data.id, ResponseStatusEnum.DENIED
     )
     assert invitation.id == data.id
-    assert invitation.status == ResponseStatus.DENIED
+    assert invitation.status == ResponseStatusEnum.DENIED
     assert invitation.group.id == group.id
     assert invitation.group.admin.id == first_user.id
     assert invitation.creation_time.strftime(
@@ -139,16 +139,16 @@ def test_response_invitation(session) -> None:
     assert len(users_group) == len(users)
     for user_group, user in zip(users_group, users):
         assert user_group.user.id == user.id
-        assert user_group.status == Status.ACTIVE
+        assert user_group.status == GroupStatusEnum.ACTIVE
 
     data = InvitationFactory(
         sender_id=first_user.id, recipient_id=second_user.id, group_id=group.id
     )
     invitation = response_invitation(
-        session, second_user.id, data.id, ResponseStatus.ACCEPTED
+        session, second_user.id, data.id, ResponseStatusEnum.ACCEPTED
     )
     assert invitation.id == invitation.id
-    assert invitation.status == ResponseStatus.ACCEPTED
+    assert invitation.status == ResponseStatusEnum.ACCEPTED
     assert invitation.group.id == group.id
     assert invitation.group.admin.id == first_user.id
     assert invitation.creation_time.strftime(
@@ -161,13 +161,13 @@ def test_response_invitation(session) -> None:
     assert len(users_group) == len(users)
     for user_group, user in zip(users_group, users):
         assert user_group.user.id == user.id
-        assert user_group.status == Status.ACTIVE
+        assert user_group.status == GroupStatusEnum.ACTIVE
 
 
 def test_response_invitation_not_found(session) -> None:
     user = UserFactory()
     with pytest.raises(HTTPException) as ex_info:
-        response_invitation(session, user.id, 9999, ResponseStatus.DENIED)
+        response_invitation(session, user.id, 9999, ResponseStatusEnum.DENIED)
     assert "Invitation is not found" in str(ex_info.value.detail)
 
 
@@ -184,6 +184,6 @@ def test_response_invitation_in_inactive_group(session) -> None:
     leave_group(session, first_user.id, group.id)
     with pytest.raises(HTTPException) as ex_info:
         response_invitation(
-            session, second_user.id, invitation.id, ResponseStatus.ACCEPTED
+            session, second_user.id, invitation.id, ResponseStatusEnum.ACCEPTED
         )
     assert "Invitation is not found" in str(ex_info.value.detail)

@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock
 
 import models
+import models.status
 from dependencies import oauth
 from schemas import CreateCategory
 from tests.conftest import client, async_return
@@ -48,9 +49,13 @@ class CategoryTestCase(unittest.TestCase):
 
     def test_create_category_inactive_group(self) -> None:
         category = CategoryFactory()
-        group = GroupFactory(admin_id=self.user.id, status=models.Status.INACTIVE)
+        group = GroupFactory(
+            admin_id=self.user.id, status=models.status.GroupStatusEnum.INACTIVE
+        )
         UserGroupFactory(
-            user_id=self.user.id, group_id=group.id, status=models.Status.INACTIVE
+            user_id=self.user.id,
+            group_id=group.id,
+            status=models.status.GroupStatusEnum.INACTIVE,
         )
         data = client.post(f"/categories/{group.id}/", json={"title": category.title})
         assert data.status_code == 405

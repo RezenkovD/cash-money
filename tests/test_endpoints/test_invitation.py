@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import Mock
 
 import models
+import models.status
 from dependencies import oauth
 from tests.conftest import client, async_return
 from tests.factories import (
@@ -43,7 +44,7 @@ class InvitationTestCase(unittest.TestCase):
         data = data.json()
         invitation_data = {
             "id": data["id"],
-            "status": models.ResponseStatus.PENDING,
+            "status": models.status.ResponseStatusEnum.PENDING,
             "recipient": {
                 "id": self.second_user.id,
                 "login": self.second_user.login,
@@ -55,7 +56,7 @@ class InvitationTestCase(unittest.TestCase):
                 "title": self.first_group.title,
                 "description": self.first_group.description,
                 "id": self.first_group.id,
-                "status": models.Status.ACTIVE,
+                "status": models.status.GroupStatusEnum.ACTIVE,
                 "admin": {
                     "id": self.first_user.id,
                     "login": self.first_user.login,
@@ -77,7 +78,7 @@ class InvitationTestCase(unittest.TestCase):
 
     def test_create_invitation_to_inactive_group(self) -> None:
         third_group = GroupFactory(
-            admin_id=self.first_user.id, status=models.Status.INACTIVE
+            admin_id=self.first_user.id, status=models.status.GroupStatusEnum.INACTIVE
         )
         UserGroupFactory(user_id=self.first_user.id, group_id=third_group.id)
         data = client.post(
@@ -129,7 +130,7 @@ class InvitationTestCase(unittest.TestCase):
                     "title": self.second_group.title,
                     "description": self.second_group.description,
                     "id": self.second_group.id,
-                    "status": models.Status.ACTIVE,
+                    "status": models.status.GroupStatusEnum.ACTIVE,
                     "admin": {
                         "id": self.second_user.id,
                         "login": self.second_user.login,
@@ -149,7 +150,7 @@ class InvitationTestCase(unittest.TestCase):
             recipient_id=self.first_user.id,
             group_id=self.second_group.id,
         )
-        response = models.UserResponse.ACCEPTED
+        response = models.status.UserResponseEnum.ACCEPTED
         data = client.post(f"invitations/response/{invitation.id}?response={response}")
         assert data.status_code == 200
         invitation_data = {
@@ -159,7 +160,7 @@ class InvitationTestCase(unittest.TestCase):
                 "title": self.second_group.title,
                 "description": self.second_group.description,
                 "id": self.second_group.id,
-                "status": models.Status.ACTIVE,
+                "status": models.status.GroupStatusEnum.ACTIVE,
                 "admin": {
                     "id": self.second_user.id,
                     "login": self.second_user.login,
@@ -186,10 +187,10 @@ class InvitationTestCase(unittest.TestCase):
         assert len(group_users) == len(users)
         for group_user, user in zip(group_users, users):
             assert group_user["user"]["id"] == user.id
-            assert group_user["status"] == models.Status.ACTIVE
+            assert group_user["status"] == models.status.GroupStatusEnum.ACTIVE
 
     def test_response_invitation_not_found(self) -> None:
-        response = models.UserResponse.ACCEPTED
+        response = models.status.UserResponseEnum.ACCEPTED
         data = client.post(f"invitations/response/{9999}?response={response}")
         assert data.status_code == 404
 
@@ -214,6 +215,6 @@ class InvitationTestCase(unittest.TestCase):
         }
         oauth.google.authorize_access_token = Mock(return_value=async_return(user_dict))
         client.get("/auth/")
-        response = models.UserResponse.ACCEPTED
+        response = models.status.UserResponseEnum.ACCEPTED
         data = client.post(f"invitations/response/{invitation.id}?response={response}")
         assert data.status_code == 404

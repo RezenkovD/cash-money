@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from starlette import status
 from starlette.exceptions import HTTPException
 
+import models.status
 import schemas
 import models
 
@@ -26,7 +27,7 @@ def remove_user(
             .filter_by(
                 user_id=user_id,
                 group_id=group_id,
-                status=models.Status.ACTIVE,
+                status=models.status.GroupStatusEnum.ACTIVE,
             )
             .one()
         )
@@ -61,9 +62,9 @@ def remove_user(
 
 def disband_group(db: Session, group_id: int) -> schemas.UsersGroup:
     db_group = db.query(models.Group).filter_by(id=group_id).one()
-    db_group.status = models.Status.INACTIVE
+    db_group.status = models.status.GroupStatusEnum.INACTIVE
     db.query(models.UserGroup).filter_by(group_id=group_id).update(
-        {models.UserGroup.status: models.Status.INACTIVE}
+        {models.UserGroup.status: models.status.GroupStatusEnum.INACTIVE}
     )
     db_users_group = (
         db.query(models.Group)
@@ -105,7 +106,7 @@ def leave_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group is not found",
         )
-    db_user_group.status = models.Status.INACTIVE
+    db_user_group.status = models.status.GroupStatusEnum.INACTIVE
     try:
         db.commit()
     except:
@@ -121,7 +122,7 @@ def create_group(
     db: Session, user_id: int, group: schemas.CreateGroup
 ) -> schemas.Group:
     db_group = models.Group(
-        **group.dict(), admin_id=user_id, status=models.Status.ACTIVE
+        **group.dict(), admin_id=user_id, status=models.status.GroupStatusEnum.ACTIVE
     )
     db.add(db_group)
     try:
@@ -143,18 +144,18 @@ def add_user_in_group(db: Session, user_id: int, group_id: int) -> None:
         .filter_by(
             user_id=user_id,
             group_id=group_id,
-            status=models.Status.INACTIVE,
+            status=models.status.GroupStatusEnum.INACTIVE,
         )
         .one_or_none()
     )
     if db_user_group:
-        db_user_group.status = models.Status.ACTIVE
+        db_user_group.status = models.status.GroupStatusEnum.ACTIVE
     else:
         db_user_group = models.UserGroup(
             user_id=user_id,
             group_id=group_id,
             date_join=datetime.date.today(),
-            status=models.Status.ACTIVE,
+            status=models.status.GroupStatusEnum.ACTIVE,
         )
         db.add(db_user_group)
 
