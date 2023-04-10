@@ -4,4 +4,4 @@ from .group import Group, UserGroup
 from .invitation import Invitation
 from .category import Category, CategoryGroups
 from .expense import Expense
-from .replenishments import Replenishments
+from .replenishment import Replenishment

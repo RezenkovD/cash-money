@@ -8,7 +8,7 @@ from routers import user
 from routers import invitation
 from routers import category
 from routers import expense
-from routers import replenishments
+from routers import replenishment
 from config import settings
 
 app = FastAPI()
@@ -21,7 +21,7 @@ app.include_router(user.router)
 app.include_router(invitation.router)
 app.include_router(category.router)
 app.include_router(expense.router)
-app.include_router(replenishments.router)
+app.include_router(replenishment.router)
 
 if __name__ == "__main__":
     uvicorn.run(

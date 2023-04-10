@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
-from schemas import CreateReplenishments
+from schemas import CreateReplenishment
 from tests.conftest import client, async_return
 from tests.factories import UserFactory, ReplenishmentsFactory
 
@@ -25,7 +25,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
         client.get("/auth/")
 
     def test_create_replenishments(self) -> None:
-        replenishments = CreateReplenishments(descriptions="descriptions", amount=999.9)
+        replenishments = CreateReplenishment(descriptions="descriptions", amount=999.9)
         data = client.post(
             "/replenishments/",
             json={

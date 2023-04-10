@@ -13,7 +13,7 @@ from sqlalchemy.orm import relationship
 from database import Base
 
 
-class Replenishments(Base):
+class Replenishment(Base):
     __tablename__ = "replenishments"
 
     id = Column(Integer, primary_key=True, index=True)

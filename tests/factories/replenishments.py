@@ -3,7 +3,7 @@ import datetime
 import factory
 from factory.fuzzy import FuzzyFloat
 
-from models import Replenishments
+from models import Replenishment
 from .base_factory import BaseFactory
 
 
@@ -15,4 +15,4 @@ class ReplenishmentsFactory(BaseFactory):
     user_id = factory.Faker("id")
 
     class Meta:
-        model = Replenishments
+        model = Replenishment

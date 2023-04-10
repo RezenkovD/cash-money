@@ -4,18 +4,18 @@ from schemas import BaseUser
 from schemas.base_model import BaseModel
 
 
-class CreateReplenishments(BaseModel):
+class CreateReplenishment(BaseModel):
     amount: float
     descriptions: str
 
 
-class Replenishments(CreateReplenishments):
+class Replenishment(CreateReplenishment):
     id: int
     time: datetime.datetime
     user: BaseUser
 
 
-class UserReplenishments(CreateReplenishments):
+class UserReplenishment(CreateReplenishment):
     time: datetime.datetime
 
 
