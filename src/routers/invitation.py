@@ -7,7 +7,7 @@ import services
 from database import get_db
 from dependencies import get_current_user
 from models import User, UserResponseEnum
-from schemas import BaseInvitation, CreateInvitation, Invitation
+from schemas import BaseInvitation, CreateInvitation, InvitationModel
 
 router = APIRouter(
     prefix="/invitations",
@@ -15,13 +15,13 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=Invitation)
+@router.post("/", response_model=InvitationModel)
 def create_invitation(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     data: CreateInvitation,
-) -> Invitation:
+) -> InvitationModel:
     return services.create_invitation(db, current_user.id, data)
 
 
@@ -33,12 +33,12 @@ def read_invitation(
     return services.read_invitations(db, current_user.id)
 
 
-@router.post("/response/{invitation_id}/", response_model=Invitation)
+@router.post("/response/{invitation_id}/", response_model=InvitationModel)
 def response_invitation(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     invitation_id: int,
     response: UserResponseEnum,
-) -> Invitation:
+) -> InvitationModel:
     return services.response_invitation(db, current_user.id, invitation_id, response)

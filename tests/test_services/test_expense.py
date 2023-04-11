@@ -3,8 +3,7 @@ import datetime
 import pytest
 from starlette.exceptions import HTTPException
 
-import models
-import models.status
+from models import Expense, GroupStatusEnum
 from schemas import CreateExpense
 from services import create_expense, read_expenses
 from tests.factories import (
@@ -27,7 +26,7 @@ def test_create_expense(session) -> None:
         descriptions="descriptions", amount=999.9, category_id=category.id
     )
     data = create_expense(session, user.id, group.id, expense)
-    db_expenses = session.query(models.Expense).all()
+    db_expenses = session.query(Expense).all()
     assert len(db_expenses) == 1
     assert data.descriptions == expense.descriptions
     assert float(data.amount) == expense.amount
@@ -57,7 +56,7 @@ def test_create_expense_inactive_user(session) -> None:
     UserGroupFactory(
         user_id=user.id,
         group_id=group.id,
-        status=models.status.GroupStatusEnum.INACTIVE,
+        status=GroupStatusEnum.INACTIVE,
     )
     expense = CreateExpense(
         descriptions="descriptions", amount=999.9, category_id=category.id

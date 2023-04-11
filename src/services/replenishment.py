@@ -7,13 +7,13 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
 
-import schemas
 from models import Replenishment
+from schemas import CreateReplenishment, ReplenishmentModel, UserReplenishment
 
 
 def create_replenishments(
-    db: Session, user_id: int, replenishments: schemas.CreateReplenishment
-) -> schemas.Replenishment:
+    db: Session, user_id: int, replenishments: CreateReplenishment
+) -> ReplenishmentModel:
     db_replenishments = Replenishment(**replenishments.dict())
     db_replenishments.user_id = user_id
     db_replenishments.time = datetime.datetime.utcnow()
@@ -35,7 +35,7 @@ def read_replenishments(
     filter_date: Optional[date] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
-) -> List[schemas.UserReplenishment]:
+) -> List[UserReplenishment]:
     if filter_date and start_date or filter_date and end_date:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -51,9 +51,7 @@ def read_replenishments(
     return replenishments
 
 
-def read_replenishments_all_time(
-    db: Session, user_id: int
-) -> List[schemas.UserReplenishment]:
+def read_replenishments_all_time(db: Session, user_id: int) -> List[UserReplenishment]:
     replenishments = (
         db.query(Replenishment)
         .filter_by(
@@ -66,7 +64,7 @@ def read_replenishments_all_time(
 
 def read_replenishments_month(
     db: Session, user_id: int, filter_date: date
-) -> List[schemas.UserReplenishment]:
+) -> List[UserReplenishment]:
     replenishments = (
         db.query(Replenishment)
         .filter(
@@ -83,7 +81,7 @@ def read_replenishments_month(
 
 def read_replenishments_time_range(
     db: Session, user_id: int, start_date: date, end_date: date
-) -> List[schemas.UserReplenishment]:
+) -> List[UserReplenishment]:
     if start_date > end_date:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

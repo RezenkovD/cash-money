@@ -11,7 +11,7 @@ from dependencies import (
     transform_exact_date_or_422,
 )
 from models import User
-from schemas import BaseExpense, CreateExpense, UserExpense
+from schemas import CreateExpense, ExpenseModel, UserExpense
 
 router = APIRouter(
     prefix="/expenses",
@@ -19,14 +19,14 @@ router = APIRouter(
 )
 
 
-@router.post("/group/{group_id}/", response_model=BaseExpense)
+@router.post("/group/{group_id}/", response_model=ExpenseModel)
 def create_expense(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
     expense: CreateExpense,
-) -> BaseExpense:
+) -> ExpenseModel:
     return services.create_expense(db, current_user.id, group_id, expense)
 
 

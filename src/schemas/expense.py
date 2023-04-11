@@ -1,6 +1,6 @@
 import datetime
 
-from schemas import BaseUser, Category, ShortGroup
+from schemas import BaseUser, CategoryModel, ShortGroup
 from schemas.base_model import BaseModel
 
 
@@ -12,10 +12,10 @@ class CreateExpense(BaseModel):
 
 class CategoryGroup(BaseModel):
     group: ShortGroup
-    category: Category
+    category: CategoryModel
 
 
-class BaseExpense(BaseModel):
+class ExpenseModel(BaseModel):
     id: int
     descriptions: str
     amount: float

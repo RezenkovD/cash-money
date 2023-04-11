@@ -9,7 +9,7 @@ class CreateReplenishment(BaseModel):
     descriptions: str
 
 
-class Replenishment(CreateReplenishment):
+class ReplenishmentModel(CreateReplenishment):
     id: int
     time: datetime.datetime
     user: BaseUser

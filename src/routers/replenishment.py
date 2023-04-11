@@ -11,7 +11,7 @@ from dependencies import (
     transform_exact_date_or_422,
 )
 from models import User
-from schemas import CreateReplenishment, Replenishment, UserReplenishment
+from schemas import CreateReplenishment, ReplenishmentModel, UserReplenishment
 
 router = APIRouter(
     prefix="/replenishments",
@@ -19,13 +19,13 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=Replenishment)
+@router.post("/", response_model=ReplenishmentModel)
 def create_replenishments(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     replenishments: CreateReplenishment,
-) -> Replenishment:
+) -> ReplenishmentModel:
     return services.create_replenishments(db, current_user.id, replenishments)
 
 

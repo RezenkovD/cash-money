@@ -4,9 +4,7 @@ from operator import and_
 import pytest
 from starlette.exceptions import HTTPException
 
-import models
-import models.status
-from models import GroupStatusEnum, UserGroup
+from models import Group, GroupStatusEnum, UserGroup
 from schemas import CreateGroup
 from services import (
     add_user_in_group,
@@ -76,7 +74,7 @@ def test_add_inactive_user_in_group(session) -> None:
     UserGroupFactory(
         group_id=group.id,
         user_id=user.id,
-        status=models.status.GroupStatusEnum.INACTIVE,
+        status=GroupStatusEnum.INACTIVE,
     )
     db_user_group = (
         session.query(UserGroup)
@@ -200,7 +198,7 @@ def test_leave_group_admin(session) -> None:
     users_group = read_users_group(session, first_user.id, group.id)
     for user in users_group.users_group:
         assert user.status == GroupStatusEnum.INACTIVE
-    db_group = session.query(models.Group).filter_by(id=group.id).one()
+    db_group = session.query(Group).filter_by(id=group.id).one()
     assert db_group.status == GroupStatusEnum.INACTIVE
 
 
@@ -213,7 +211,7 @@ def test_disband_group(session):
     data = disband_group(session, group.id)
     for user in data.users_group:
         assert user.status == GroupStatusEnum.INACTIVE
-    db_group = session.query(models.Group).filter_by(id=group.id).one()
+    db_group = session.query(Group).filter_by(id=group.id).one()
     assert db_group.status == GroupStatusEnum.INACTIVE
 
 
@@ -237,12 +235,12 @@ def test_remove_admin(session):
     group = GroupFactory(admin_id=first_user.id)
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
     UserGroupFactory(user_id=second_user.id, group_id=group.id)
-    db_group = session.query(models.Group).filter_by(id=group.id).one()
+    db_group = session.query(Group).filter_by(id=group.id).one()
     assert db_group.status == GroupStatusEnum.ACTIVE
     data = remove_user(session, first_user.id, group.id, first_user.id)
     for user in data.users_group:
         assert user.status == GroupStatusEnum.INACTIVE
-    db_group = session.query(models.Group).filter_by(id=group.id).one()
+    db_group = session.query(Group).filter_by(id=group.id).one()
     assert db_group.status == GroupStatusEnum.INACTIVE
 
 
@@ -264,7 +262,7 @@ def test_remove_inactive_user(session) -> None:
     UserGroupFactory(
         user_id=second_user.id,
         group_id=group.id,
-        status=models.status.GroupStatusEnum.INACTIVE,
+        status=GroupStatusEnum.INACTIVE,
     )
     with pytest.raises(HTTPException) as ex_info:
         remove_user(session, first_user.id, group.id, second_user.id)

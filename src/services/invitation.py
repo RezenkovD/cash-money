@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
 
-import schemas
 from models import (
     Group,
     GroupStatusEnum,
@@ -16,6 +15,7 @@ from models import (
     UserGroup,
     UserResponseEnum,
 )
+from schemas import BaseInvitation, CreateInvitation, InvitationModel
 from services import add_user_in_group
 
 
@@ -40,7 +40,7 @@ def update_invitation_info(db: Session, user_id: int) -> None:
 
 def response_invitation(
     db: Session, user_id: int, invitation_id: int, response: UserResponseEnum
-) -> schemas.Invitation:
+) -> InvitationModel:
     update_invitation_info(db, user_id)
     try:
         db_invitation = (
@@ -77,7 +77,7 @@ def response_invitation(
         return db_invitation
 
 
-def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
+def read_invitations(db: Session, user_id: int) -> List[BaseInvitation]:
     update_invitation_info(db, user_id)
     db_invitations = (
         db.query(Invitation)
@@ -91,8 +91,8 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
 
 
 def create_invitation(
-    db: Session, user_id: int, data: schemas.CreateInvitation
-) -> schemas.Invitation:
+    db: Session, user_id: int, data: CreateInvitation
+) -> InvitationModel:
     try:
         db_group = db.query(Group).filter_by(admin_id=user_id, id=data.group_id).one()
     except exc.NoResultFound:

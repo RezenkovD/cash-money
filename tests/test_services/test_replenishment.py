@@ -3,7 +3,7 @@ import datetime
 import pytest
 from starlette.exceptions import HTTPException
 
-import models
+from models import Replenishment
 from schemas import CreateReplenishment
 from services import create_replenishments, read_replenishments
 from tests.factories import ReplenishmentsFactory, UserFactory
@@ -13,7 +13,7 @@ def test_create_replenishments(session) -> None:
     user = UserFactory()
     replenishments = CreateReplenishment(descriptions="descriptions", amount=999.9)
     data = create_replenishments(session, user.id, replenishments)
-    db_replenishments = session.query(models.Replenishment).all()
+    db_replenishments = session.query(Replenishment).all()
     assert len(db_replenishments) == 1
     assert data.descriptions == replenishments.descriptions
     assert float(data.amount) == replenishments.amount

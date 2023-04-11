@@ -1,8 +1,7 @@
 import pytest
 from starlette.exceptions import HTTPException
 
-import models
-import models.status
+from models import Category, CategoryGroups, GroupStatusEnum
 from schemas import CreateCategory
 from services import create_category
 from tests.factories import CategoryFactory, GroupFactory, UserFactory, UserGroupFactory
@@ -15,7 +14,7 @@ def test_create_category(session) -> None:
     category = CreateCategory(title="BoOK")
     data = create_category(session, user.id, group.id, category)
     assert data.title == category.title.lower()
-    db_category_group = session.query(models.CategoryGroups).all()
+    db_category_group = session.query(CategoryGroups).all()
     assert len(db_category_group) == 1
 
 
@@ -30,13 +29,11 @@ def test_create_category_not_admin(session) -> None:
 
 def test_create_category_inactive_group(session) -> None:
     user = UserFactory()
-    group = GroupFactory(
-        admin_id=user.id, status=models.status.GroupStatusEnum.INACTIVE
-    )
+    group = GroupFactory(admin_id=user.id, status=GroupStatusEnum.INACTIVE)
     UserGroupFactory(
         user_id=user.id,
         group_id=group.id,
-        status=models.status.GroupStatusEnum.INACTIVE,
+        status=GroupStatusEnum.INACTIVE,
     )
     category = CreateCategory(title="Book")
     with pytest.raises(HTTPException) as ex_info:
@@ -60,10 +57,10 @@ def test_add_exist_category_in_group(session) -> None:
     group = GroupFactory(admin_id=user.id)
     UserGroupFactory(user_id=user.id, group_id=group.id)
     CategoryFactory(title="BOOK")
-    db_category_group = session.query(models.Category).all()
+    db_category_group = session.query(Category).all()
     assert len(db_category_group) == 1
     category = CreateCategory(title="BOOK")
     data = create_category(session, user.id, group.id, category)
     assert data.title == category.title.lower()
-    db_category_group = session.query(models.CategoryGroups).all()
+    db_category_group = session.query(CategoryGroups).all()
     assert len(db_category_group) == 1

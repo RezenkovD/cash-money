@@ -2,9 +2,8 @@ import datetime
 import unittest
 from unittest.mock import Mock
 
-import models
-import models.status
 from dependencies import oauth
+from models import GroupStatusEnum
 from schemas import CreateExpense
 from tests.conftest import async_return, client
 from tests.factories import (
@@ -87,7 +86,7 @@ class ExpensesTestCase(unittest.TestCase):
         UserGroupFactory(
             user_id=self.user.id,
             group_id=group.id,
-            status=models.status.GroupStatusEnum.INACTIVE,
+            status=GroupStatusEnum.INACTIVE,
         )
         expense = CreateExpense(
             descriptions="descriptions", amount=999.9, category_id=self.category.id

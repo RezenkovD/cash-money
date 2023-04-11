@@ -1,20 +1,20 @@
-from .user import BaseUser, User
+from .user import BaseUser, UserModel
 from .group import (
     AboutCategory,
     AboutUser,
     CategoriesGroup,
     CreateGroup,
-    Group,
+    GroupModel,
     ShortGroup,
     UserGroups,
     UsersGroup,
 )
-from .invintation import BaseInvitation, CreateInvitation, Invitation
-from .category import Category, CreateCategory
-from .expense import BaseExpense, CreateExpense, UserExpense
+from .invintation import BaseInvitation, CreateInvitation, InvitationModel
+from .category import CategoryModel, CreateCategory
+from .expense import CreateExpense, ExpenseModel, UserExpense
 from .replenishment import (
     CreateReplenishment,
     CurrentBalance,
-    Replenishment,
+    ReplenishmentModel,
     UserReplenishment,
 )
