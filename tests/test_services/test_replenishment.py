@@ -6,8 +6,7 @@ from starlette.exceptions import HTTPException
 import models
 from schemas import CreateReplenishment
 from services import create_replenishments, read_replenishments
-
-from tests.factories import UserFactory, ReplenishmentsFactory
+from tests.factories import ReplenishmentsFactory, UserFactory
 
 
 def test_create_replenishments(session) -> None:

@@ -4,15 +4,15 @@ from unittest.mock import Mock
 
 from dependencies import oauth
 from models import GroupStatusEnum
-from tests.conftest import client, async_return
+from tests.conftest import async_return, client
 from tests.factories import (
-    UserFactory,
-    GroupFactory,
-    UserGroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
-    ReplenishmentsFactory,
     ExpenseFactory,
+    GroupFactory,
+    ReplenishmentsFactory,
+    UserFactory,
+    UserGroupFactory,
 )
 
 

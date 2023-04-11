@@ -1,6 +1,6 @@
 from pydantic.schema import date
 
-from schemas import User, Group
+from schemas import Group, User
 from schemas.base_model import BaseModel
 
 

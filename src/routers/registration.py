@@ -1,10 +1,10 @@
 from authlib.integrations.base_client import OAuthError
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
-from fastapi import Depends, APIRouter
 
 from database import get_db
 from dependencies import oauth

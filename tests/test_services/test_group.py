@@ -1,28 +1,28 @@
 import datetime
-import pytest
 from operator import and_
 
+import pytest
 from starlette.exceptions import HTTPException
 
 import models
 import models.status
-from models import UserGroup, GroupStatusEnum
+from models import GroupStatusEnum, UserGroup
 from schemas import CreateGroup
 from services import (
-    create_group,
     add_user_in_group,
-    read_users_group,
-    read_user_groups,
-    leave_group,
-    remove_user,
+    create_group,
     disband_group,
+    leave_group,
     read_categories_group,
+    read_user_groups,
+    read_users_group,
+    remove_user,
 )
 from tests.factories import (
-    UserFactory,
-    GroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
+    GroupFactory,
+    UserFactory,
     UserGroupFactory,
 )
 

@@ -1,12 +1,12 @@
 from services import get_user, read_user_current_balance
 from tests.factories import (
-    UserFactory,
-    ReplenishmentsFactory,
-    ExpenseFactory,
-    GroupFactory,
-    UserGroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
+    ExpenseFactory,
+    GroupFactory,
+    ReplenishmentsFactory,
+    UserFactory,
+    UserGroupFactory,
 )
 
 

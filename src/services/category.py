@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
 
+import models
 import models.status
 import schemas
-import models
 
 
 def create_category(

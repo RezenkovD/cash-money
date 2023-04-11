@@ -2,7 +2,8 @@ import datetime
 
 import factory
 
-from models import Group, UserGroup, GroupStatusEnum
+from models import Group, GroupStatusEnum, UserGroup
+
 from .base_factory import BaseFactory
 
 

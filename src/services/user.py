@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import coalesce, sum
 
-from models import User, Replenishment, Expense
+from models import Expense, Replenishment, User
 from schemas import CurrentBalance
 
 

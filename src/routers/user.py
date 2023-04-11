@@ -1,13 +1,13 @@
 from typing import List
 
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter
 
+import schemas
+import services
 from database import get_db
 from dependencies import get_current_user
 from models import User
-import schemas
-import services
 
 router = APIRouter(
     prefix="/users",

@@ -4,8 +4,8 @@ from unittest.mock import Mock
 
 from dependencies import oauth
 from schemas import CreateReplenishment
-from tests.conftest import client, async_return
-from tests.factories import UserFactory, ReplenishmentsFactory
+from tests.conftest import async_return, client
+from tests.factories import ReplenishmentsFactory, UserFactory
 
 
 class ReplenishmentsTestCase(unittest.TestCase):
