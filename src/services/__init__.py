@@ -1,4 +1,4 @@
-from .user import get_user
+from .user import get_user, read_user_current_balance
 from .group import (
     create_group,
     read_users_group,
