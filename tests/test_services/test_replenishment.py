@@ -4,7 +4,7 @@ import pytest
 from starlette.exceptions import HTTPException
 
 import models
-from schemas import CreateReplenishments
+from schemas import CreateReplenishment
 from services import create_replenishments, read_replenishments
 
 from tests.factories import UserFactory, ReplenishmentsFactory
@@ -12,7 +12,7 @@ from tests.factories import UserFactory, ReplenishmentsFactory
 
 def test_create_replenishments(session) -> None:
     user = UserFactory()
-    replenishments = CreateReplenishments(descriptions="descriptions", amount=999.9)
+    replenishments = CreateReplenishment(descriptions="descriptions", amount=999.9)
     data = create_replenishments(session, user.id, replenishments)
     db_replenishments = session.query(models.Replenishment).all()
     assert len(db_replenishments) == 1

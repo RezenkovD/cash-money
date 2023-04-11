@@ -12,8 +12,8 @@ import models
 
 
 def create_replenishments(
-    db: Session, user_id: int, replenishments: schemas.CreateReplenishments
-) -> schemas.Replenishments:
+    db: Session, user_id: int, replenishments: schemas.CreateReplenishment
+) -> schemas.Replenishment:
     db_replenishments = models.Replenishment(**replenishments.dict())
     db_replenishments.user_id = user_id
     db_replenishments.time = datetime.datetime.utcnow()
@@ -35,7 +35,7 @@ def read_replenishments(
     filter_date: Optional[date] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
-) -> List[schemas.UserReplenishments]:
+) -> List[schemas.UserReplenishment]:
     if filter_date and start_date or filter_date and end_date:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -53,7 +53,7 @@ def read_replenishments(
 
 def read_replenishments_all_time(
     db: Session, user_id: int
-) -> List[schemas.UserReplenishments]:
+) -> List[schemas.UserReplenishment]:
     replenishments = (
         db.query(models.Replenishment)
         .filter_by(
@@ -66,7 +66,7 @@ def read_replenishments_all_time(
 
 def read_replenishments_month(
     db: Session, user_id: int, filter_date: date
-) -> List[schemas.UserReplenishments]:
+) -> List[schemas.UserReplenishment]:
     replenishments = (
         db.query(models.Replenishment)
         .filter(
@@ -83,7 +83,7 @@ def read_replenishments_month(
 
 def read_replenishments_time_range(
     db: Session, user_id: int, start_date: date, end_date: date
-) -> List[schemas.UserReplenishments]:
+) -> List[schemas.UserReplenishment]:
     if start_date > end_date:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -9,7 +9,7 @@ from dependencies import (
     transform_date_or_422,
     transform_exact_date_or_422,
 )
-from schemas import Replenishments, CreateReplenishments, UserReplenishments
+from schemas import Replenishment, CreateReplenishment, UserReplenishment
 from models import User
 import services
 
@@ -19,45 +19,45 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=Replenishments)
+@router.post("/", response_model=Replenishment)
 def create_replenishments(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    replenishments: CreateReplenishments,
-) -> Replenishments:
+    replenishments: CreateReplenishment,
+) -> Replenishment:
     return services.create_replenishments(db, current_user.id, replenishments)
 
 
-@router.get("/all-time/", response_model=List[UserReplenishments])
+@router.get("/all-time/", response_model=List[UserReplenishment])
 def read_replenishments_all_time(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> List[UserReplenishments]:
+) -> List[UserReplenishment]:
     return services.read_replenishments(db=db, user_id=current_user.id)
 
 
-@router.get("/{year_month}/", response_model=List[UserReplenishments])
+@router.get("/{year_month}/", response_model=List[UserReplenishment])
 def read_replenishments_month(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     year_month: str,
-) -> List[UserReplenishments]:
+) -> List[UserReplenishment]:
     filter_date = transform_date_or_422(year_month)
     return services.read_replenishments(
         db=db, user_id=current_user.id, filter_date=filter_date
     )
 
 
-@router.get("/{start_date}/{end_date}/", response_model=List[UserReplenishments])
+@router.get("/{start_date}/{end_date}/", response_model=List[UserReplenishment])
 def read_replenishments_time_range(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     start_date: str,
     end_date: str,
-) -> List[UserReplenishments]:
+) -> List[UserReplenishment]:
     start_date = transform_exact_date_or_422(start_date)
     end_date = transform_exact_date_or_422(end_date)
     return services.read_replenishments(

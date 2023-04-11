@@ -13,8 +13,8 @@ from .invintation import Invitation, CreateInvitation, BaseInvitation
 from .category import Category, CreateCategory
 from .expense import CreateExpense, BaseExpense, UserExpense
 from .replenishment import (
-    CreateReplenishments,
-    Replenishments,
-    UserReplenishments,
+    CreateReplenishment,
+    Replenishment,
+    UserReplenishment,
     CurrentBalance,
 )
