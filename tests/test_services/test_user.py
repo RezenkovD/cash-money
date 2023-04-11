@@ -27,7 +27,7 @@ def test_get_user(session) -> None:
     assert db_user.picture == user_data["picture"]
 
 
-def test_read_user_current_balance(session) -> None:
+def test_read_user_positive_current_balance(session) -> None:
     user = UserFactory()
     group = GroupFactory(admin_id=user.id)
     UserGroupFactory(user_id=user.id, group_id=group.id)
@@ -47,4 +47,23 @@ def test_read_user_current_balance(session) -> None:
         first_replenishments.amount
         + second_replenishments.amount
         - (first_expense.amount + second_expense.amount)
+    )
+
+
+def test_read_user_negative_current_balance(session) -> None:
+    user = UserFactory()
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id)
+    category = CategoryFactory()
+    CategoryGroupFactory(category_id=category.id, group_id=group.id)
+
+    first_expense = ExpenseFactory(
+        user_id=user.id, group_id=group.id, category_id=category.id
+    )
+    second_expense = ExpenseFactory(
+        user_id=user.id, group_id=group.id, category_id=category.id
+    )
+    data = read_user_current_balance(session, user.id)
+    assert data.current_balance == float(
+        -(first_expense.amount + second_expense.amount)
     )

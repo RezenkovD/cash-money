@@ -8,13 +8,13 @@ from starlette import status
 from starlette.exceptions import HTTPException
 
 import schemas
-import models
+from models import Replenishment
 
 
 def create_replenishments(
     db: Session, user_id: int, replenishments: schemas.CreateReplenishment
 ) -> schemas.Replenishment:
-    db_replenishments = models.Replenishment(**replenishments.dict())
+    db_replenishments = Replenishment(**replenishments.dict())
     db_replenishments.user_id = user_id
     db_replenishments.time = datetime.datetime.utcnow()
     db.add(db_replenishments)
@@ -55,7 +55,7 @@ def read_replenishments_all_time(
     db: Session, user_id: int
 ) -> List[schemas.UserReplenishment]:
     replenishments = (
-        db.query(models.Replenishment)
+        db.query(Replenishment)
         .filter_by(
             user_id=user_id,
         )
@@ -68,12 +68,12 @@ def read_replenishments_month(
     db: Session, user_id: int, filter_date: date
 ) -> List[schemas.UserReplenishment]:
     replenishments = (
-        db.query(models.Replenishment)
+        db.query(Replenishment)
         .filter(
             and_(
-                models.Replenishment.user_id == user_id,
-                extract("year", models.Replenishment.time) == filter_date.year,
-                extract("month", models.Replenishment.time) == filter_date.month,
+                Replenishment.user_id == user_id,
+                extract("year", Replenishment.time) == filter_date.year,
+                extract("month", Replenishment.time) == filter_date.month,
             )
         )
         .all()
@@ -90,11 +90,11 @@ def read_replenishments_time_range(
             detail="The start date cannot be older than the end date!",
         )
     replenishments = (
-        db.query(models.Replenishment)
+        db.query(Replenishment)
         .filter(
-            models.Replenishment.user_id == user_id,
-            models.Replenishment.time >= start_date,
-            models.Replenishment.time <= end_date,
+            Replenishment.user_id == user_id,
+            Replenishment.time >= start_date,
+            Replenishment.time <= end_date,
         )
         .all()
     )
