@@ -1,13 +1,6 @@
 import datetime
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    ForeignKey,
-    DECIMAL,
-    DateTime,
-)
+from sqlalchemy import DECIMAL, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from database import Base

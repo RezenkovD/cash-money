@@ -1,13 +1,13 @@
 from typing import Union
 
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter
 
+import services
 from database import get_db
 from dependencies import get_current_user
 from models import User
-from schemas import Group, CreateGroup, UsersGroup, AboutUser, CategoriesGroup
-import services
+from schemas import AboutUser, CategoriesGroup, CreateGroup, Group, UsersGroup
 
 router = APIRouter(
     prefix="/groups",

@@ -1,13 +1,13 @@
 import datetime
 
 from sqlalchemy import (
+    DECIMAL,
     Column,
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     String,
-    ForeignKey,
-    DECIMAL,
-    DateTime,
-    ForeignKeyConstraint,
 )
 from sqlalchemy.orm import relationship
 

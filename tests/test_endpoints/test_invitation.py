@@ -5,12 +5,12 @@ from unittest.mock import Mock
 import models
 import models.status
 from dependencies import oauth
-from tests.conftest import client, async_return
+from tests.conftest import async_return, client
 from tests.factories import (
-    UserFactory,
     GroupFactory,
-    UserGroupFactory,
     InvitationFactory,
+    UserFactory,
+    UserGroupFactory,
 )
 
 

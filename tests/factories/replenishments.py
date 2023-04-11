@@ -4,6 +4,7 @@ import factory
 from factory.fuzzy import FuzzyFloat
 
 from models import Replenishment
+
 from .base_factory import BaseFactory
 
 

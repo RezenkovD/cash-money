@@ -5,7 +5,7 @@ import models
 import models.status
 from schemas import CreateCategory
 from services import create_category
-from tests.factories import UserFactory, GroupFactory, UserGroupFactory, CategoryFactory
+from tests.factories import CategoryFactory, GroupFactory, UserFactory, UserGroupFactory
 
 
 def test_create_category(session) -> None:

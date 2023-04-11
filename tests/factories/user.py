@@ -1,6 +1,7 @@
 import factory
 
 from models import User
+
 from .base_factory import BaseFactory
 
 

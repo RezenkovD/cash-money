@@ -8,12 +8,12 @@ import models.status
 from schemas import CreateExpense
 from services import create_expense, read_expenses
 from tests.factories import (
-    UserFactory,
-    GroupFactory,
-    UserGroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
     ExpenseFactory,
+    GroupFactory,
+    UserFactory,
+    UserGroupFactory,
 )
 
 

@@ -1,7 +1,6 @@
 from datetime import date
 from typing import List
 
-
 from schemas import User
 from schemas.base_model import BaseModel
 from schemas.category import Category
