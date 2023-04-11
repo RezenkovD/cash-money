@@ -24,7 +24,7 @@ def test_create_replenishments(session) -> None:
     assert data.user.id == user.id
 
 
-def test_read_replenishments_by_group_time_range_date_exc(session):
+def test_read_replenishments_by_group_time_range_date_exc(session) -> None:
     user = UserFactory()
     start_date = datetime.datetime(2022, 12, 10)
     end_date = datetime.datetime(2022, 11, 22)
@@ -40,7 +40,7 @@ def test_read_replenishments_by_group_time_range_date_exc(session):
     )
 
 
-def test_read_replenishments_many_arguments(session):
+def test_read_replenishments_many_arguments(session) -> None:
     user = UserFactory()
     filter_date = datetime.datetime(2022, 11, 10)
     start_date = datetime.datetime(2022, 11, 10)
@@ -59,7 +59,7 @@ def test_read_replenishments_many_arguments(session):
     )
 
 
-def test_read_replenishments_all_time(session):
+def test_read_replenishments_all_time(session) -> None:
     user = UserFactory()
     first_replenishments = ReplenishmentsFactory(user_id=user.id)
     second_replenishments = ReplenishmentsFactory(user_id=user.id)
@@ -76,7 +76,7 @@ def test_read_replenishments_all_time(session):
         assert data.descriptions == expense.descriptions
 
 
-def test_read_replenishments_month(session):
+def test_read_replenishments_month(session) -> None:
     user = UserFactory()
 
     time = datetime.datetime(2022, 12, 12)
@@ -110,7 +110,7 @@ def test_read_replenishments_month(session):
         assert data.user.id == user.id
 
 
-def test_read_replenishments_time_range(session):
+def test_read_replenishments_time_range(session) -> None:
     user = UserFactory()
 
     second_date = datetime.datetime(2022, 12, 10)
