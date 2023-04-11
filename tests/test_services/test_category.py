@@ -1,10 +1,10 @@
-import pytest
-from starlette.exceptions import HTTPException
-
 import models
+import pytest
 from schemas import CreateCategory
 from services import create_category
-from tests.factories import UserFactory, GroupFactory, UserGroupFactory, CategoryFactory
+from starlette.exceptions import HTTPException
+
+from tests.factories import CategoryFactory, GroupFactory, UserFactory, UserGroupFactory
 
 
 def test_create_category(session) -> None:

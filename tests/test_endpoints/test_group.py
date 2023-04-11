@@ -5,13 +5,14 @@ from unittest.mock import Mock
 from dependencies import oauth
 from models import Status
 from schemas import CreateGroup
-from tests.conftest import client, async_return
+
+from tests.conftest import async_return, client
 from tests.factories import (
-    UserFactory,
-    GroupFactory,
-    UserGroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
+    GroupFactory,
+    UserFactory,
+    UserGroupFactory,
 )
 
 

@@ -8,12 +8,12 @@ from starlette.exceptions import HTTPException
 
 import schemas
 from models import (
+    Group,
     Invitation,
     ResponseStatus,
-    UserGroup,
-    User,
-    Group,
     Status,
+    User,
+    UserGroup,
     UserResponse,
 )
 from services import add_user_in_group

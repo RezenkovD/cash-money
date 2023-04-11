@@ -1,6 +1,6 @@
 import factory
-
 from models import Category, CategoryGroups
+
 from .base_factory import BaseFactory
 
 

@@ -2,8 +2,8 @@ import datetime
 
 import factory
 from factory.fuzzy import FuzzyFloat
-
 from models import Expense
+
 from .base_factory import BaseFactory
 
 

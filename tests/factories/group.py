@@ -1,8 +1,8 @@
 import datetime
 
 import factory
+from models import Group, Status, UserGroup
 
-from models import Group, UserGroup, Status
 from .base_factory import BaseFactory
 
 

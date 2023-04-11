@@ -1,14 +1,13 @@
 import asyncio
-import pytest
 
+import pytest
+from config import settings
+from database import Base, get_db
 from fastapi.testclient import TestClient
+from main import app as main_app
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
-
-from config import settings
-from database import Base, get_db
-from main import app as main_app
 
 engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

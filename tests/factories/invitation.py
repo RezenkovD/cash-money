@@ -1,8 +1,8 @@
 import datetime
 
 import factory
-
 from models import Invitation, ResponseStatus
+
 from .base_factory import BaseFactory
 
 

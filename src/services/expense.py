@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
 
-import schemas
 import models
+import schemas
 
 
 def create_expense(

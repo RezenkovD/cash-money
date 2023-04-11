@@ -1,18 +1,18 @@
 import datetime
 
-import pytest
-from starlette.exceptions import HTTPException
-
 import models
+import pytest
 from schemas import CreateExpense
 from services import create_expense, read_expenses
+from starlette.exceptions import HTTPException
+
 from tests.factories import (
-    UserFactory,
-    GroupFactory,
-    UserGroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
     ExpenseFactory,
+    GroupFactory,
+    UserFactory,
+    UserGroupFactory,
 )
 
 

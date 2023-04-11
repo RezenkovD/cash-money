@@ -5,14 +5,15 @@ from unittest.mock import Mock
 import models
 from dependencies import oauth
 from schemas import CreateExpense
-from tests.conftest import client, async_return
+
+from tests.conftest import async_return, client
 from tests.factories import (
-    UserFactory,
-    GroupFactory,
-    UserGroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
     ExpenseFactory,
+    GroupFactory,
+    UserFactory,
+    UserGroupFactory,
 )
 
 

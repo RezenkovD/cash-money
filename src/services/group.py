@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session, joinedload
 from starlette import status
 from starlette.exceptions import HTTPException
 
-import schemas
 import models
+import schemas
 
 
 def remove_user(

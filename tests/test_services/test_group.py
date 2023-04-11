@@ -1,27 +1,27 @@
 import datetime
-import pytest
 from operator import and_
 
-from starlette.exceptions import HTTPException
-
 import models
-from models import UserGroup, Status
+import pytest
+from models import Status, UserGroup
 from schemas import CreateGroup
 from services import (
-    create_group,
     add_user_in_group,
-    read_users_group,
-    read_user_groups,
-    leave_group,
-    remove_user,
+    create_group,
     disband_group,
+    leave_group,
     read_categories_group,
+    read_user_groups,
+    read_users_group,
+    remove_user,
 )
+from starlette.exceptions import HTTPException
+
 from tests.factories import (
-    UserFactory,
-    GroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
+    GroupFactory,
+    UserFactory,
     UserGroupFactory,
 )
 

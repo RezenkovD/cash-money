@@ -1,4 +1,5 @@
 from services import get_user
+
 from tests.factories import UserFactory
 
 

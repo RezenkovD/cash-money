@@ -2,13 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 
-from routers import registration
-from routers import group
-from routers import user
-from routers import invitation
-from routers import category
-from routers import expense
 from config import settings
+from routers import category, expense, group, invitation, registration, user
 
 app = FastAPI()
 

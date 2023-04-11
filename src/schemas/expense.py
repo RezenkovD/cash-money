@@ -1,6 +1,6 @@
 import datetime
 
-from schemas import BaseUser, ShortGroup, Category
+from schemas import BaseUser, Category, ShortGroup
 from schemas.base_model import BaseModel
 
 
