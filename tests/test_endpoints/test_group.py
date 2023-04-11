@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
-from models import Status
+from models import GroupStatusEnum
 from schemas import CreateGroup
 from tests.conftest import client, async_return
 from tests.factories import (
@@ -43,7 +43,7 @@ class GroupTestCase(unittest.TestCase):
             "id": group_data["id"],
             "title": group.title,
             "description": group.description,
-            "status": Status.ACTIVE,
+            "status": GroupStatusEnum.ACTIVE,
             "admin": {
                 "id": self.user.id,
                 "login": self.user_dict["userinfo"]["email"],
@@ -62,7 +62,7 @@ class GroupTestCase(unittest.TestCase):
         users_group_data = {
             "users_group": [
                 {
-                    "status": Status.ACTIVE,
+                    "status": GroupStatusEnum.ACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                     "user": {
                         "id": self.user.id,
@@ -91,7 +91,7 @@ class GroupTestCase(unittest.TestCase):
                 "login": self.user.login,
                 "picture": self.user.picture,
             },
-            "status": Status.INACTIVE,
+            "status": GroupStatusEnum.INACTIVE,
             "date_join": datetime.date.today().strftime("%Y-%m-%d"),
         }
         data = data.json()
@@ -115,7 +115,7 @@ class GroupTestCase(unittest.TestCase):
                         "login": self.user.login,
                         "picture": self.user.picture,
                     },
-                    "status": Status.INACTIVE,
+                    "status": GroupStatusEnum.INACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 }
             ]
@@ -134,7 +134,7 @@ class GroupTestCase(unittest.TestCase):
                 "last_name": second_user.last_name,
                 "picture": second_user.picture,
             },
-            "status": Status.INACTIVE,
+            "status": GroupStatusEnum.INACTIVE,
             "date_join": datetime.date.today().strftime("%Y-%m-%d"),
         }
         assert data.status_code == 200
@@ -143,7 +143,9 @@ class GroupTestCase(unittest.TestCase):
     def test_remove_inactive_user(self) -> None:
         second_user = UserFactory()
         UserGroupFactory(
-            user_id=second_user.id, group_id=self.group.id, status=Status.INACTIVE
+            user_id=second_user.id,
+            group_id=self.group.id,
+            status=GroupStatusEnum.INACTIVE,
         )
         data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}/")
         assert data.status_code == 405
@@ -163,7 +165,7 @@ class GroupTestCase(unittest.TestCase):
                         "login": self.user.login,
                         "picture": self.user.picture,
                     },
-                    "status": Status.INACTIVE,
+                    "status": GroupStatusEnum.INACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 },
                 {
@@ -174,7 +176,7 @@ class GroupTestCase(unittest.TestCase):
                         "last_name": second_user.last_name,
                         "picture": second_user.picture,
                     },
-                    "status": Status.INACTIVE,
+                    "status": GroupStatusEnum.INACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 },
             ]

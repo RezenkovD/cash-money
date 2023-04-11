@@ -2,6 +2,7 @@ import pytest
 from starlette.exceptions import HTTPException
 
 import models
+import models.status
 from schemas import CreateCategory
 from services import create_category
 from tests.factories import UserFactory, GroupFactory, UserGroupFactory, CategoryFactory
@@ -29,8 +30,14 @@ def test_create_category_not_admin(session) -> None:
 
 def test_create_category_inactive_group(session) -> None:
     user = UserFactory()
-    group = GroupFactory(admin_id=user.id, status=models.Status.INACTIVE)
-    UserGroupFactory(user_id=user.id, group_id=group.id, status=models.Status.INACTIVE)
+    group = GroupFactory(
+        admin_id=user.id, status=models.status.GroupStatusEnum.INACTIVE
+    )
+    UserGroupFactory(
+        user_id=user.id,
+        group_id=group.id,
+        status=models.status.GroupStatusEnum.INACTIVE,
+    )
     category = CreateCategory(title="Book")
     with pytest.raises(HTTPException) as ex_info:
         create_category(session, user.id, group.id, category)

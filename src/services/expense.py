@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
 
+import models.status
 import schemas
 import models
 
@@ -25,7 +26,7 @@ def create_expense(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You are not a user of this group!",
         )
-    if db_user_group.status == models.Status.INACTIVE:
+    if db_user_group.status == models.status.GroupStatusEnum.INACTIVE:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="The user is not active in this group!",

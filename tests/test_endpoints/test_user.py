@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
-from models import Status
+from models import GroupStatusEnum
 from tests.conftest import client, async_return
 from tests.factories import (
     UserFactory,
@@ -68,9 +68,9 @@ class UserTestCase(unittest.TestCase):
                         "id": first_group.id,
                         "title": first_group.title,
                         "description": first_group.description,
-                        "status": Status.ACTIVE,
+                        "status": GroupStatusEnum.ACTIVE,
                     },
-                    "status": Status.ACTIVE,
+                    "status": GroupStatusEnum.ACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 },
                 {
@@ -78,9 +78,9 @@ class UserTestCase(unittest.TestCase):
                         "id": second_group.id,
                         "title": second_group.title,
                         "description": second_group.description,
-                        "status": Status.ACTIVE,
+                        "status": GroupStatusEnum.ACTIVE,
                     },
-                    "status": Status.ACTIVE,
+                    "status": GroupStatusEnum.ACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
                 },
             ]

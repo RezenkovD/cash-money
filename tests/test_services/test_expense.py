@@ -4,6 +4,7 @@ import pytest
 from starlette.exceptions import HTTPException
 
 import models
+import models.status
 from schemas import CreateExpense
 from services import create_expense, read_expenses
 from tests.factories import (
@@ -53,7 +54,11 @@ def test_create_expense_inactive_user(session) -> None:
     user = UserFactory()
     category = CategoryFactory()
     group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=group.id, status=models.Status.INACTIVE)
+    UserGroupFactory(
+        user_id=user.id,
+        group_id=group.id,
+        status=models.status.GroupStatusEnum.INACTIVE,
+    )
     expense = CreateExpense(
         descriptions="descriptions", amount=999.9, category_id=category.id
     )
