@@ -5,5 +5,5 @@ class CreateCategory(BaseModel):
     title: str
 
 
-class Category(CreateCategory):
+class CategoryModel(CreateCategory):
     id: int

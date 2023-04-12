@@ -2,17 +2,17 @@ import datetime
 import unittest
 from unittest.mock import Mock
 
-import models
 from dependencies import oauth
+from enums import GroupStatusEnum
 from schemas import CreateExpense
-from tests.conftest import client, async_return
+from tests.conftest import async_return, client
 from tests.factories import (
-    UserFactory,
-    GroupFactory,
-    UserGroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
     ExpenseFactory,
+    GroupFactory,
+    UserFactory,
+    UserGroupFactory,
 )
 
 
@@ -84,7 +84,9 @@ class ExpensesTestCase(unittest.TestCase):
     def test_create_expense_inactive_user(self) -> None:
         group = GroupFactory(admin_id=self.user.id)
         UserGroupFactory(
-            user_id=self.user.id, group_id=group.id, status=models.Status.INACTIVE
+            user_id=self.user.id,
+            group_id=group.id,
+            status=GroupStatusEnum.INACTIVE,
         )
         expense = CreateExpense(
             descriptions="descriptions", amount=999.9, category_id=self.category.id

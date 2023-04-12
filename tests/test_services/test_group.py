@@ -1,27 +1,27 @@
 import datetime
-import pytest
 from operator import and_
 
+import pytest
 from starlette.exceptions import HTTPException
 
-import models
-from models import UserGroup, Status
+from models import Group, UserGroup
+from enums import GroupStatusEnum
 from schemas import CreateGroup
 from services import (
-    create_group,
     add_user_in_group,
-    read_users_group,
-    read_user_groups,
-    leave_group,
-    remove_user,
+    create_group,
     disband_group,
+    leave_group,
     read_categories_group,
+    read_user_groups,
+    read_users_group,
+    remove_user,
 )
 from tests.factories import (
-    UserFactory,
-    GroupFactory,
     CategoryFactory,
     CategoryGroupFactory,
+    GroupFactory,
+    UserFactory,
     UserGroupFactory,
 )
 
@@ -38,7 +38,7 @@ def test_create_group(session) -> None:
     group = create_group(session, user.id, data)
     assert group.title == "test_title"
     assert group.description == "test_description"
-    assert group.status == Status.ACTIVE
+    assert group.status == GroupStatusEnum.ACTIVE
     assert group.admin.login == user_data["login"]
     assert group.admin.first_name == user_data["first_name"]
     assert group.admin.last_name == user_data["last_name"]
@@ -62,7 +62,7 @@ def test_add_user_in_group(session) -> None:
         .one_or_none()
     )
     assert db_user_group.user_id == user.id
-    assert db_user_group.status == Status.ACTIVE
+    assert db_user_group.status == GroupStatusEnum.ACTIVE
     assert db_user_group.group_id == group.id
     assert db_user_group.date_join.strftime(
         "%Y-%m-%d"
@@ -72,14 +72,18 @@ def test_add_user_in_group(session) -> None:
 def test_add_inactive_user_in_group(session) -> None:
     user = UserFactory()
     group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(group_id=group.id, user_id=user.id, status=models.Status.INACTIVE)
+    UserGroupFactory(
+        group_id=group.id,
+        user_id=user.id,
+        status=GroupStatusEnum.INACTIVE,
+    )
     db_user_group = (
         session.query(UserGroup)
         .filter(and_(UserGroup.group_id == group.id, UserGroup.user_id == user.id))
         .one_or_none()
     )
     assert db_user_group.user_id == user.id
-    assert db_user_group.status == Status.INACTIVE
+    assert db_user_group.status == GroupStatusEnum.INACTIVE
     assert db_user_group.group_id == group.id
     assert db_user_group.date_join.strftime(
         "%Y-%m-%d"
@@ -92,7 +96,7 @@ def test_add_inactive_user_in_group(session) -> None:
         .one_or_none()
     )
     assert db_user_group.user_id == user.id
-    assert db_user_group.status == Status.ACTIVE
+    assert db_user_group.status == GroupStatusEnum.ACTIVE
     assert db_user_group.group_id == group.id
     assert db_user_group.date_join.strftime(
         "%Y-%m-%d"
@@ -109,7 +113,7 @@ def test_read_users_group(session) -> None:
     users = [first_user, second_user]
     for data, user in zip(users_group.users_group, users):
         assert data.user.login == user.login
-        assert data.status == Status.ACTIVE
+        assert data.status == GroupStatusEnum.ACTIVE
         assert data.date_join.strftime("%Y-%m-%d") == datetime.date.today().strftime(
             "%Y-%m-%d"
         )
@@ -136,7 +140,7 @@ def test_read_user_groups(session) -> None:
     for data, group in zip(users_group.user_groups, groups):
         assert data.group.id == group.id
         assert data.group.title == group.title
-        assert data.group.status == Status.ACTIVE
+        assert data.group.status == GroupStatusEnum.ACTIVE
 
 
 def test_read_categories_group(session) -> None:
@@ -168,10 +172,10 @@ def test_leave_group_user(session) -> None:
     UserGroupFactory(user_id=second_user.id, group_id=group.id)
     users_group = read_users_group(session, first_user.id, group.id)
     for user in users_group.users_group:
-        assert user.status == Status.ACTIVE
+        assert user.status == GroupStatusEnum.ACTIVE
     data = leave_group(session, second_user.id, group.id)
     assert data.user.id == second_user.id
-    assert data.status == Status.INACTIVE
+    assert data.status == GroupStatusEnum.INACTIVE
 
 
 def test_leave_group_not_found(session) -> None:
@@ -185,18 +189,18 @@ def test_leave_group_admin(session) -> None:
     first_user = UserFactory()
     second_user = UserFactory()
     group = GroupFactory(admin_id=first_user.id)
-    assert group.status == Status.ACTIVE
+    assert group.status == GroupStatusEnum.ACTIVE
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
     UserGroupFactory(user_id=second_user.id, group_id=group.id)
     users_group = read_users_group(session, first_user.id, group.id)
     for user in users_group.users_group:
-        assert user.status == Status.ACTIVE
+        assert user.status == GroupStatusEnum.ACTIVE
     leave_group(session, first_user.id, group.id)
     users_group = read_users_group(session, first_user.id, group.id)
     for user in users_group.users_group:
-        assert user.status == Status.INACTIVE
-    db_group = session.query(models.Group).filter_by(id=group.id).one()
-    assert db_group.status == Status.INACTIVE
+        assert user.status == GroupStatusEnum.INACTIVE
+    db_group = session.query(Group).filter_by(id=group.id).one()
+    assert db_group.status == GroupStatusEnum.INACTIVE
 
 
 def test_disband_group(session):
@@ -207,9 +211,9 @@ def test_disband_group(session):
     UserGroupFactory(user_id=second_user.id, group_id=group.id)
     data = disband_group(session, group.id)
     for user in data.users_group:
-        assert user.status == Status.INACTIVE
-    db_group = session.query(models.Group).filter_by(id=group.id).one()
-    assert db_group.status == Status.INACTIVE
+        assert user.status == GroupStatusEnum.INACTIVE
+    db_group = session.query(Group).filter_by(id=group.id).one()
+    assert db_group.status == GroupStatusEnum.INACTIVE
 
 
 def test_remove_user(session):
@@ -220,10 +224,10 @@ def test_remove_user(session):
     UserGroupFactory(user_id=second_user.id, group_id=group.id)
     db_users_group = read_users_group(session, first_user.id, group.id)
     for user in db_users_group.users_group:
-        assert user.status == Status.ACTIVE
+        assert user.status == GroupStatusEnum.ACTIVE
     data = remove_user(session, first_user.id, group.id, second_user.id)
     assert data.user.id == second_user.id
-    assert data.status == Status.INACTIVE
+    assert data.status == GroupStatusEnum.INACTIVE
 
 
 def test_remove_admin(session):
@@ -232,13 +236,13 @@ def test_remove_admin(session):
     group = GroupFactory(admin_id=first_user.id)
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
     UserGroupFactory(user_id=second_user.id, group_id=group.id)
-    db_group = session.query(models.Group).filter_by(id=group.id).one()
-    assert db_group.status == Status.ACTIVE
+    db_group = session.query(Group).filter_by(id=group.id).one()
+    assert db_group.status == GroupStatusEnum.ACTIVE
     data = remove_user(session, first_user.id, group.id, first_user.id)
     for user in data.users_group:
-        assert user.status == Status.INACTIVE
-    db_group = session.query(models.Group).filter_by(id=group.id).one()
-    assert db_group.status == Status.INACTIVE
+        assert user.status == GroupStatusEnum.INACTIVE
+    db_group = session.query(Group).filter_by(id=group.id).one()
+    assert db_group.status == GroupStatusEnum.INACTIVE
 
 
 def test_remove_user_as_non_admin(session) -> None:
@@ -257,7 +261,9 @@ def test_remove_inactive_user(session) -> None:
     group = GroupFactory(admin_id=first_user.id)
     UserGroupFactory(user_id=first_user.id, group_id=group.id)
     UserGroupFactory(
-        user_id=second_user.id, group_id=group.id, status=models.Status.INACTIVE
+        user_id=second_user.id,
+        group_id=group.id,
+        status=GroupStatusEnum.INACTIVE,
     )
     with pytest.raises(HTTPException) as ex_info:
         remove_user(session, first_user.id, group.id, second_user.id)

@@ -2,7 +2,9 @@ import datetime
 
 import factory
 
-from models import Invitation, ResponseStatus
+from models import Invitation
+from enums import ResponseStatusEnum
+
 from .base_factory import BaseFactory
 
 
@@ -12,7 +14,7 @@ class InvitationFactory(BaseFactory):
     recipient_id = factory.Faker("id")
     group_id = factory.Faker("id")
     creation_time = datetime.datetime.utcnow()
-    status = ResponseStatus.PENDING
+    status = ResponseStatusEnum.PENDING
 
     class Meta:
         model = Invitation

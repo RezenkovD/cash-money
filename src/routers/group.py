@@ -1,13 +1,13 @@
 from typing import Union
 
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter
 
+import services
 from database import get_db
 from dependencies import get_current_user
 from models import User
-from schemas import Group, CreateGroup, UsersGroup, AboutUser, CategoriesGroup
-import services
+from schemas import AboutUser, CategoriesGroup, CreateGroup, GroupModel, UsersGroup
 
 router = APIRouter(
     prefix="/groups",
@@ -15,13 +15,13 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=Group)
+@router.post("/", response_model=GroupModel)
 def create_group(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group: CreateGroup,
-) -> Group:
+) -> GroupModel:
     return services.create_group(db, current_user.id, group)
 
 

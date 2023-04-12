@@ -2,13 +2,16 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 
-from routers import registration
-from routers import group
-from routers import user
-from routers import invitation
-from routers import category
-from routers import expense
 from config import settings
+from routers import (
+    category,
+    expense,
+    group,
+    invitation,
+    registration,
+    replenishment,
+    user,
+)
 
 app = FastAPI()
 
@@ -20,6 +23,7 @@ app.include_router(user.router)
 app.include_router(invitation.router)
 app.include_router(category.router)
 app.include_router(expense.router)
+app.include_router(replenishment.router)
 
 if __name__ == "__main__":
     uvicorn.run(
