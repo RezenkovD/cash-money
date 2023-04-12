@@ -2,6 +2,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from starlette import status
+from starlette.exceptions import HTTPException
 
 import services
 from database import get_db
@@ -29,40 +31,39 @@ def create_replenishments(
     return services.create_replenishments(db, current_user.id, replenishments)
 
 
-@router.get("/all-time/", response_model=List[UserReplenishment])
-def read_replenishments_all_time(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> List[UserReplenishment]:
-    return services.read_replenishments(db=db, user_id=current_user.id)
-
-
-@router.get("/{year_month}/", response_model=List[UserReplenishment])
-def read_replenishments_month(
+@router.get("/", response_model=List[UserReplenishment])
+def read_replenishments(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    year_month: str,
+    year_month: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
 ) -> List[UserReplenishment]:
-    filter_date = transform_date_or_422(year_month)
-    return services.read_replenishments(
-        db=db, user_id=current_user.id, filter_date=filter_date
-    )
-
-
-@router.get("/{start_date}/{end_date}/", response_model=List[UserReplenishment])
-def read_replenishments_time_range(
-    *,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    start_date: str,
-    end_date: str,
-) -> List[UserReplenishment]:
-    start_date = transform_exact_date_or_422(start_date)
-    end_date = transform_exact_date_or_422(end_date)
-    return services.read_replenishments(
-        db=db,
-        user_id=current_user.id,
-        start_date=start_date,
-        end_date=end_date,
-    )
+    if year_month and (start_date or end_date):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot use filter_date with start_date or end_date",
+        )
+    elif (start_date and not end_date) or (end_date and not start_date):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Both start_date and end_date are required",
+        )
+    else:
+        if year_month:
+            filter_date = transform_date_or_422(year_month)
+            return services.read_replenishments(
+                db=db, user_id=current_user.id, filter_date=filter_date
+            )
+        elif start_date and end_date:
+            start_date = transform_exact_date_or_422(start_date)
+            end_date = transform_exact_date_or_422(end_date)
+            return services.read_replenishments(
+                db=db,
+                user_id=current_user.id,
+                start_date=start_date,
+                end_date=end_date,
+            )
+        else:
+            return services.read_replenishments(db=db, user_id=current_user.id)

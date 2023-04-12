@@ -36,11 +36,6 @@ def read_replenishments(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
 ) -> List[UserReplenishment]:
-    if filter_date and start_date or filter_date and end_date:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
-        )
     replenishments = read_replenishments_all_time(db, user_id)
     if filter_date:
         replenishments = read_replenishments_month(db, user_id, filter_date)

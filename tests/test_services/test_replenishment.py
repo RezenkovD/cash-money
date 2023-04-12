@@ -39,25 +39,6 @@ def test_read_replenishments_by_group_time_range_date_exc(session) -> None:
     )
 
 
-def test_read_replenishments_many_arguments(session) -> None:
-    user = UserFactory()
-    filter_date = datetime.datetime(2022, 11, 10)
-    start_date = datetime.datetime(2022, 11, 10)
-    end_date = datetime.datetime(2022, 11, 10)
-    with pytest.raises(HTTPException) as ex_info:
-        read_replenishments(
-            db=session,
-            user_id=user.id,
-            filter_date=filter_date,
-            start_date=start_date,
-            end_date=end_date,
-        )
-    assert (
-        "Too many arguments! It is necessary to select either a month or a start date and an end date!"
-        in str(ex_info.value.detail)
-    )
-
-
 def test_read_replenishments_all_time(session) -> None:
     user = UserFactory()
     first_replenishments = ReplenishmentsFactory(user_id=user.id)

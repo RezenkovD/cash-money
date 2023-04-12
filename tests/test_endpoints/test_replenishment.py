@@ -46,7 +46,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
     def test_read_replenishments_all_time(self) -> None:
         first_replenishments = ReplenishmentsFactory(user_id=self.user.id)
         second_replenishments = ReplenishmentsFactory(user_id=self.user.id)
-        data = client.get(f"/replenishments/all-time/")
+        data = client.get(f"/replenishments/")
         assert data.status_code == 200
         replenishments_data = [
             {
@@ -62,13 +62,29 @@ class ReplenishmentsTestCase(unittest.TestCase):
         ]
         assert data.json() == replenishments_data
 
+    def test_read_replenishments_exc_three_args(self) -> None:
+        data = client.get(
+            f"/replenishments/?year_month=2022-12&start_date=2022-12-1&end_date=2022-12-12"
+        )
+        assert data.status_code == 400
+
+    def test_read_replenishments_exc_args_no_match(self) -> None:
+        data = client.get(f"/replenishments/?year_month=2022-12&end_date=2022-12-12")
+        assert data.status_code == 400
+
+    def test_read_replenishments_exc(self) -> None:
+        data = client.get(
+            f"/replenishments/?year_month=2022-12&start_date=2022-12-1&end_date=2022-12-12"
+        )
+        assert data.status_code == 400
+
     def test_read_replenishments_month_exc(self) -> None:
-        data = client.get(f"/replenishments/11-2022/")
+        data = client.get(f"/replenishments/?year_month=12-2022")
         assert data.status_code == 422
 
     def test_read_replenishments_month(self) -> None:
         time = datetime.datetime(2022, 12, 1)
-        data = client.get(f"/replenishments/2022-12/")
+        data = client.get("/replenishments/?year_month=2022-12")
         assert not data.json()
         first_replenishments = ReplenishmentsFactory(user_id=self.user.id, time=time)
         second_replenishments = ReplenishmentsFactory(user_id=self.user.id, time=time)
@@ -76,7 +92,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
         time = datetime.datetime(2022, 11, 12)
         ReplenishmentsFactory(user_id=self.user.id, time=time)
 
-        data = client.get(f"/replenishments/2022-12/")
+        data = client.get("/replenishments/?year_month=2022-12")
         replenishments_data = [
             {
                 "descriptions": first_replenishments.descriptions,
@@ -93,7 +109,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
 
     def test_read_replenishments_time_range(self) -> None:
         time = datetime.datetime(2022, 12, 1)
-        data = client.get(f"/replenishments/2022-12-1/2022-12-12/")
+        data = client.get("/replenishments/?start_date=2022-12-1&end_date=2022-12-12")
         assert not data.json()
         first_replenishments = ReplenishmentsFactory(user_id=self.user.id, time=time)
         second_replenishments = ReplenishmentsFactory(user_id=self.user.id, time=time)
@@ -102,7 +118,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
             user_id=self.user.id,
             time=time,
         )
-        data = client.get(f"/replenishments/2022-12-1/2022-12-12/")
+        data = client.get("/replenishments/?start_date=2022-12-1&end_date=2022-12-12")
         replenishments_data = [
             {
                 "descriptions": first_replenishments.descriptions,
@@ -118,5 +134,5 @@ class ReplenishmentsTestCase(unittest.TestCase):
         assert data.json() == replenishments_data
 
     def test_read_replenishments_time_range_date_exc(self) -> None:
-        data = client.get(f"/replenishments/2022-12-31/2022-12-09/")
+        data = client.get(f"/replenishments/?start_date=2022-12-31&end_date=2022-12-09")
         assert data.status_code == 404
