@@ -1,4 +1,4 @@
 .idea/
 __pycache__/
 src/.env
-.vscode/settings.json
+.vscode/
