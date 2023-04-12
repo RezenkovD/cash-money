@@ -69,12 +69,12 @@ class ReplenishmentsTestCase(unittest.TestCase):
             "year_month": "2022-12",
         }
         data = client.get(f"/replenishments/", params=params)
-        assert data.status_code == 400
+        assert data.status_code == 422
 
     def test_read_replenishments_exc_args_no_match(self) -> None:
         params = {"end_date": "2022-12-12", "year_month": "2022-12"}
         data = client.get(f"/replenishments/", params=params)
-        assert data.status_code == 400
+        assert data.status_code == 422
 
     def test_read_replenishments_month_exc(self) -> None:
         params = {"year_month": "12-2022"}

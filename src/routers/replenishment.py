@@ -42,12 +42,12 @@ def read_replenishments(
 ) -> List[UserReplenishment]:
     if year_month and (start_date or end_date):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Cannot use filter_date with start_date or end_date",
         )
     elif (start_date and not end_date) or (end_date and not start_date):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Both start_date and end_date are required",
         )
     elif year_month:
