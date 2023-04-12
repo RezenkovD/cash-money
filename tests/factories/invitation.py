@@ -3,7 +3,7 @@ import datetime
 import factory
 
 from models import Invitation
-from status_enum import ResponseStatusEnum
+from enums import ResponseStatusEnum
 
 from .base_factory import BaseFactory
 

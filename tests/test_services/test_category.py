@@ -2,7 +2,7 @@ import pytest
 from starlette.exceptions import HTTPException
 
 from models import Category, CategoryGroups
-from status_enum import GroupStatusEnum
+from enums import GroupStatusEnum
 from schemas import CreateCategory
 from services import create_category
 from tests.factories import CategoryFactory, GroupFactory, UserFactory, UserGroupFactory

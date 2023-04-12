@@ -7,7 +7,7 @@ from starlette import status
 from starlette.exceptions import HTTPException
 
 from models import Group, User, UserGroup
-from status_enum import GroupStatusEnum
+from enums import GroupStatusEnum
 from schemas import (
     AboutUser,
     CategoriesGroup,

@@ -4,7 +4,7 @@ from starlette import status
 from starlette.exceptions import HTTPException
 
 from models import Category, CategoryGroups, Group
-from status_enum import GroupStatusEnum
+from enums import GroupStatusEnum
 from schemas import CategoryModel, CreateCategory
 
 

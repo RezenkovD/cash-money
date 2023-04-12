@@ -12,7 +12,7 @@ from models import (
     User,
     UserGroup,
 )
-from status_enum import GroupStatusEnum, ResponseStatusEnum, UserResponseEnum
+from enums import GroupStatusEnum, ResponseStatusEnum, UserResponseEnum
 from schemas import BaseInvitation, CreateInvitation, InvitationModel
 from services import add_user_in_group
 

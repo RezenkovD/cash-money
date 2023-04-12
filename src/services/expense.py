@@ -8,7 +8,7 @@ from starlette import status
 from starlette.exceptions import HTTPException
 
 from models import CategoryGroups, Expense, UserGroup
-from status_enum import GroupStatusEnum
+from enums import GroupStatusEnum
 from schemas import CreateExpense, ExpenseModel, UserExpense
 
 

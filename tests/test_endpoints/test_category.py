@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
-from status_enum import GroupStatusEnum
+from enums import GroupStatusEnum
 from schemas import CreateCategory
 from tests.conftest import async_return, client
 from tests.factories import (

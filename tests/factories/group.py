@@ -3,7 +3,7 @@ import datetime
 import factory
 
 from models import Group, UserGroup
-from status_enum import GroupStatusEnum
+from enums import GroupStatusEnum
 
 from .base_factory import BaseFactory
 

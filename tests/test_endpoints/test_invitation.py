@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
-from status_enum import GroupStatusEnum, ResponseStatusEnum, UserResponseEnum
+from enums import GroupStatusEnum, ResponseStatusEnum, UserResponseEnum
 from tests.conftest import async_return, client
 from tests.factories import (
     GroupFactory,

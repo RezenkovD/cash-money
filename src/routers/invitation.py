@@ -7,7 +7,7 @@ import services
 from database import get_db
 from dependencies import get_current_user
 from models import User
-from status_enum import UserResponseEnum
+from enums import UserResponseEnum
 from schemas import BaseInvitation, CreateInvitation, InvitationModel
 
 router = APIRouter(

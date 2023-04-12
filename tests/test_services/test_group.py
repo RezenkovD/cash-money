@@ -5,7 +5,7 @@ import pytest
 from starlette.exceptions import HTTPException
 
 from models import Group, UserGroup
-from status_enum import GroupStatusEnum
+from enums import GroupStatusEnum
 from schemas import CreateGroup
 from services import (
     add_user_in_group,

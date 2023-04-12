@@ -4,7 +4,7 @@ from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from database import Base
-from status_enum import GroupStatusEnum
+from enums import GroupStatusEnum
 
 
 class Group(Base):
