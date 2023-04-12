@@ -50,20 +50,19 @@ def read_replenishments(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Both start_date and end_date are required",
         )
+    elif year_month:
+        filter_date = transform_date_or_422(year_month)
+        return services.read_replenishments(
+            db=db, user_id=current_user.id, filter_date=filter_date
+        )
+    elif start_date and end_date:
+        start_date = transform_exact_date_or_422(start_date)
+        end_date = transform_exact_date_or_422(end_date)
+        return services.read_replenishments(
+            db=db,
+            user_id=current_user.id,
+            start_date=start_date,
+            end_date=end_date,
+        )
     else:
-        if year_month:
-            filter_date = transform_date_or_422(year_month)
-            return services.read_replenishments(
-                db=db, user_id=current_user.id, filter_date=filter_date
-            )
-        elif start_date and end_date:
-            start_date = transform_exact_date_or_422(start_date)
-            end_date = transform_exact_date_or_422(end_date)
-            return services.read_replenishments(
-                db=db,
-                user_id=current_user.id,
-                start_date=start_date,
-                end_date=end_date,
-            )
-        else:
-            return services.read_replenishments(db=db, user_id=current_user.id)
+        return services.read_replenishments(db=db, user_id=current_user.id)
