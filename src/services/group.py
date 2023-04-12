@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session, joinedload
 from starlette import status
 from starlette.exceptions import HTTPException
 
-from models import Group, GroupStatusEnum, User, UserGroup
+from models import Group, User, UserGroup
+from status_enum import GroupStatusEnum
 from schemas import (
     AboutUser,
     CategoriesGroup,

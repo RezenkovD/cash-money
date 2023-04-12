@@ -8,13 +8,11 @@ from starlette.exceptions import HTTPException
 
 from models import (
     Group,
-    GroupStatusEnum,
     Invitation,
-    ResponseStatusEnum,
     User,
     UserGroup,
-    UserResponseEnum,
 )
+from status_enum import GroupStatusEnum, ResponseStatusEnum, UserResponseEnum
 from schemas import BaseInvitation, CreateInvitation, InvitationModel
 from services import add_user_in_group
 

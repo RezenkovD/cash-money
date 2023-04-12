@@ -3,7 +3,8 @@ import datetime
 import pytest
 from starlette.exceptions import HTTPException
 
-from models import Expense, GroupStatusEnum
+from models import Expense
+from status_enum import GroupStatusEnum
 from schemas import CreateExpense
 from services import create_expense, read_expenses
 from tests.factories import (

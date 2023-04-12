@@ -3,7 +3,7 @@ import datetime
 import pytest
 from starlette.exceptions import HTTPException
 
-from models import GroupStatusEnum, ResponseStatusEnum
+from status_enum import GroupStatusEnum, ResponseStatusEnum
 from schemas import CreateInvitation
 from services import (
     create_invitation,
