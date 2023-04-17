@@ -7,6 +7,7 @@ from models import Expense
 from enums import GroupStatusEnum
 from schemas import CreateExpense
 from services import create_expense, read_expenses
+from services.expense import update_expense, delete_expense
 from tests.factories import (
     CategoryFactory,
     CategoryGroupFactory,
@@ -37,6 +38,66 @@ def test_create_expense(session) -> None:
     assert data.user.id == user.id
     assert data.category_group.category.id == category.id
     assert data.category_group.group.id == group.id
+
+
+def test_update_expense(session) -> None:
+    user = UserFactory()
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id)
+    category = CategoryFactory()
+    CategoryGroupFactory(category_id=category.id, group_id=group.id)
+    expense = ExpenseFactory(
+        user_id=user.id, group_id=group.id, category_id=category.id
+    )
+    date_update_expense = CreateExpense(
+        descriptions="descriptions", amount=999.9, category_id=category.id
+    )
+    data = update_expense(session, user.id, group.id, date_update_expense, expense.id)
+    assert data.descriptions == date_update_expense.descriptions
+    assert float(data.amount) == date_update_expense.amount
+    assert data.time.strftime("%Y-%m-%d %H:%M") == datetime.datetime.utcnow().strftime(
+        "%Y-%m-%d %H:%M"
+    )
+    assert data.user.id == user.id
+    assert data.category_group.category.id == category.id
+    assert data.category_group.group.id == group.id
+
+
+def test_delete_expense(session) -> None:
+    user = UserFactory()
+    group = GroupFactory(admin_id=user.id)
+    UserGroupFactory(user_id=user.id, group_id=group.id)
+    category = CategoryFactory()
+    CategoryGroupFactory(category_id=category.id, group_id=group.id)
+    expense = ExpenseFactory(
+        user_id=user.id, group_id=group.id, category_id=category.id
+    )
+    db_expenses = session.query(Expense).all()
+    assert len(db_expenses) == 1
+    delete_expense(session, user.id, group.id, expense.id)
+    db_expenses = session.query(Expense).all()
+    assert len(db_expenses) == 0
+
+
+def test_update_expense_another_user(session) -> None:
+    first_user = UserFactory()
+    group = GroupFactory(admin_id=first_user.id)
+    UserGroupFactory(user_id=first_user.id, group_id=group.id)
+    category = CategoryFactory()
+    CategoryGroupFactory(category_id=category.id, group_id=group.id)
+    expense = ExpenseFactory(
+        user_id=first_user.id, group_id=group.id, category_id=category.id
+    )
+    second_user = UserFactory()
+    UserGroupFactory(user_id=second_user.id, group_id=group.id)
+    date_update_expense = CreateExpense(
+        descriptions="descriptions", amount=999.9, category_id=category.id
+    )
+    with pytest.raises(HTTPException) as ex_info:
+        update_expense(
+            session, second_user.id, group.id, date_update_expense, expense.id
+        )
+    assert "It's not your expense!" in str(ex_info.value.detail)
 
 
 def test_create_expense_another_group(session) -> None:

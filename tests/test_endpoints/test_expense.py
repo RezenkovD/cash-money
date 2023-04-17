@@ -67,6 +67,50 @@ class ExpensesTestCase(unittest.TestCase):
         assert data.status_code == 200
         assert data.json() == expense_data
 
+    def test_update_expense(self) -> None:
+        expense = ExpenseFactory(
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+        )
+        date_update_expense = CreateExpense(
+            descriptions="descriptions", amount=999.9, category_id=self.category.id
+        )
+        data = client.put(
+            f"/expenses/group/{self.first_group.id}/{expense.id}/",
+            json={
+                "descriptions": date_update_expense.descriptions,
+                "amount": date_update_expense.amount,
+                "category_id": date_update_expense.category_id,
+            },
+        )
+        expense_data = {
+            "id": data.json()["id"],
+            "descriptions": date_update_expense.descriptions,
+            "amount": date_update_expense.amount,
+            "time": data.json()["time"],
+            "category_group": {
+                "group": {"id": self.first_group.id, "title": self.first_group.title},
+                "category": {"title": self.category.title, "id": self.category.id},
+            },
+            "user": {"id": self.user.id, "login": self.user.login},
+        }
+        assert data.status_code == 200
+        assert data.json() == expense_data
+
+    def test_delete_expense(self) -> None:
+        expense = ExpenseFactory(
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+        )
+        data = client.delete(f"/expenses/group/{self.first_group.id}/{expense.id}/")
+        assert data.status_code == 204
+        data = client.get(f"/expenses/all-time/")
+        assert data.status_code == 200
+        expenses_data = []
+        assert data.json() == expenses_data
+
     def test_create_expense_another_group(self) -> None:
         expense = CreateExpense(
             descriptions="descriptions", amount=999.9, category_id=self.category.id

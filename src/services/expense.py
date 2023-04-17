@@ -12,9 +12,13 @@ from enums import GroupStatusEnum
 from schemas import CreateExpense, ExpenseModel, UserExpense
 
 
-def create_expense(
-    db: Session, user_id: int, group_id: int, expense: CreateExpense
-) -> ExpenseModel:
+def validate_input_data(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    expense: CreateExpense = None,
+    expense_id: int = None,
+) -> None:
     try:
         db_user_group = (
             db.query(UserGroup).filter_by(group_id=group_id, user_id=user_id).one()
@@ -29,16 +33,31 @@ def create_expense(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="The user is not active in this group!",
         )
-    try:
-        db.query(CategoryGroups).filter_by(
-            category_id=expense.category_id,
-            group_id=group_id,
-        ).one()
-    except exc.NoResultFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="The group has no such category!",
-        )
+    if expense:
+        try:
+            db.query(CategoryGroups).filter_by(
+                category_id=expense.category_id,
+                group_id=group_id,
+            ).one()
+        except exc.NoResultFound:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="The group has no such category!",
+            )
+    if expense_id:
+        try:
+            db.query(Expense).filter_by(id=expense_id, user_id=user_id).one()
+        except exc.NoResultFound:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="It's not your expense!",
+            )
+
+
+def create_expense(
+    db: Session, user_id: int, group_id: int, expense: CreateExpense
+) -> ExpenseModel:
+    validate_input_data(db=db, user_id=user_id, group_id=group_id, expense=expense)
     db_expense = Expense(**expense.dict())
     db_expense.user_id = user_id
     db_expense.group_id = group_id
@@ -53,6 +72,43 @@ def create_expense(
         )
     else:
         return db_expense
+
+
+def update_expense(
+    db: Session, user_id: int, group_id: int, expense: CreateExpense, expense_id: int
+) -> ExpenseModel:
+    validate_input_data(
+        db=db,
+        user_id=user_id,
+        group_id=group_id,
+        expense=expense,
+        expense_id=expense_id,
+    )
+    db.query(Expense).filter_by(id=expense_id).update(values={**expense.dict()})
+    db_expense = db.query(Expense).filter_by(id=expense_id).one()
+    try:
+        db.commit()
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while update expense",
+        )
+    else:
+        return db_expense
+
+
+def delete_expense(db: Session, user_id: int, group_id: int, expense_id: int) -> None:
+    validate_input_data(
+        db=db, user_id=user_id, group_id=group_id, expense_id=expense_id
+    )
+    db.query(Expense).filter_by(id=expense_id).delete()
+    try:
+        db.commit()
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while delete expense",
+        )
 
 
 def read_expenses(

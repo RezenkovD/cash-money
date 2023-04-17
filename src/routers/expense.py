@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from starlette.status import HTTP_204_NO_CONTENT
 
 import services
 from database import get_db
@@ -28,6 +29,29 @@ def create_expense(
     expense: CreateExpense,
 ) -> ExpenseModel:
     return services.create_expense(db, current_user.id, group_id, expense)
+
+
+@router.put("/group/{group_id}/{expense_id}/", response_model=ExpenseModel)
+def update_expense(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+    expense: CreateExpense,
+    expense_id: int,
+) -> ExpenseModel:
+    return services.update_expense(db, current_user.id, group_id, expense, expense_id)
+
+
+@router.delete("/group/{group_id}/{expense_id}/", status_code=HTTP_204_NO_CONTENT)
+def delete_expense(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+    expense_id: int,
+) -> None:
+    services.delete_expense(db, current_user.id, group_id, expense_id)
 
 
 @router.get("/group/{group_id}/all-time/", response_model=List[UserExpense])
