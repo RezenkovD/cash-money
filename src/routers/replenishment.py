@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
+from starlette.status import HTTP_204_NO_CONTENT
 
 import services
 from database import get_db
@@ -22,13 +23,36 @@ router = APIRouter(
 
 
 @router.post("/", response_model=ReplenishmentModel)
-def create_replenishments(
+def create_replenishment(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    replenishments: CreateReplenishment,
+    replenishment: CreateReplenishment,
 ) -> ReplenishmentModel:
-    return services.create_replenishments(db, current_user.id, replenishments)
+    return services.create_replenishment(db, current_user.id, replenishment)
+
+
+@router.put("/{replenishment_id}/", response_model=ReplenishmentModel)
+def update_replenishment(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    replenishment: CreateReplenishment,
+    replenishment_id: int,
+) -> ReplenishmentModel:
+    return services.update_replenishment(
+        db, current_user.id, replenishment, replenishment_id
+    )
+
+
+@router.delete("/{replenishment_id}/", status_code=HTTP_204_NO_CONTENT)
+def delete_replenishment(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    replenishment_id: int,
+) -> None:
+    services.delete_replenishment(db, current_user.id, replenishment_id)
 
 
 @router.get("/", response_model=List[UserReplenishment])

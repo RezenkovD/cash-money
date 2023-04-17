@@ -10,7 +10,7 @@ from tests.factories import (
     CategoryGroupFactory,
     ExpenseFactory,
     GroupFactory,
-    ReplenishmentsFactory,
+    ReplenishmentFactory,
     UserFactory,
     UserGroupFactory,
 )
@@ -98,8 +98,8 @@ class UserTestCase(unittest.TestCase):
         category = CategoryFactory()
         CategoryGroupFactory(category_id=category.id, group_id=group.id)
 
-        first_replenishments = ReplenishmentsFactory(user_id=self.first_user.id)
-        second_replenishments = ReplenishmentsFactory(user_id=self.first_user.id)
+        first_replenishments = ReplenishmentFactory(user_id=self.first_user.id)
+        second_replenishments = ReplenishmentFactory(user_id=self.first_user.id)
         first_expense = ExpenseFactory(
             user_id=self.first_user.id, group_id=group.id, category_id=category.id
         )

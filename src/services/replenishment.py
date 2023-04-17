@@ -2,7 +2,7 @@ import datetime
 from typing import List, Optional
 
 from pydantic.schema import date
-from sqlalchemy import and_, extract
+from sqlalchemy import and_, extract, exc
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
@@ -11,13 +11,13 @@ from models import Replenishment
 from schemas import CreateReplenishment, ReplenishmentModel, UserReplenishment
 
 
-def create_replenishments(
-    db: Session, user_id: int, replenishments: CreateReplenishment
+def create_replenishment(
+    db: Session, user_id: int, replenishment: CreateReplenishment
 ) -> ReplenishmentModel:
-    db_replenishments = Replenishment(**replenishments.dict())
-    db_replenishments.user_id = user_id
-    db_replenishments.time = datetime.datetime.utcnow()
-    db.add(db_replenishments)
+    db_replenishment = Replenishment(**replenishment.dict())
+    db_replenishment.user_id = user_id
+    db_replenishment.time = datetime.datetime.utcnow()
+    db.add(db_replenishment)
     try:
         db.commit()
     except:
@@ -26,7 +26,50 @@ def create_replenishments(
             detail=f"An error occurred while create replenishments",
         )
     else:
-        return db_replenishments
+        return db_replenishment
+
+
+def update_replenishment(
+    db: Session, user_id: int, replenishment: CreateReplenishment, replenishment_id: int
+):
+    try:
+        db.query(Replenishment).filter_by(id=replenishment_id, user_id=user_id).one()
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="It's not your replenishment!",
+        )
+    db.query(Replenishment).filter_by(id=replenishment_id).update(
+        values={**replenishment.dict()}
+    )
+    db_replenishment = db.query(Replenishment).filter_by(id=replenishment_id).one()
+    try:
+        db.commit()
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while update replenishment",
+        )
+    else:
+        return db_replenishment
+
+
+def delete_replenishment(db: Session, user_id: int, replenishment_id: int):
+    try:
+        db.query(Replenishment).filter_by(id=replenishment_id, user_id=user_id).one()
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="It's not your replenishment!",
+        )
+    db.query(Replenishment).filter_by(id=replenishment_id).delete()
+    try:
+        db.commit()
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while delete replenishment",
+        )
 
 
 def read_replenishments(

@@ -5,22 +5,68 @@ from starlette.exceptions import HTTPException
 
 from models import Replenishment
 from schemas import CreateReplenishment
-from services import create_replenishments, read_replenishments
-from tests.factories import ReplenishmentsFactory, UserFactory
+from services import (
+    create_replenishment,
+    read_replenishments,
+    delete_replenishment,
+    update_replenishment,
+)
+from tests.factories import ReplenishmentFactory, UserFactory
 
 
-def test_create_replenishments(session) -> None:
+def test_create_replenishment(session) -> None:
     user = UserFactory()
-    replenishments = CreateReplenishment(descriptions="descriptions", amount=999.9)
-    data = create_replenishments(session, user.id, replenishments)
-    db_replenishments = session.query(Replenishment).all()
-    assert len(db_replenishments) == 1
-    assert data.descriptions == replenishments.descriptions
-    assert float(data.amount) == replenishments.amount
+    replenishment = CreateReplenishment(descriptions="descriptions", amount=999.9)
+    data = create_replenishment(session, user.id, replenishment)
+    db_replenishment = session.query(Replenishment).all()
+    assert len(db_replenishment) == 1
+    assert data.descriptions == replenishment.descriptions
+    assert float(data.amount) == replenishment.amount
     assert data.time.strftime("%Y-%m-%d %H:%M") == datetime.datetime.utcnow().strftime(
         "%Y-%m-%d %H:%M"
     )
     assert data.user.id == user.id
+
+
+def test_update_replenishment(session) -> None:
+    user = UserFactory()
+    replenishment = ReplenishmentFactory(user_id=user.id)
+    date_update_replenishment = CreateReplenishment(
+        descriptions="descriptions", amount=999.9
+    )
+    data = update_replenishment(
+        session, user.id, date_update_replenishment, replenishment.id
+    )
+    assert data.descriptions == date_update_replenishment.descriptions
+    assert float(data.amount) == date_update_replenishment.amount
+    assert data.time.strftime("%Y-%m-%d %H:%M") == datetime.datetime.utcnow().strftime(
+        "%Y-%m-%d %H:%M"
+    )
+    assert data.user.id == user.id
+
+
+def test_delete_replenishment(session) -> None:
+    user = UserFactory()
+    replenishment = ReplenishmentFactory(user_id=user.id)
+    db_expenses = session.query(Replenishment).all()
+    assert len(db_expenses) == 1
+    delete_replenishment(session, user.id, replenishment.id)
+    db_expenses = session.query(Replenishment).all()
+    assert len(db_expenses) == 0
+
+
+def test_update_replenishment_another_user(session) -> None:
+    first_user = UserFactory()
+    replenishment = ReplenishmentFactory(user_id=first_user.id)
+    second_user = UserFactory()
+    date_update_replenishment = CreateReplenishment(
+        descriptions="descriptions", amount=999.9
+    )
+    with pytest.raises(HTTPException) as ex_info:
+        update_replenishment(
+            session, second_user.id, date_update_replenishment, replenishment.id
+        )
+    assert "It's not your replenishment!" in str(ex_info.value.detail)
 
 
 def test_read_replenishments_by_group_time_range_date_exc(session) -> None:
@@ -41,8 +87,8 @@ def test_read_replenishments_by_group_time_range_date_exc(session) -> None:
 
 def test_read_replenishments_all_time(session) -> None:
     user = UserFactory()
-    first_replenishments = ReplenishmentsFactory(user_id=user.id)
-    second_replenishments = ReplenishmentsFactory(user_id=user.id)
+    first_replenishments = ReplenishmentFactory(user_id=user.id)
+    second_replenishments = ReplenishmentFactory(user_id=user.id)
     data = read_replenishments(db=session, user_id=user.id)
     expenses = [
         first_replenishments,
@@ -61,9 +107,9 @@ def test_read_replenishments_month(session) -> None:
 
     time = datetime.datetime(2022, 12, 12)
 
-    first_replenishments = ReplenishmentsFactory(user_id=user.id)
-    second_replenishments = ReplenishmentsFactory(user_id=user.id, time=time)
-    third_replenishments = ReplenishmentsFactory(user_id=user.id, time=time)
+    first_replenishments = ReplenishmentFactory(user_id=user.id)
+    second_replenishments = ReplenishmentFactory(user_id=user.id, time=time)
+    third_replenishments = ReplenishmentFactory(user_id=user.id, time=time)
 
     replenishments = [first_replenishments]
     data = read_replenishments(
@@ -96,12 +142,12 @@ def test_read_replenishments_time_range(session) -> None:
     second_date = datetime.datetime(2022, 12, 10)
     third_date = datetime.datetime(2022, 12, 22)
 
-    ReplenishmentsFactory(user_id=user.id)
-    second_replenishments = ReplenishmentsFactory(
+    ReplenishmentFactory(user_id=user.id)
+    second_replenishments = ReplenishmentFactory(
         user_id=user.id,
         time=second_date,
     )
-    third_replenishments = ReplenishmentsFactory(
+    third_replenishments = ReplenishmentFactory(
         user_id=user.id,
         time=third_date,
     )

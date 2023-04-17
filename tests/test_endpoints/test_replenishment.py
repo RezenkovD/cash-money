@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from dependencies import oauth
 from schemas import CreateReplenishment
 from tests.conftest import async_return, client
-from tests.factories import ReplenishmentsFactory, UserFactory
+from tests.factories import ReplenishmentFactory, UserFactory
 
 
 class ReplenishmentsTestCase(unittest.TestCase):
@@ -24,28 +24,59 @@ class ReplenishmentsTestCase(unittest.TestCase):
         )
         client.get("/auth/")
 
-    def test_create_replenishments(self) -> None:
-        replenishments = CreateReplenishment(descriptions="descriptions", amount=999.9)
+    def test_create_replenishment(self) -> None:
+        replenishment = CreateReplenishment(descriptions="descriptions", amount=999.9)
         data = client.post(
             "/replenishments/",
             json={
-                "descriptions": replenishments.descriptions,
-                "amount": replenishments.amount,
+                "descriptions": replenishment.descriptions,
+                "amount": replenishment.amount,
+            },
+        )
+        replenishment_data = {
+            "id": data.json()["id"],
+            "descriptions": replenishment.descriptions,
+            "amount": replenishment.amount,
+            "time": data.json()["time"],
+            "user": {"id": self.user.id, "login": self.user.login},
+        }
+        assert data.status_code == 200
+        assert data.json() == replenishment_data
+
+    def test_update_replenishment(self) -> None:
+        replenishment = ReplenishmentFactory(user_id=self.user.id)
+        date_update_replenishment = CreateReplenishment(
+            descriptions="descriptions", amount=999.9
+        )
+        data = client.put(
+            f"/replenishments/{replenishment.id}/",
+            json={
+                "descriptions": date_update_replenishment.descriptions,
+                "amount": date_update_replenishment.amount,
             },
         )
         replenishments_data = {
             "id": data.json()["id"],
-            "descriptions": replenishments.descriptions,
-            "amount": replenishments.amount,
+            "descriptions": date_update_replenishment.descriptions,
+            "amount": date_update_replenishment.amount,
             "time": data.json()["time"],
             "user": {"id": self.user.id, "login": self.user.login},
         }
         assert data.status_code == 200
         assert data.json() == replenishments_data
 
+    def test_delete_replenishment(self) -> None:
+        replenishment = ReplenishmentFactory(user_id=self.user.id)
+        data = client.delete(f"/replenishments/{replenishment.id}/")
+        assert data.status_code == 204
+        data = client.get(f"/replenishments/")
+        assert data.status_code == 200
+        replenishments_data = []
+        assert data.json() == replenishments_data
+
     def test_read_replenishments_all_time(self) -> None:
-        first_replenishments = ReplenishmentsFactory(user_id=self.user.id)
-        second_replenishments = ReplenishmentsFactory(user_id=self.user.id)
+        first_replenishments = ReplenishmentFactory(user_id=self.user.id)
+        second_replenishments = ReplenishmentFactory(user_id=self.user.id)
         data = client.get(f"/replenishments/")
         assert data.status_code == 200
         replenishments_data = [
@@ -86,11 +117,11 @@ class ReplenishmentsTestCase(unittest.TestCase):
         params = {"year_month": "2022-12"}
         data = client.get("/replenishments", params=params)
         assert not data.json()
-        first_replenishments = ReplenishmentsFactory(user_id=self.user.id, time=time)
-        second_replenishments = ReplenishmentsFactory(user_id=self.user.id, time=time)
+        first_replenishments = ReplenishmentFactory(user_id=self.user.id, time=time)
+        second_replenishments = ReplenishmentFactory(user_id=self.user.id, time=time)
 
         time = datetime.datetime(2022, 11, 12)
-        ReplenishmentsFactory(user_id=self.user.id, time=time)
+        ReplenishmentFactory(user_id=self.user.id, time=time)
 
         data = client.get("/replenishments/", params=params)
         replenishments_data = [
@@ -112,10 +143,10 @@ class ReplenishmentsTestCase(unittest.TestCase):
         params = {"start_date": "2022-12-1", "end_date": "2022-12-12"}
         data = client.get("/replenishments/", params=params)
         assert not data.json()
-        first_replenishments = ReplenishmentsFactory(user_id=self.user.id, time=time)
-        second_replenishments = ReplenishmentsFactory(user_id=self.user.id, time=time)
+        first_replenishments = ReplenishmentFactory(user_id=self.user.id, time=time)
+        second_replenishments = ReplenishmentFactory(user_id=self.user.id, time=time)
         time = datetime.datetime(2022, 11, 13)
-        ReplenishmentsFactory(
+        ReplenishmentFactory(
             user_id=self.user.id,
             time=time,
         )

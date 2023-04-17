@@ -18,5 +18,10 @@ from .group import (
     remove_user,
 )
 from .invitation import create_invitation, read_invitations, response_invitation
-from .replenishment import create_replenishments, read_replenishments
+from .replenishment import (
+    create_replenishment,
+    read_replenishments,
+    update_replenishment,
+    delete_replenishment,
+)
 from .user import get_user, read_user_current_balance

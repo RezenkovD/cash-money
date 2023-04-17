@@ -4,7 +4,7 @@ from tests.factories import (
     CategoryGroupFactory,
     ExpenseFactory,
     GroupFactory,
-    ReplenishmentsFactory,
+    ReplenishmentFactory,
     UserFactory,
     UserGroupFactory,
 )
@@ -34,8 +34,8 @@ def test_read_user_positive_current_balance(session) -> None:
     category = CategoryFactory()
     CategoryGroupFactory(category_id=category.id, group_id=group.id)
 
-    first_replenishments = ReplenishmentsFactory(user_id=user.id)
-    second_replenishments = ReplenishmentsFactory(user_id=user.id)
+    first_replenishments = ReplenishmentFactory(user_id=user.id)
+    second_replenishments = ReplenishmentFactory(user_id=user.id)
     first_expense = ExpenseFactory(
         user_id=user.id, group_id=group.id, category_id=category.id
     )

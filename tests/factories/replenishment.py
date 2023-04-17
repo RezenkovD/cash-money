@@ -8,7 +8,7 @@ from models import Replenishment
 from .base_factory import BaseFactory
 
 
-class ReplenishmentsFactory(BaseFactory):
+class ReplenishmentFactory(BaseFactory):
     id = factory.Sequence(lambda n: n)
     descriptions = factory.Faker("word")
     amount = FuzzyFloat(50.0, 1000.0)
