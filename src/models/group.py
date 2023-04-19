@@ -15,11 +15,13 @@ class Group(Base):
     description = Column(String, nullable=False)
     admin_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     status = Column(String, Enum(GroupStatusEnum), nullable=False)
+    icon_color_id = Column(Integer, ForeignKey("icon_color.id"), nullable=False)
 
     admin = relationship("User", back_populates="groups")
     users_group = relationship("UserGroup", back_populates="group")
     invitations = relationship("Invitation", back_populates="group")
     categories_group = relationship("CategoryGroups", back_populates="group")
+    icon_color = relationship("IconColor", back_populates="group")
 
 
 class UserGroup(Base):
