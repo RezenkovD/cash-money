@@ -7,7 +7,14 @@ import services
 from database import get_db
 from dependencies import get_current_user
 from models import User
-from schemas import AboutUser, CategoriesGroup, CreateGroup, GroupModel, UsersGroup
+from schemas import (
+    AboutUser,
+    CategoriesGroup,
+    CreateGroup,
+    GroupModel,
+    UsersGroup,
+    CreateIconColor,
+)
 
 router = APIRouter(
     prefix="/groups",
@@ -21,8 +28,9 @@ def create_group(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group: CreateGroup,
+    icon_color: CreateIconColor,
 ) -> GroupModel:
-    return services.create_group(db, current_user.id, group)
+    return services.create_group(db, current_user.id, group, icon_color)
 
 
 @router.get("/{group_id}/users/", response_model=UsersGroup)

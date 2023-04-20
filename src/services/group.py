@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from starlette import status
 from starlette.exceptions import HTTPException
 
-from models import Group, User, UserGroup
+from models import Group, User, UserGroup, Color, Icon, IconColor
 from enums import GroupStatusEnum
 from schemas import (
     AboutUser,
@@ -15,6 +15,7 @@ from schemas import (
     GroupModel,
     UserGroups,
     UsersGroup,
+    CreateIconColor,
 )
 
 
@@ -125,8 +126,34 @@ def leave_group(
         return db_user_group
 
 
-def create_group(db: Session, user_id: int, group: CreateGroup) -> GroupModel:
-    db_group = Group(**group.dict(), admin_id=user_id, status=GroupStatusEnum.ACTIVE)
+def create_group(
+    db: Session, user_id: int, group: CreateGroup, icon_color: CreateIconColor
+) -> GroupModel:
+    db_icon = db.query(Icon).filter_by(url=icon_color.icon_url).one_or_none()
+    if db_icon is None:
+        db_icon = Icon(url=icon_color.icon_url)
+        db.add(db_icon)
+        db.flush()
+    db_color = db.query(Color).filter_by(code=icon_color.color_code).one_or_none()
+    if db_color is None:
+        db_color = Color(code=icon_color.color_code)
+        db.add(db_color)
+        db.flush()
+    db_icon_color = (
+        db.query(IconColor)
+        .filter_by(icon_id=db_icon.id, color_id=db_color.id)
+        .one_or_none()
+    )
+    if db_icon_color is None:
+        db_icon_color = IconColor(icon_id=db_icon.id, color_id=db_color.id)
+        db.add(db_icon_color)
+        db.flush()
+    db_group = Group(
+        **group.dict(),
+        admin_id=user_id,
+        status=GroupStatusEnum.ACTIVE,
+        icon_color_id=db_icon_color.id,
+    )
     db.add(db_group)
     try:
         db.flush()
