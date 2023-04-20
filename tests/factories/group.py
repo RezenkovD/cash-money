@@ -9,11 +9,12 @@ from .base_factory import BaseFactory
 
 
 class GroupFactory(BaseFactory):
-    id = factory.Sequence(lambda n: n + 1)
+    id = factory.Sequence(lambda n: n)
     title = factory.Faker("word")
     description = factory.Faker("word")
     admin_id = None
     status = GroupStatusEnum.ACTIVE
+    icon_color_id = factory.Faker("word")
 
     class Meta:
         model = Group
