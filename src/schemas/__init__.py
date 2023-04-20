@@ -1,4 +1,5 @@
 from .user import BaseUser, UserModel
+from .icon_color import Icon, Color, IconColor, CreateIconColor
 from .group import (
     AboutCategory,
     AboutUser,

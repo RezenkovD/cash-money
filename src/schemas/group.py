@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List
 
-from schemas import UserModel
+from schemas import UserModel, IconColor
 from schemas.base_model import BaseModel
 from schemas.category import CategoryModel
 
@@ -26,6 +26,7 @@ class ShortGroup(BaseModel):
 class GroupModel(BaseGroup):
     id: int
     admin: UserModel
+    icon_color: IconColor
 
 
 class AboutUser(BaseModel):
