@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 from dependencies import oauth
 from enums import GroupStatusEnum
-from schemas import CreateGroup
+from schemas import CreateGroup, CreateIconColor
 from tests.conftest import async_return, client
 from tests.factories import (
     CategoryFactory,
@@ -12,6 +12,9 @@ from tests.factories import (
     GroupFactory,
     UserFactory,
     UserGroupFactory,
+    IconFactory,
+    ColorFactory,
+    IconColorFactory,
 )
 
 
@@ -30,13 +33,29 @@ class GroupTestCase(unittest.TestCase):
             return_value=async_return(self.user_dict)
         )
         client.get("/auth/")
-        self.group = GroupFactory(admin_id=self.user.id)
+        self.icon = IconFactory()
+        self.color = ColorFactory()
+        self.icon_color = IconColorFactory(icon_id=self.icon.id, color_id=self.color.id)
+        self.group = GroupFactory(
+            admin_id=self.user.id, icon_color_id=self.icon_color.id
+        )
         UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
     def test_create_group(self) -> None:
         group = CreateGroup(title="string", description="string")
+        icon_color = CreateIconColor(icon_url=self.icon.url, color_code=self.color.code)
         data = client.post(
-            "/groups/", json={"title": group.title, "description": group.description}
+            "/groups/",
+            json={
+                "group": {
+                    "title": group.title,
+                    "description": group.description,
+                },
+                "icon_color": {
+                    "icon_url": icon_color.icon_url,
+                    "color_code": icon_color.color_code,
+                },
+            },
         )
         group_data = data.json()
         group_data = {
@@ -50,6 +69,11 @@ class GroupTestCase(unittest.TestCase):
                 "first_name": self.user_dict["userinfo"]["given_name"],
                 "last_name": self.user_dict["userinfo"]["family_name"],
                 "picture": self.user_dict["userinfo"]["picture"],
+            },
+            "icon_color": {
+                "id": self.icon_color.id,
+                "icon": {"id": self.icon.id, "url": self.icon.url},
+                "color": {"id": self.color.id, "code": self.color.code},
             },
         }
         assert data.status_code == 200
@@ -78,7 +102,9 @@ class GroupTestCase(unittest.TestCase):
 
     def test_leave_group_user(self) -> None:
         second_user = UserFactory()
-        second_group = GroupFactory(admin_id=second_user.id)
+        second_group = GroupFactory(
+            admin_id=second_user.id, icon_color_id=self.icon_color.id
+        )
         UserGroupFactory(user_id=second_user.id, group_id=second_group.id)
         UserGroupFactory(user_id=self.user.id, group_id=second_group.id)
         data = client.post(f"/groups/{second_group.id}/leave/")
@@ -185,7 +211,9 @@ class GroupTestCase(unittest.TestCase):
 
     def test_remove_user_as_non_admin(self) -> None:
         second_user = UserFactory()
-        second_group = GroupFactory(admin_id=second_user.id)
+        second_group = GroupFactory(
+            admin_id=second_user.id, icon_color_id=self.icon_color.id
+        )
         data = client.post(f"/groups/{second_group.id}/remove/{second_user.id}/")
         assert data.status_code == 404
 

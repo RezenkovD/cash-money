@@ -11,6 +11,9 @@ from tests.factories import (
     GroupFactory,
     UserFactory,
     UserGroupFactory,
+    IconFactory,
+    ColorFactory,
+    IconColorFactory,
 )
 
 
@@ -29,7 +32,12 @@ class CategoryTestCase(unittest.TestCase):
             return_value=async_return(self.user_dict)
         )
         client.get("/auth/")
-        self.group = GroupFactory(admin_id=self.user.id)
+        self.icon = IconFactory()
+        self.color = ColorFactory()
+        self.icon_color = IconColorFactory(icon_id=self.icon.id, color_id=self.color.id)
+        self.group = GroupFactory(
+            admin_id=self.user.id, icon_color_id=self.icon_color.id
+        )
         UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
     def test_create_category(self) -> None:
@@ -48,7 +56,11 @@ class CategoryTestCase(unittest.TestCase):
 
     def test_create_category_inactive_group(self) -> None:
         category = CategoryFactory()
-        group = GroupFactory(admin_id=self.user.id, status=GroupStatusEnum.INACTIVE)
+        group = GroupFactory(
+            admin_id=self.user.id,
+            status=GroupStatusEnum.INACTIVE,
+            icon_color_id=self.icon_color.id,
+        )
         UserGroupFactory(
             user_id=self.user.id,
             group_id=group.id,
