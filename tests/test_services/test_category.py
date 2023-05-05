@@ -15,7 +15,7 @@ from tests.factories import (
 
 def test_create_category(session, dependence_factory) -> None:
     factories = dependence_factory
-    category = CreateCategory(title="BoOK")
+    category = CreateCategory(title="BoOK", color_code="string", icon_url="string")
     data = create_category(
         session, factories["first_user"].id, factories["first_group"].id, category
     )
@@ -29,7 +29,7 @@ def test_create_category(session, dependence_factory) -> None:
 
 def test_create_category_not_admin(session, dependence_factory) -> None:
     factories = dependence_factory
-    category = CreateCategory(title="Book")
+    category = CreateCategory(title="Book", color_code="string", icon_url="string")
     with pytest.raises(HTTPException) as ex_info:
         create_category(session, 9999, factories["first_group"].id, category)
     assert "You are not admin in this group!" in str(ex_info.value.detail)
@@ -43,7 +43,7 @@ def test_create_category_inactive_group(session) -> None:
         group_id=group.id,
         status=GroupStatusEnum.INACTIVE,
     )
-    category = CreateCategory(title="Book")
+    category = CreateCategory(title="Book", color_code="string", icon_url="string")
     with pytest.raises(HTTPException) as ex_info:
         create_category(session, user.id, group.id, category)
     assert "Group is not active!" in str(ex_info.value.detail)
@@ -52,9 +52,9 @@ def test_create_category_inactive_group(session) -> None:
 def test_create_category_exist(session) -> None:
     user = UserFactory()
     group = GroupFactory(admin_id=user.id)
-    category = CreateCategory(title="BoOK")
+    category = CreateCategory(title="BoOK", color_code="string", icon_url="string")
     create_category(session, user.id, group.id, category)
-    category = CreateCategory(title="BOoK")
+    category = CreateCategory(title="BOoK", color_code="string", icon_url="string")
     with pytest.raises(HTTPException) as ex_info:
         create_category(session, user.id, group.id, category)
     assert "The category is already in this group!" in str(ex_info.value.detail)
@@ -63,7 +63,7 @@ def test_create_category_exist(session) -> None:
 def test_add_exist_category_in_group(session, dependence_factory) -> None:
     factories = dependence_factory
     CategoryFactory(title="book")
-    category = CreateCategory(title="BOOK")
+    category = CreateCategory(title="BOOK", color_code="string", icon_url="string")
     create_category(
         session,
         dependence_factory["first_user"].id,
