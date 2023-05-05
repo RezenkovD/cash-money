@@ -13,7 +13,6 @@ from schemas import (
     CreateGroup,
     GroupModel,
     UsersGroup,
-    CreateIconColor,
 )
 
 router = APIRouter(
@@ -28,9 +27,8 @@ def create_group(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group: CreateGroup,
-    icon_color: CreateIconColor,
 ) -> GroupModel:
-    return services.create_group(db, current_user.id, group, icon_color)
+    return services.create_group(db, current_user.id, group)
 
 
 @router.get("/{group_id}/users/", response_model=UsersGroup)

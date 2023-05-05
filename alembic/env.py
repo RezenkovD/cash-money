@@ -28,9 +28,6 @@ from models import (
     Group,
     User,
     UserGroup,
-    IconColor,
-    Color,
-    Icon,
 )
 
 # other values from the config, defined by the needs of env.py,
