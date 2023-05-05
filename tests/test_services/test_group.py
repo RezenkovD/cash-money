@@ -16,6 +16,7 @@ from services import (
     read_user_groups,
     read_users_group,
     remove_user,
+    update_group,
 )
 from tests.factories import (
     CategoryFactory,
@@ -44,6 +45,42 @@ def test_create_group(session, dependence_factory) -> None:
     assert group.admin.picture == factories["first_user"].picture
     assert group.icon_url == group_data.icon_url
     assert group.color_code == group_data.color_code
+
+
+def test_update_group(session, dependence_factory) -> None:
+    factories = dependence_factory
+    group_data = CreateGroup(
+        title="test_title",
+        description="test_description",
+        icon_url="string",
+        color_code="string",
+    )
+    group = update_group(
+        session, factories["first_user"].id, group_data, factories["first_group"].id
+    )
+    assert session.query(Group).filter_by(id=group.id).one_or_none() is not None
+    assert group.title == group_data.title
+    assert group.description == group_data.description
+    assert group.status == GroupStatusEnum.ACTIVE
+    assert group.admin.login == factories["first_user"].login
+    assert group.admin.first_name == factories["first_user"].first_name
+    assert group.admin.last_name == factories["first_user"].last_name
+    assert group.admin.picture == factories["first_user"].picture
+    assert group.icon_url == group_data.icon_url
+    assert group.color_code == group_data.color_code
+
+
+def test_update_group_as_non_admin(session, dependence_factory) -> None:
+    factories = dependence_factory
+    group_data = CreateGroup(
+        title="test_title",
+        description="test_description",
+        icon_url="string",
+        color_code="string",
+    )
+    with pytest.raises(HTTPException) as ex_info:
+        update_group(session, 99999, group_data, factories["first_group"].id)
+    assert "You are not an admin of this group!" in str(ex_info.value.detail)
 
 
 def test_add_user_in_group(session, dependence_factory) -> None:

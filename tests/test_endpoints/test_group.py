@@ -62,6 +62,50 @@ class GroupTestCase(unittest.TestCase):
         }
         assert data.json() == group_data
 
+    def test_update_group(self) -> None:
+        group = CreateGroup(
+            title="string", description="string", icon_url="string", color_code="string"
+        )
+        data = client.put(
+            f"/groups/{self.group.id}",
+            json={
+                "title": group.title,
+                "description": group.description,
+                "icon_url": group.icon_url,
+                "color_code": group.color_code,
+            },
+        )
+        assert data.status_code == 200
+        group_data = {
+            "id": self.group.id,
+            "title": group.title,
+            "description": group.description,
+            "status": GroupStatusEnum.ACTIVE,
+            "admin": {
+                "id": self.user.id,
+                "login": self.user_dict["userinfo"]["email"],
+                "first_name": self.user_dict["userinfo"]["given_name"],
+                "last_name": self.user_dict["userinfo"]["family_name"],
+                "picture": self.user_dict["userinfo"]["picture"],
+            },
+        }
+        assert data.json() == group_data
+
+    def test_update_group_as_non_admin(self) -> None:
+        group = CreateGroup(
+            title="string", description="string", icon_url="string", color_code="string"
+        )
+        data = client.put(
+            f"/groups/9999",
+            json={
+                "title": group.title,
+                "description": group.description,
+                "icon_url": group.icon_url,
+                "color_code": group.color_code,
+            },
+        )
+        assert data.status_code == 404
+
     def test_read_users_group(self) -> None:
         data = client.get(f"/groups/{self.group.id}/users/")
         assert data.status_code == 200
