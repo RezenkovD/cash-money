@@ -44,7 +44,12 @@ def create_category(
                 status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
                 detail="The category is already in this group!",
             )
-    db_category_group = CategoryGroups(category_id=db_category.id, group_id=group_id)
+    db_category_group = CategoryGroups(
+        category_id=db_category.id,
+        group_id=group_id,
+        icon_url=category.icon_url,
+        color_code=category.color_code,
+    )
     db.add(db_category_group)
     try:
         db.commit()
