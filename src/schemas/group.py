@@ -9,6 +9,8 @@ from schemas.category import CategoryModel
 class CreateGroup(BaseModel):
     title: str
     description: str
+    icon_url: str
+    color_code: str
 
 
 class BaseGroup(BaseModel):

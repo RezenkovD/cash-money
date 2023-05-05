@@ -77,7 +77,8 @@ class InvitationTestCase(unittest.TestCase):
 
     def test_create_invitation_to_inactive_group(self) -> None:
         third_group = GroupFactory(
-            admin_id=self.first_user.id, status=GroupStatusEnum.INACTIVE
+            admin_id=self.first_user.id,
+            status=GroupStatusEnum.INACTIVE,
         )
         UserGroupFactory(user_id=self.first_user.id, group_id=third_group.id)
         data = client.post(

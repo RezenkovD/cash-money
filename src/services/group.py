@@ -126,7 +126,11 @@ def leave_group(
 
 
 def create_group(db: Session, user_id: int, group: CreateGroup) -> GroupModel:
-    db_group = Group(**group.dict(), admin_id=user_id, status=GroupStatusEnum.ACTIVE)
+    db_group = Group(
+        **group.dict(),
+        admin_id=user_id,
+        status=GroupStatusEnum.ACTIVE,
+    )
     db.add(db_group)
     try:
         db.flush()
@@ -136,6 +140,29 @@ def create_group(db: Session, user_id: int, group: CreateGroup) -> GroupModel:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"An error occurred while create group",
+        )
+    else:
+        return db_group
+
+
+def update_group(
+    db: Session, user_id: int, group: CreateGroup, group_id: int
+) -> GroupModel:
+    try:
+        db.query(Group).filter_by(id=group_id, admin_id=user_id).one()
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not an admin of this group!",
+        )
+    db.query(Group).filter_by(id=group_id).update(values={**group.dict()})
+    db_group = db.query(Group).filter_by(id=group_id).one()
+    try:
+        db.commit()
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while update group",
         )
     else:
         return db_group

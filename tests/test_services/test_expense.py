@@ -6,139 +6,128 @@ from starlette.exceptions import HTTPException
 from models import Expense
 from enums import GroupStatusEnum
 from schemas import CreateExpense
-from services import create_expense, read_expenses
-from services.expense import update_expense, delete_expense
-from tests.factories import (
-    CategoryFactory,
-    CategoryGroupFactory,
-    ExpenseFactory,
-    GroupFactory,
-    UserFactory,
-    UserGroupFactory,
-)
+from services import create_expense
+from services.expense import update_expense, delete_expense, read_expenses
+from tests.factories import UserGroupFactory
 
 
-def test_create_expense(session) -> None:
-    user = UserFactory()
-    group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=group.id)
+def test_create_expense(session, dependence_factory, activity) -> None:
+    factories = dependence_factory
+    activity = activity
     expense = CreateExpense(
-        descriptions="descriptions", amount=999.9, category_id=category.id
+        descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
-    data = create_expense(session, user.id, group.id, expense)
-    db_expenses = session.query(Expense).all()
-    assert len(db_expenses) == 1
+    data = create_expense(
+        session, factories["first_user"].id, factories["first_group"].id, expense
+    )
+    db_expenses = session.query(Expense).filter_by(id=data.id).one_or_none()
+    assert db_expenses is not None
     assert data.descriptions == expense.descriptions
     assert float(data.amount) == expense.amount
     assert data.time.strftime("%Y-%m-%d %H:%M") == datetime.datetime.utcnow().strftime(
         "%Y-%m-%d %H:%M"
     )
-    assert data.user.id == user.id
-    assert data.category_group.category.id == category.id
-    assert data.category_group.group.id == group.id
+    assert data.user.id == factories["first_user"].id
+    assert data.category_group.category.id == activity["category"].id
+    assert data.category_group.group.id == factories["first_group"].id
 
 
-def test_update_expense(session) -> None:
-    user = UserFactory()
-    group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=group.id)
-    expense = ExpenseFactory(
-        user_id=user.id, group_id=group.id, category_id=category.id
-    )
+def test_update_expense(session, dependence_factory, activity) -> None:
+    factories = dependence_factory
+    activity = activity
     date_update_expense = CreateExpense(
-        descriptions="descriptions", amount=999.9, category_id=category.id
+        descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
-    data = update_expense(session, user.id, group.id, date_update_expense, expense.id)
+    data = update_expense(
+        session,
+        factories["first_user"].id,
+        factories["first_group"].id,
+        date_update_expense,
+        activity["first_expense"].id,
+    )
     assert data.descriptions == date_update_expense.descriptions
     assert float(data.amount) == date_update_expense.amount
-    assert data.time.strftime("%Y-%m-%d %H:%M") == datetime.datetime.utcnow().strftime(
-        "%Y-%m-%d %H:%M"
-    )
-    assert data.user.id == user.id
-    assert data.category_group.category.id == category.id
-    assert data.category_group.group.id == group.id
+    assert data.time == activity["first_expense"].time
+    assert data.user.id == factories["first_user"].id
+    assert data.category_group.category.id == activity["category"].id
+    assert data.category_group.group.id == factories["first_group"].id
 
 
-def test_delete_expense(session) -> None:
-    user = UserFactory()
-    group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=group.id)
-    expense = ExpenseFactory(
-        user_id=user.id, group_id=group.id, category_id=category.id
-    )
+def test_delete_expense(session, dependence_factory, activity) -> None:
+    factories = dependence_factory
+    activity = activity
     db_expenses = session.query(Expense).all()
     assert len(db_expenses) == 1
-    delete_expense(session, user.id, group.id, expense.id)
+    delete_expense(
+        session,
+        factories["first_user"].id,
+        factories["first_group"].id,
+        activity["first_expense"].id,
+    )
     db_expenses = session.query(Expense).all()
     assert len(db_expenses) == 0
 
 
-def test_update_expense_another_user(session) -> None:
-    first_user = UserFactory()
-    group = GroupFactory(admin_id=first_user.id)
-    UserGroupFactory(user_id=first_user.id, group_id=group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=group.id)
-    expense = ExpenseFactory(
-        user_id=first_user.id, group_id=group.id, category_id=category.id
+def test_update_expense_another_user(session, dependence_factory, activity) -> None:
+    factories = dependence_factory
+    activity = activity
+    UserGroupFactory(
+        user_id=factories["second_user"].id, group_id=factories["first_group"].id
     )
-    second_user = UserFactory()
-    UserGroupFactory(user_id=second_user.id, group_id=group.id)
     date_update_expense = CreateExpense(
-        descriptions="descriptions", amount=999.9, category_id=category.id
+        descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
     with pytest.raises(HTTPException) as ex_info:
         update_expense(
-            session, second_user.id, group.id, date_update_expense, expense.id
+            session,
+            factories["second_user"].id,
+            factories["first_group"].id,
+            date_update_expense,
+            activity["first_expense"].id,
         )
     assert "It's not your expense!" in str(ex_info.value.detail)
 
 
-def test_create_expense_another_group(session) -> None:
-    user = UserFactory()
-    category = CategoryFactory()
+def test_create_expense_another_group(session, dependence_factory, activity) -> None:
+    factories = dependence_factory
+    activity = activity
     expense = CreateExpense(
-        descriptions="descriptions", amount=999.9, category_id=category.id
+        descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
     with pytest.raises(HTTPException) as ex_info:
-        create_expense(session, user.id, 9999, expense)
+        create_expense(session, factories["first_user"].id, 9999, expense)
     assert "You are not a user of this group!" in str(ex_info.value.detail)
 
 
-def test_create_expense_inactive_user(session) -> None:
-    user = UserFactory()
-    category = CategoryFactory()
-    group = GroupFactory(admin_id=user.id)
+def test_create_expense_inactive_user(session, dependence_factory, activity) -> None:
+    factories = dependence_factory
+    activity = activity
     UserGroupFactory(
-        user_id=user.id,
-        group_id=group.id,
+        user_id=factories["second_user"].id,
+        group_id=factories["first_group"].id,
         status=GroupStatusEnum.INACTIVE,
     )
     expense = CreateExpense(
-        descriptions="descriptions", amount=999.9, category_id=category.id
+        descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
     with pytest.raises(HTTPException) as ex_info:
-        create_expense(session, user.id, group.id, expense)
+        create_expense(
+            session, factories["second_user"].id, factories["first_group"].id, expense
+        )
     assert "The user is not active in this group!" in str(ex_info.value.detail)
 
 
-def test_create_expense_another_category(session) -> None:
-    user = UserFactory()
-    group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=group.id)
+def test_create_expense_another_category(session, dependence_factory) -> None:
+    factories = dependence_factory
     expense = CreateExpense(
         descriptions="descriptions",
         amount=999.9,
         category_id=9999,
     )
     with pytest.raises(HTTPException) as ex_info:
-        create_expense(session, user.id, group.id, expense)
+        create_expense(
+            session, factories["first_user"].id, factories["first_group"].id, expense
+        )
     assert "The group has no such category!" in str(ex_info.value.detail)
 
 
@@ -148,99 +137,17 @@ def test_read_expenses_by_another_group(session) -> None:
     assert "You are not a user of this group!" in str(ex_info.value.detail)
 
 
-def test_read_expenses_by_group_all_time(session) -> None:
-    user = UserFactory()
-    first_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=first_group.id)
-    second_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=second_group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=first_group.id)
-    CategoryGroupFactory(category_id=category.id, group_id=second_group.id)
-
-    first_expense = ExpenseFactory(
-        user_id=user.id, group_id=first_group.id, category_id=category.id
-    )
-    second_expense = ExpenseFactory(
-        user_id=user.id, group_id=second_group.id, category_id=category.id
-    )
-    third_expense = ExpenseFactory(
-        user_id=user.id, group_id=first_group.id, category_id=category.id
-    )
-
-    data = read_expenses(db=session, group_id=first_group.id, user_id=user.id)
-    expenses = [first_expense, third_expense]
-    assert len(data) == len(expenses)
-    for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
-
-    data = read_expenses(db=session, group_id=second_group.id, user_id=user.id)
-    expenses = [second_expense]
-    assert len(data) == len(expenses)
-    for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
-
-
-def test_read_expenses_by_group_month(session) -> None:
-    user = UserFactory()
-    group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=group.id)
-
-    time = datetime.datetime(2022, 12, 12)
+def test_read_expenses_by_group_all_time(
+    session, dependence_factory, activity, update_activity
+) -> None:
+    factories = dependence_factory
+    activity = activity
+    update_activity = update_activity
+    expenses = [activity["first_expense"], update_activity["third_expense"]]
     data = read_expenses(
         db=session,
-        group_id=group.id,
-        user_id=user.id,
-        filter_date=datetime.date.today(),
-    )
-    assert not data
-
-    data = read_expenses(
-        db=session, group_id=group.id, user_id=user.id, filter_date=time
-    )
-    assert not data
-
-    first_expense = ExpenseFactory(
-        user_id=user.id, group_id=group.id, category_id=category.id
-    )
-    second_expense = ExpenseFactory(
-        user_id=user.id, group_id=group.id, category_id=category.id, time=time
-    )
-    third_expense = ExpenseFactory(
-        user_id=user.id, group_id=group.id, category_id=category.id, time=time
-    )
-
-    expenses = [first_expense]
-    data = read_expenses(
-        db=session,
-        group_id=group.id,
-        user_id=user.id,
-        filter_date=datetime.date.today(),
-    )
-    assert len(data) == len(expenses)
-    for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
-
-    expenses = [second_expense, third_expense]
-    data = read_expenses(
-        db=session, group_id=group.id, user_id=user.id, filter_date=time
+        group_id=factories["first_group"].id,
+        user_id=factories["first_user"].id,
     )
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
@@ -252,40 +159,17 @@ def test_read_expenses_by_group_month(session) -> None:
         assert data.category_group.category.id == expense.category_id
 
 
-def test_read_expenses_by_group_time_range(session):
-    user = UserFactory()
-    group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=group.id)
-
-    second_date = datetime.datetime(2022, 12, 10)
-    third_date = datetime.datetime(2022, 12, 22)
-
+def test_read_expenses_by_group_month(
+    session, dependence_factory, activity, update_activity
+) -> None:
+    factories = dependence_factory
+    activity = activity
+    expenses = [activity["first_expense"]]
     data = read_expenses(
         db=session,
-        group_id=group.id,
-        user_id=user.id,
-        start_date=second_date,
-        end_date=third_date,
-    )
-    assert not data
-
-    ExpenseFactory(user_id=user.id, group_id=group.id, category_id=category.id)
-    second_expense = ExpenseFactory(
-        user_id=user.id, group_id=group.id, category_id=category.id, time=second_date
-    )
-    third_expense = ExpenseFactory(
-        user_id=user.id, group_id=group.id, category_id=category.id, time=third_date
-    )
-    expenses = [second_expense, third_expense]
-
-    data = read_expenses(
-        db=session,
-        group_id=group.id,
-        user_id=user.id,
-        start_date=second_date,
-        end_date=third_date,
+        group_id=factories["first_group"].id,
+        user_id=factories["first_user"].id,
+        filter_date=activity["filter_date"],
     )
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
@@ -297,17 +181,38 @@ def test_read_expenses_by_group_time_range(session):
         assert data.category_group.category.id == expense.category_id
 
 
-def test_read_expenses_by_group_time_range_date_exc(session):
-    user = UserFactory()
-    group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=group.id)
+def test_read_expenses_by_group_time_range(
+    session, dependence_factory, activity, update_activity
+):
+    factories = dependence_factory
+    update_activity = update_activity
+    expenses = [update_activity["third_expense"]]
+    data = read_expenses(
+        db=session,
+        group_id=factories["first_group"].id,
+        user_id=factories["first_user"].id,
+        start_date=update_activity["start_date"],
+        end_date=update_activity["end_date"],
+    )
+    assert len(data) == len(expenses)
+    for data, expense in zip(data, expenses):
+        assert data.id == expense.id
+        assert data.time == expense.time
+        assert data.amount == expense.amount
+        assert data.descriptions == expense.descriptions
+        assert data.category_group.group.id == expense.group_id
+        assert data.category_group.category.id == expense.category_id
+
+
+def test_read_expenses_by_group_time_range_date_exc(session, dependence_factory):
+    factories = dependence_factory
     start_date = datetime.datetime(2022, 12, 10)
     end_date = datetime.datetime(2022, 11, 22)
     with pytest.raises(HTTPException) as ex_info:
         read_expenses(
             db=session,
-            group_id=group.id,
-            user_id=user.id,
+            group_id=factories["first_group"].id,
+            user_id=factories["first_user"].id,
             start_date=start_date,
             end_date=end_date,
         )
@@ -316,18 +221,16 @@ def test_read_expenses_by_group_time_range_date_exc(session):
     )
 
 
-def test_read_expenses_many_arguments(session):
-    user = UserFactory()
-    group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=group.id)
+def test_read_expenses_many_arguments(session, dependence_factory):
+    factories = dependence_factory
     filter_date = datetime.datetime(2022, 11, 10)
     start_date = datetime.datetime(2022, 11, 10)
     end_date = datetime.datetime(2022, 11, 10)
     with pytest.raises(HTTPException) as ex_info:
         read_expenses(
             db=session,
-            group_id=group.id,
-            user_id=user.id,
+            group_id=factories["first_group"].id,
+            user_id=factories["first_user"].id,
             filter_date=filter_date,
             start_date=start_date,
             end_date=end_date,
@@ -335,27 +238,15 @@ def test_read_expenses_many_arguments(session):
     assert "Too many arguments!" in str(ex_info.value.detail)
 
 
-def test_read_expenses_all_time(session):
-    user = UserFactory()
-    first_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=first_group.id)
-    second_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=second_group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=first_group.id)
-    CategoryGroupFactory(category_id=category.id, group_id=second_group.id)
-
-    first_expense = ExpenseFactory(
-        user_id=user.id, group_id=first_group.id, category_id=category.id
-    )
-    second_expense = ExpenseFactory(
-        user_id=user.id, group_id=second_group.id, category_id=category.id
-    )
-
-    data = read_expenses(db=session, user_id=user.id)
+def test_read_expenses_all_time(session, dependence_factory, activity, update_activity):
+    factories = dependence_factory
+    activity = activity
+    update_activity = update_activity
+    data = read_expenses(db=session, user_id=factories["first_user"].id)
     expenses = [
-        first_expense,
-        second_expense,
+        activity["first_expense"],
+        update_activity["second_expense"],
+        update_activity["third_expense"],
     ]
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
@@ -367,33 +258,14 @@ def test_read_expenses_all_time(session):
         assert data.category_group.category.id == expense.category_id
 
 
-def test_read_expenses_month(session):
-    user = UserFactory()
-    first_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=first_group.id)
-    second_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=second_group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=first_group.id)
-    CategoryGroupFactory(category_id=category.id, group_id=second_group.id)
-
-    time = datetime.datetime(2022, 12, 12)
-
-    first_expense = ExpenseFactory(
-        user_id=user.id, group_id=first_group.id, category_id=category.id
-    )
-    second_expense = ExpenseFactory(
-        user_id=user.id, group_id=second_group.id, category_id=category.id, time=time
-    )
-    third_expense = ExpenseFactory(
-        user_id=user.id, group_id=first_group.id, category_id=category.id, time=time
-    )
-
-    expenses = [first_expense]
+def test_read_expenses_month(session, dependence_factory, activity, update_activity):
+    factories = dependence_factory
+    update_activity = update_activity
+    expenses = [update_activity["second_expense"], update_activity["third_expense"]]
     data = read_expenses(
         db=session,
-        user_id=user.id,
-        filter_date=datetime.date.today(),
+        user_id=factories["first_user"].id,
+        filter_date=update_activity["start_date"],
     )
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
@@ -404,53 +276,19 @@ def test_read_expenses_month(session):
         assert data.category_group.group.id == expense.group_id
         assert data.category_group.category.id == expense.category_id
 
-    expenses = [second_expense, third_expense]
-    data = read_expenses(db=session, user_id=user.id, filter_date=time)
-    assert len(data) == len(expenses)
-    for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
 
-
-def test_read_expenses_time_range(session):
-    user = UserFactory()
-    first_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=first_group.id)
-    second_group = GroupFactory(admin_id=user.id)
-    UserGroupFactory(user_id=user.id, group_id=second_group.id)
-    category = CategoryFactory()
-    CategoryGroupFactory(category_id=category.id, group_id=first_group.id)
-    CategoryGroupFactory(category_id=category.id, group_id=second_group.id)
-
-    second_date = datetime.datetime(2022, 12, 10)
-    third_date = datetime.datetime(2022, 12, 22)
-
-    ExpenseFactory(user_id=user.id, group_id=first_group.id, category_id=category.id)
-    second_expense = ExpenseFactory(
-        user_id=user.id,
-        group_id=second_group.id,
-        category_id=category.id,
-        time=second_date,
-    )
-    third_expense = ExpenseFactory(
-        user_id=user.id,
-        group_id=first_group.id,
-        category_id=category.id,
-        time=third_date,
-    )
-
-    expenses = [second_expense, third_expense]
+def test_read_expenses_time_range(
+    session, dependence_factory, activity, update_activity
+):
+    factories = dependence_factory
+    update_activity = update_activity
+    expenses = [update_activity["second_expense"], update_activity["third_expense"]]
     data = read_expenses(
         db=session,
-        user_id=user.id,
-        start_date=second_date,
-        end_date=third_date,
+        user_id=factories["first_user"].id,
+        start_date=update_activity["start_date"],
+        end_date=update_activity["end_date"],
     )
-
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
         assert data.id == expense.id

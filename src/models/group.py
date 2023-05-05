@@ -15,6 +15,8 @@ class Group(Base):
     description = Column(String, nullable=False)
     admin_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     status = Column(String, Enum(GroupStatusEnum), nullable=False)
+    icon_url = Column(String, nullable=False)
+    color_code = Column(String, nullable=False)
 
     admin = relationship("User", back_populates="groups")
     users_group = relationship("UserGroup", back_populates="group")

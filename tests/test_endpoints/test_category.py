@@ -48,7 +48,10 @@ class CategoryTestCase(unittest.TestCase):
 
     def test_create_category_inactive_group(self) -> None:
         category = CategoryFactory()
-        group = GroupFactory(admin_id=self.user.id, status=GroupStatusEnum.INACTIVE)
+        group = GroupFactory(
+            admin_id=self.user.id,
+            status=GroupStatusEnum.INACTIVE,
+        )
         UserGroupFactory(
             user_id=self.user.id,
             group_id=group.id,
