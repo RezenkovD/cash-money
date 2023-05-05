@@ -5,12 +5,14 @@ from starlette.exceptions import HTTPException
 
 from models import Category, CategoryGroups, Group
 from enums import GroupStatusEnum
-from schemas import CategoryModel, CreateCategory
+from schemas import CategoryModel, CreateCategory, IconColor
 
 
-def create_category(
-    db: Session, user_id: int, group_id: int, category: CreateCategory
-) -> CategoryModel:
+def validate_input_data(
+    db: Session,
+    user_id: int,
+    group_id: int,
+) -> None:
     try:
         group = db.query(Group).filter_by(id=group_id, admin_id=user_id).one()
     except exc.NoResultFound:
@@ -23,6 +25,12 @@ def create_category(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="Group is not active!",
         )
+
+
+def create_category(
+    db: Session, user_id: int, group_id: int, category: CreateCategory
+) -> CategoryModel:
+    validate_input_data(db, user_id, group_id)
     db_category = (
         db.query(Category).filter_by(title=category.title.lower()).one_or_none()
     )
@@ -60,3 +68,43 @@ def create_category(
         )
     else:
         return db_category
+
+
+def update_category(
+    db: Session, user_id: int, group_id: int, icon_color: IconColor, category_id: int
+) -> CategoryModel:
+    validate_input_data(db, user_id, group_id)
+    try:
+        (
+            db.query(CategoryGroups)
+            .filter_by(
+                group_id=group_id,
+                category_id=category_id,
+            )
+            .one()
+        )
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You do not have this category!",
+        )
+    db.query(CategoryGroups).filter_by(
+        group_id=group_id,
+        category_id=category_id,
+    ).update(values={**icon_color.dict()})
+    db_category_group = (
+        db.query(Category)
+        .filter_by(
+            id=category_id,
+        )
+        .one()
+    )
+    try:
+        db.commit()
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while update category",
+        )
+    else:
+        return db_category_group

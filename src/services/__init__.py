@@ -1,4 +1,4 @@
-from .category import create_category
+from .category import create_category, update_category
 from .expense import (
     create_expense,
     update_expense,
