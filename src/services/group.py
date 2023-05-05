@@ -145,6 +145,29 @@ def create_group(db: Session, user_id: int, group: CreateGroup) -> GroupModel:
         return db_group
 
 
+def update_group(
+    db: Session, user_id: int, group: CreateGroup, group_id: int
+) -> GroupModel:
+    try:
+        db.query(Group).filter_by(id=group_id, admin_id=user_id).one()
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not an admin of this group!",
+        )
+    db.query(Group).filter_by(id=group_id).update(values={**group.dict()})
+    db_group = db.query(Group).filter_by(id=group_id).one()
+    try:
+        db.commit()
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"An error occurred while update group",
+        )
+    else:
+        return db_group
+
+
 def add_user_in_group(db: Session, user_id: int, group_id: int) -> None:
     db_user_group = (
         db.query(UserGroup)

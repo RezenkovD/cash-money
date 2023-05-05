@@ -10,6 +10,7 @@ from .expense import (
 from .group import (
     add_user_in_group,
     create_group,
+    update_group,
     disband_group,
     leave_group,
     read_categories_group,
