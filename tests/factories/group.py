@@ -14,7 +14,8 @@ class GroupFactory(BaseFactory):
     description = factory.Faker("word")
     admin_id = None
     status = GroupStatusEnum.ACTIVE
-    icon_color_id = factory.Faker("word")
+    icon_url = factory.Faker("word")
+    color_code = factory.Faker("word")
 
     class Meta:
         model = Group

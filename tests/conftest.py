@@ -16,11 +16,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 from tests.factories import (
     UserFactory,
-    IconFactory,
-    IconColorFactory,
     GroupFactory,
     UserGroupFactory,
-    ColorFactory,
     CategoryFactory,
     CategoryGroupFactory,
     ExpenseFactory,
@@ -95,10 +92,7 @@ def async_return(result):
 def dependence_factory() -> dict:
     first_user = UserFactory()
     second_user = UserFactory()
-    icon = IconFactory()
-    color = ColorFactory()
-    icon_color = IconColorFactory(icon_id=icon.id, color_id=color.id)
-    first_group = GroupFactory(admin_id=first_user.id, icon_color_id=icon_color.id)
+    first_group = GroupFactory(admin_id=first_user.id)
     UserGroupFactory(
         user_id=first_user.id,
         group_id=first_group.id,
@@ -106,9 +100,6 @@ def dependence_factory() -> dict:
     factories = {
         "first_user": first_user,
         "second_user": second_user,
-        "icon": icon,
-        "color": color,
-        "icon_color": icon_color,
         "first_group": first_group,
     }
     return factories
@@ -151,9 +142,7 @@ def update_activity(dependence_factory, activity):
     start_date = datetime.datetime(2022, 12, 10)
     end_date = datetime.datetime(2022, 12, 22)
     factories = dependence_factory
-    second_group = GroupFactory(
-        admin_id=factories["first_user"].id, icon_color_id=factories["icon_color"].id
-    )
+    second_group = GroupFactory(admin_id=factories["first_user"].id)
     UserGroupFactory(user_id=factories["first_user"].id, group_id=second_group.id)
     CategoryGroupFactory(category_id=activity["category"].id, group_id=second_group.id)
     second_expense = ExpenseFactory(

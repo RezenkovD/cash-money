@@ -45,7 +45,6 @@ def test_create_invitation_to_inactive_group(session, dependence_factory) -> Non
     group = GroupFactory(
         admin_id=factories["first_user"].id,
         status=GroupStatusEnum.INACTIVE,
-        icon_color_id=factories["icon_color"].id,
     )
     UserGroupFactory(user_id=factories["first_user"].id, group_id=group.id)
     data = CreateInvitation(recipient_id=factories["second_user"].id, group_id=group.id)

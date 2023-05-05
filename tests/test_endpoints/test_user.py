@@ -13,9 +13,6 @@ from tests.factories import (
     ReplenishmentFactory,
     UserFactory,
     UserGroupFactory,
-    IconFactory,
-    ColorFactory,
-    IconColorFactory,
 )
 
 
@@ -47,9 +44,6 @@ class UserTestCase(unittest.TestCase):
                 "picture": self.first_user.picture,
             }
         }
-        self.icon = IconFactory()
-        self.color = ColorFactory()
-        self.icon_color = IconColorFactory(icon_id=self.icon.id, color_id=self.color.id)
 
     def test_read_users(self) -> None:
         data = client.get("/users/")
@@ -61,12 +55,8 @@ class UserTestCase(unittest.TestCase):
             return_value=async_return(self.user_dict)
         )
         client.get("/auth/")
-        first_group = GroupFactory(
-            admin_id=self.first_user.id, icon_color_id=self.icon_color.id
-        )
-        second_group = GroupFactory(
-            admin_id=self.first_user.id, icon_color_id=self.icon_color.id
-        )
+        first_group = GroupFactory(admin_id=self.first_user.id)
+        second_group = GroupFactory(admin_id=self.first_user.id)
         UserGroupFactory(user_id=self.first_user.id, group_id=first_group.id)
         UserGroupFactory(user_id=self.first_user.id, group_id=second_group.id)
         data = client.get("/users/groups/")
@@ -103,9 +93,7 @@ class UserTestCase(unittest.TestCase):
             return_value=async_return(self.user_dict)
         )
         client.get("/auth/")
-        group = GroupFactory(
-            admin_id=self.first_user.id, icon_color_id=self.icon_color.id
-        )
+        group = GroupFactory(admin_id=self.first_user.id)
         UserGroupFactory(user_id=self.first_user.id, group_id=group.id)
         category = CategoryFactory()
         CategoryGroupFactory(category_id=category.id, group_id=group.id)

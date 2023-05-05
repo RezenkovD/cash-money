@@ -10,9 +10,6 @@ from tests.factories import (
     GroupFactory,
     UserFactory,
     UserGroupFactory,
-    IconFactory,
-    ColorFactory,
-    IconColorFactory,
 )
 
 
@@ -40,12 +37,7 @@ def test_create_category_not_admin(session, dependence_factory) -> None:
 
 def test_create_category_inactive_group(session) -> None:
     user = UserFactory()
-    icon = IconFactory()
-    color = ColorFactory()
-    icon_color = IconColorFactory(icon_id=icon.id, color_id=color.id)
-    group = GroupFactory(
-        admin_id=user.id, status=GroupStatusEnum.INACTIVE, icon_color_id=icon_color.id
-    )
+    group = GroupFactory(admin_id=user.id, status=GroupStatusEnum.INACTIVE)
     UserGroupFactory(
         user_id=user.id,
         group_id=group.id,
@@ -59,10 +51,7 @@ def test_create_category_inactive_group(session) -> None:
 
 def test_create_category_exist(session) -> None:
     user = UserFactory()
-    icon = IconFactory()
-    color = ColorFactory()
-    icon_color = IconColorFactory(icon_id=icon.id, color_id=color.id)
-    group = GroupFactory(admin_id=user.id, icon_color_id=icon_color.id)
+    group = GroupFactory(admin_id=user.id)
     category = CreateCategory(title="BoOK")
     create_category(session, user.id, group.id, category)
     category = CreateCategory(title="BOoK")

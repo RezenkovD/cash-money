@@ -6,7 +6,7 @@ from starlette.exceptions import HTTPException
 
 from models import Group, UserGroup
 from enums import GroupStatusEnum
-from schemas import CreateGroup, CreateIconColor
+from schemas import CreateGroup
 from services import (
     add_user_in_group,
     create_group,
@@ -27,14 +27,13 @@ from tests.factories import (
 
 def test_create_group(session, dependence_factory) -> None:
     factories = dependence_factory
-    icon_color_data = CreateIconColor(
-        color_code=factories["color"].code,
-        icon_url=factories["icon"].url,
+    group_data = CreateGroup(
+        title="test_title",
+        description="test_description",
+        icon_url="string",
+        color_code="string",
     )
-    group_data = CreateGroup(title="test_title", description="test_description")
-    group = create_group(
-        session, factories["first_user"].id, group_data, icon_color_data
-    )
+    group = create_group(session, factories["first_user"].id, group_data)
     assert session.query(Group).filter_by(id=group.id).one_or_none() is not None
     assert group.title == group_data.title
     assert group.description == group_data.description
@@ -43,8 +42,8 @@ def test_create_group(session, dependence_factory) -> None:
     assert group.admin.first_name == factories["first_user"].first_name
     assert group.admin.last_name == factories["first_user"].last_name
     assert group.admin.picture == factories["first_user"].picture
-    assert group.icon_color.color.id == factories["color"].id
-    assert group.icon_color.icon.id == factories["color"].id
+    assert group.icon_url == group_data.icon_url
+    assert group.color_code == group_data.color_code
 
 
 def test_add_user_in_group(session, dependence_factory) -> None:
@@ -121,7 +120,6 @@ def test_read_groups_user(session, dependence_factory) -> None:
     factories = dependence_factory
     second_group = GroupFactory(
         admin_id=factories["first_user"].id,
-        icon_color_id=factories["icon_color"].id,
     )
     UserGroupFactory(user_id=factories["first_user"].id, group_id=second_group.id)
     users_group = read_user_groups(session, factories["first_user"].id)

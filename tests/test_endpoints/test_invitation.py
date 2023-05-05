@@ -10,9 +10,6 @@ from tests.factories import (
     InvitationFactory,
     UserFactory,
     UserGroupFactory,
-    IconFactory,
-    ColorFactory,
-    IconColorFactory,
 )
 
 
@@ -32,16 +29,9 @@ class InvitationTestCase(unittest.TestCase):
             return_value=async_return(self.user_dict)
         )
         client.get("/auth/")
-        self.icon = IconFactory()
-        self.color = ColorFactory()
-        self.icon_color = IconColorFactory(icon_id=self.icon.id, color_id=self.color.id)
-        self.first_group = GroupFactory(
-            admin_id=self.first_user.id, icon_color_id=self.icon_color.id
-        )
+        self.first_group = GroupFactory(admin_id=self.first_user.id)
         UserGroupFactory(user_id=self.first_user.id, group_id=self.first_group.id)
-        self.second_group = GroupFactory(
-            admin_id=self.second_user.id, icon_color_id=self.icon_color.id
-        )
+        self.second_group = GroupFactory(admin_id=self.second_user.id)
         UserGroupFactory(user_id=self.second_user.id, group_id=self.second_group.id)
 
     def test_create_invitation(self) -> None:
@@ -73,11 +63,6 @@ class InvitationTestCase(unittest.TestCase):
                     "last_name": self.first_user.last_name,
                     "picture": self.first_user.picture,
                 },
-                "icon_color": {
-                    "id": self.icon_color.id,
-                    "icon": {"id": self.icon.id, "url": self.icon.url},
-                    "color": {"id": self.color.id, "code": self.color.code},
-                },
             },
             "creation_time": datetime.date.today().strftime("%Y-%m-%d"),
         }
@@ -94,7 +79,6 @@ class InvitationTestCase(unittest.TestCase):
         third_group = GroupFactory(
             admin_id=self.first_user.id,
             status=GroupStatusEnum.INACTIVE,
-            icon_color_id=self.icon_color.id,
         )
         UserGroupFactory(user_id=self.first_user.id, group_id=third_group.id)
         data = client.post(
@@ -154,11 +138,6 @@ class InvitationTestCase(unittest.TestCase):
                         "last_name": self.second_user.last_name,
                         "picture": self.second_user.picture,
                     },
-                    "icon_color": {
-                        "id": self.icon_color.id,
-                        "icon": {"id": self.icon.id, "url": self.icon.url},
-                        "color": {"id": self.color.id, "code": self.color.code},
-                    },
                 },
                 "creation_time": datetime.date.today().strftime("%Y-%m-%d"),
             }
@@ -189,11 +168,6 @@ class InvitationTestCase(unittest.TestCase):
                     "last_name": self.second_user.last_name,
                     "picture": self.second_user.picture,
                 },
-                "icon_color": {
-                    "id": self.icon_color.id,
-                    "icon": {"id": self.icon.id, "url": self.icon.url},
-                    "color": {"id": self.color.id, "code": self.color.code},
-                },
             },
             "creation_time": datetime.date.today().strftime("%Y-%m-%d"),
             "recipient": {
@@ -221,9 +195,7 @@ class InvitationTestCase(unittest.TestCase):
         assert data.status_code == 404
 
     def test_response_invitation_in_inactive_group(self) -> None:
-        group = GroupFactory(
-            admin_id=self.first_user.id, icon_color_id=self.icon_color.id
-        )
+        group = GroupFactory(admin_id=self.first_user.id)
         UserGroupFactory(user_id=self.first_user.id, group_id=group.id)
         invitation = InvitationFactory(
             sender_id=self.first_user.id,
