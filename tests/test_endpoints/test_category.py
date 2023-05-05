@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from dependencies import oauth
 from enums import GroupStatusEnum
-from schemas import CreateCategory
+from schemas import CreateCategory, IconColor
 from tests.conftest import async_return, client
 from tests.factories import (
     CategoryFactory,
@@ -40,6 +40,21 @@ class CategoryTestCase(unittest.TestCase):
                 "title": category.title,
                 "icon_url": category.icon_url,
                 "color_code": category.color_code,
+            },
+        )
+        assert data.status_code == 200
+        category_data = {"title": category.title.lower(), "id": data.json()["id"]}
+        assert data.json() == category_data
+
+    def test_update_category(self) -> None:
+        category = CategoryFactory()
+        CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
+        icon_color = IconColor(icon_url="string", color_code="string")
+        data = client.put(
+            f"/categories/{self.group.id}/{category.id}",
+            json={
+                "icon_url": icon_color.icon_url,
+                "color_code": icon_color.color_code,
             },
         )
         assert data.status_code == 200

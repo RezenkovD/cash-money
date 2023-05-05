@@ -3,13 +3,14 @@ from starlette.exceptions import HTTPException
 
 from models import Category, CategoryGroups
 from enums import GroupStatusEnum
-from schemas import CreateCategory
-from services import create_category
+from schemas import CreateCategory, IconColor
+from services import create_category, update_category
 from tests.factories import (
     CategoryFactory,
     GroupFactory,
     UserFactory,
     UserGroupFactory,
+    CategoryGroupFactory,
 )
 
 
@@ -25,6 +26,43 @@ def test_create_category(session, dependence_factory) -> None:
         session.query(CategoryGroups).filter_by(category_id=data.id).one_or_none()
     )
     assert db_category_group is not None
+
+
+def test_update_category(session, dependence_factory) -> None:
+    factories = dependence_factory
+    category = CategoryFactory()
+    CategoryGroupFactory(category_id=category.id, group_id=factories["first_group"].id)
+    icon_color = IconColor(color_code="string", icon_url="string")
+    data = update_category(
+        session,
+        factories["first_user"].id,
+        factories["first_group"].id,
+        icon_color,
+        category.id,
+    )
+    db_category_group = (
+        session.query(CategoryGroups)
+        .filter_by(category_id=data.id, group_id=factories["first_group"].id)
+        .one_or_none()
+    )
+    assert db_category_group.icon_url == icon_color.icon_url
+    assert db_category_group.color_code == icon_color.color_code
+
+
+def test_update_non_mine_category(session, dependence_factory) -> None:
+    factories = dependence_factory
+    category = CategoryFactory()
+    CategoryGroupFactory(category_id=category.id, group_id=factories["first_group"].id)
+    icon_color = IconColor(color_code="string", icon_url="string")
+    with pytest.raises(HTTPException) as ex_info:
+        update_category(
+            session,
+            factories["first_user"].id,
+            factories["first_group"].id,
+            icon_color,
+            9999,
+        )
+    assert "You do not have this category!" in str(ex_info.value.detail)
 
 
 def test_create_category_not_admin(session, dependence_factory) -> None:
