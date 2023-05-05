@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from dependencies import oauth
 from enums import GroupStatusEnum
-from schemas import CreateCategory
+from schemas import CreateCategory, IconColor
 from tests.conftest import async_return, client
 from tests.factories import (
     CategoryFactory,
@@ -33,9 +33,29 @@ class CategoryTestCase(unittest.TestCase):
         UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
     def test_create_category(self) -> None:
-        category = CreateCategory(title="title")
+        category = CreateCategory(title="title", icon_url="string", color_code="string")
         data = client.post(
-            f"/categories/{self.group.id}/", json={"title": category.title}
+            f"/categories/{self.group.id}/",
+            json={
+                "title": category.title,
+                "icon_url": category.icon_url,
+                "color_code": category.color_code,
+            },
+        )
+        assert data.status_code == 200
+        category_data = {"title": category.title.lower(), "id": data.json()["id"]}
+        assert data.json() == category_data
+
+    def test_update_category(self) -> None:
+        category = CategoryFactory()
+        CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
+        icon_color = IconColor(icon_url="string", color_code="string")
+        data = client.put(
+            f"/categories/{self.group.id}/{category.id}",
+            json={
+                "icon_url": icon_color.icon_url,
+                "color_code": icon_color.color_code,
+            },
         )
         assert data.status_code == 200
         category_data = {"title": category.title.lower(), "id": data.json()["id"]}
@@ -43,7 +63,14 @@ class CategoryTestCase(unittest.TestCase):
 
     def test_create_category_not_admin(self) -> None:
         category = CategoryFactory()
-        data = client.post("/categories/9999/", json={"title": category.title})
+        data = client.post(
+            "/categories/9999/",
+            json={
+                "title": category.title,
+                "icon_url": "icon_url",
+                "color_code": "color_code",
+            },
+        )
         assert data.status_code == 404
 
     def test_create_category_inactive_group(self) -> None:
@@ -57,13 +84,25 @@ class CategoryTestCase(unittest.TestCase):
             group_id=group.id,
             status=GroupStatusEnum.INACTIVE,
         )
-        data = client.post(f"/categories/{group.id}/", json={"title": category.title})
+        data = client.post(
+            f"/categories/{group.id}/",
+            json={
+                "title": category.title,
+                "icon_url": "icon_url",
+                "color_code": "color_code",
+            },
+        )
         assert data.status_code == 405
 
     def test_create_category_exist(self) -> None:
         category = CategoryFactory()
         CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
         data = client.post(
-            f"/categories/{self.group.id}/", json={"title": category.title}
+            f"/categories/{self.group.id}/",
+            json={
+                "title": category.title,
+                "icon_url": "icon_url",
+                "color_code": "color_code",
+            },
         )
         assert data.status_code == 405
