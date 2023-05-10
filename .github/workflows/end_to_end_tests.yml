@@ -19,7 +19,6 @@ jobs:
       with:
         python-version: "3.10"
 
-    - name: Caching
     - uses: actions/cache@v3
       with:
         path: ~/.cache/pip
