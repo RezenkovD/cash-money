@@ -19,6 +19,15 @@ jobs:
       with:
         python-version: "3.10"
 
+    - name: Install PostgreSQL
+      run: |
+        sudo apt-get update
+        sudo apt-get install postgresql postgresql-contrib -y
+        sudo service postgresql start
+        sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.POSTGRES_DB }}"
+        sudo -u postgres psql -c "CREATE USER ${{ secrets.POSTGRES_USER }} WITH PASSWORD ${{ secrets.POSTGRES_PASSWORD }};"
+        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE mydb TO  ${{ secrets.POSTGRES_USER }};"
+
     - uses: actions/cache@v3
       with:
         path: ~/.cache/pip
