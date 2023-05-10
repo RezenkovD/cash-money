@@ -48,4 +48,4 @@ def test_auth_login(session) -> None:
 
 def test_logout(session) -> None:
     data = client.get("/logout/")
-    assert "set-cookie" is not data.headers.keys()
+    assert "set-cookie" not in data.headers
