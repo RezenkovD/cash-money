@@ -1,18 +1,18 @@
-import enum
+from enum import StrEnum
 
 
-class GroupStatusEnum(str, enum.Enum):
+class GroupStatusEnum(StrEnum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
 
 
-class ResponseStatusEnum(str, enum.Enum):
+class ResponseStatusEnum(StrEnum):
     PENDING = "PENDING"
     ACCEPTED = "ACCEPTED"
     DENIED = "DENIED"
     OVERDUE = "OVERDUE"
 
 
-class UserResponseEnum(str, enum.Enum):
+class UserResponseEnum(StrEnum):
     ACCEPTED = "ACCEPTED"
     DENIED = "DENIED"
