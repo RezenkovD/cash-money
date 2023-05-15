@@ -33,4 +33,4 @@ def read_user_current_balance(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CurrentBalance:
-    return services.read_user_current_balance(db, current_user.id)
+    return services.current_balance(db, current_user.id)

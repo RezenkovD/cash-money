@@ -25,4 +25,4 @@ from .replenishment import (
     update_replenishment,
     delete_replenishment,
 )
-from .user import get_user, read_user_current_balance
+from .user import get_user, current_balance

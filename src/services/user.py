@@ -11,7 +11,7 @@ def get_user(db: Session, login: str) -> Optional[User]:
     return db.query(User).filter_by(login=login).one_or_none()
 
 
-def read_user_current_balance(db: Session, user_id: int) -> CurrentBalance:
+def current_balance(db: Session, user_id: int) -> CurrentBalance:
     (replenishments,) = db.query(
         coalesce(sum(Replenishment.amount).filter(Replenishment.user_id == user_id), 0)
     ).one()
