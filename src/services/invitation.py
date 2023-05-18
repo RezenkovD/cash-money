@@ -13,7 +13,7 @@ from models import (
     UserGroup,
 )
 from enums import GroupStatusEnum, ResponseStatusEnum, UserResponseEnum
-from schemas import BaseInvitation, CreateInvitation, InvitationModel
+from schemas import BaseInvitation, InvitationCreate, InvitationModel
 from services import add_user_in_group
 
 
@@ -89,7 +89,7 @@ def read_invitations(db: Session, user_id: int) -> List[BaseInvitation]:
 
 
 def create_invitation(
-    db: Session, user_id: int, data: CreateInvitation
+    db: Session, user_id: int, data: InvitationCreate
 ) -> InvitationModel:
     try:
         db_group = db.query(Group).filter_by(admin_id=user_id, id=data.group_id).one()

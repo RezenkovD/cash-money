@@ -7,16 +7,16 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
 
-from models import CategoryGroups, Expense, UserGroup
+from models import CategoryGroup, Expense, UserGroup
 from enums import GroupStatusEnum
-from schemas import CreateExpense, ExpenseModel, UserExpense
+from schemas import ExpenseCreate, ExpenseModel, UserExpense
 
 
 def validate_input_data(
     db: Session,
     user_id: int,
     group_id: int,
-    expense: CreateExpense = None,
+    expense: ExpenseCreate = None,
     expense_id: int = None,
 ) -> None:
     try:
@@ -35,7 +35,7 @@ def validate_input_data(
         )
     if expense:
         try:
-            db.query(CategoryGroups).filter_by(
+            db.query(CategoryGroup).filter_by(
                 category_id=expense.category_id,
                 group_id=group_id,
             ).one()
@@ -55,7 +55,7 @@ def validate_input_data(
 
 
 def create_expense(
-    db: Session, user_id: int, group_id: int, expense: CreateExpense
+    db: Session, user_id: int, group_id: int, expense: ExpenseCreate
 ) -> ExpenseModel:
     validate_input_data(db=db, user_id=user_id, group_id=group_id, expense=expense)
     db_expense = Expense(**expense.dict())
@@ -75,7 +75,7 @@ def create_expense(
 
 
 def update_expense(
-    db: Session, user_id: int, group_id: int, expense: CreateExpense, expense_id: int
+    db: Session, user_id: int, group_id: int, expense: ExpenseCreate, expense_id: int
 ) -> ExpenseModel:
     validate_input_data(
         db=db,

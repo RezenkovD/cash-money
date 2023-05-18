@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 from dependencies import oauth
 from enums import GroupStatusEnum
-from schemas import CreateGroup
+from schemas import GroupCreate
 from tests.conftest import async_return, client
 from tests.factories import (
     CategoryFactory,
@@ -34,7 +34,7 @@ class GroupTestCase(unittest.TestCase):
         UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
     def test_create_group(self) -> None:
-        group = CreateGroup(
+        group = GroupCreate(
             title="string", description="string", icon_url="string", color_code="string"
         )
         data = client.post(
@@ -63,7 +63,7 @@ class GroupTestCase(unittest.TestCase):
         assert data.json() == group_data
 
     def test_update_group(self) -> None:
-        group = CreateGroup(
+        group = GroupCreate(
             title="string", description="string", icon_url="string", color_code="string"
         )
         data = client.put(
@@ -92,7 +92,7 @@ class GroupTestCase(unittest.TestCase):
         assert data.json() == group_data
 
     def test_update_group_as_non_admin(self) -> None:
-        group = CreateGroup(
+        group = GroupCreate(
             title="string", description="string", icon_url="string", color_code="string"
         )
         data = client.put(

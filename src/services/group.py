@@ -11,7 +11,7 @@ from enums import GroupStatusEnum
 from schemas import (
     AboutUser,
     CategoriesGroup,
-    CreateGroup,
+    GroupCreate,
     GroupModel,
     UserGroups,
     UsersGroup,
@@ -125,7 +125,7 @@ def leave_group(
         return db_user_group
 
 
-def create_group(db: Session, user_id: int, group: CreateGroup) -> GroupModel:
+def create_group(db: Session, user_id: int, group: GroupCreate) -> GroupModel:
     db_group = Group(
         **group.dict(),
         admin_id=user_id,
@@ -146,7 +146,7 @@ def create_group(db: Session, user_id: int, group: CreateGroup) -> GroupModel:
 
 
 def update_group(
-    db: Session, user_id: int, group: CreateGroup, group_id: int
+    db: Session, user_id: int, group: GroupCreate, group_id: int
 ) -> GroupModel:
     try:
         db.query(Group).filter_by(id=group_id, admin_id=user_id).one()

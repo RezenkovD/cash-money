@@ -6,7 +6,7 @@ from schemas.base_model import BaseModel
 from schemas.category import CategoryModel
 
 
-class CreateGroup(BaseModel):
+class GroupCreate(BaseModel):
     title: str
     description: str
     icon_url: str

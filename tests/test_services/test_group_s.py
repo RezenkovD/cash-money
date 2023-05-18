@@ -6,7 +6,7 @@ from starlette.exceptions import HTTPException
 
 from models import Group, UserGroup
 from enums import GroupStatusEnum
-from schemas import CreateGroup
+from schemas import GroupCreate
 from services import (
     add_user_in_group,
     create_group,
@@ -28,7 +28,7 @@ from tests.factories import (
 
 def test_create_group(session, dependence_factory) -> None:
     factories = dependence_factory
-    group_data = CreateGroup(
+    group_data = GroupCreate(
         title="test_title",
         description="test_description",
         icon_url="string",
@@ -49,7 +49,7 @@ def test_create_group(session, dependence_factory) -> None:
 
 def test_update_group(session, dependence_factory) -> None:
     factories = dependence_factory
-    group_data = CreateGroup(
+    group_data = GroupCreate(
         title="test_title",
         description="test_description",
         icon_url="string",
@@ -72,7 +72,7 @@ def test_update_group(session, dependence_factory) -> None:
 
 def test_update_group_as_non_admin(session, dependence_factory) -> None:
     factories = dependence_factory
-    group_data = CreateGroup(
+    group_data = GroupCreate(
         title="test_title",
         description="test_description",
         icon_url="string",

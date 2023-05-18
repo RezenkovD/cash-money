@@ -23,7 +23,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 from models import (
     Category,
-    CategoryGroups,
+    CategoryGroup,
     Expense,
     Group,
     User,

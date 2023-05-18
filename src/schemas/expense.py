@@ -4,7 +4,7 @@ from schemas import BaseUser, CategoryModel, ShortGroup
 from schemas.base_model import BaseModel
 
 
-class CreateExpense(BaseModel):
+class ExpenseCreate(BaseModel):
     descriptions: str
     amount: float
     category_id: int

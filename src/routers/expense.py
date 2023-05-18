@@ -14,7 +14,7 @@ from dependencies import (
     transform_exact_date_or_422,
 )
 from models import User
-from schemas import CreateExpense, ExpenseModel, UserExpense
+from schemas import ExpenseCreate, ExpenseModel, UserExpense
 
 router = APIRouter(
     prefix="/expenses",
@@ -28,7 +28,7 @@ def create_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-    expense: CreateExpense,
+    expense: ExpenseCreate,
 ) -> ExpenseModel:
     return services.create_expense(db, current_user.id, group_id, expense)
 
@@ -39,7 +39,7 @@ def update_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-    expense: CreateExpense,
+    expense: ExpenseCreate,
     expense_id: int,
 ) -> ExpenseModel:
     return services.update_expense(db, current_user.id, group_id, expense, expense_id)

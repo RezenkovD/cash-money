@@ -3,17 +3,17 @@ from .group import (
     AboutCategory,
     AboutUser,
     CategoriesGroup,
-    CreateGroup,
+    GroupCreate,
     GroupModel,
     ShortGroup,
     UserGroups,
     UsersGroup,
 )
-from .invintation import BaseInvitation, CreateInvitation, InvitationModel
-from .category import CategoryModel, CreateCategory, IconColor
-from .expense import CreateExpense, ExpenseModel, UserExpense
+from .invintation import BaseInvitation, InvitationCreate, InvitationModel
+from .category import CategoryModel, CategoryCreate, IconColor
+from .expense import ExpenseCreate, ExpenseModel, UserExpense
 from .replenishment import (
-    CreateReplenishment,
+    ReplenishmentCreate,
     CurrentBalance,
     ReplenishmentModel,
     UserReplenishment,

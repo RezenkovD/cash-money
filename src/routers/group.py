@@ -10,7 +10,7 @@ from models import User
 from schemas import (
     AboutUser,
     CategoriesGroup,
-    CreateGroup,
+    GroupCreate,
     GroupModel,
     UsersGroup,
 )
@@ -26,7 +26,7 @@ def create_group(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    group: CreateGroup,
+    group: GroupCreate,
 ) -> GroupModel:
     return services.create_group(db, current_user.id, group)
 
@@ -36,7 +36,7 @@ def update_group(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    group: CreateGroup,
+    group: GroupCreate,
     group_id: int,
 ) -> GroupModel:
     return services.update_group(db, current_user.id, group, group_id)

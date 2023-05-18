@@ -8,7 +8,7 @@ from database import get_db
 from dependencies import get_current_user
 from models import User
 from enums import UserResponseEnum
-from schemas import BaseInvitation, CreateInvitation, InvitationModel
+from schemas import BaseInvitation, InvitationCreate, InvitationModel
 
 router = APIRouter(
     prefix="/invitations",
@@ -21,7 +21,7 @@ def create_invitation(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    data: CreateInvitation,
+    data: InvitationCreate,
 ) -> InvitationModel:
     return services.create_invitation(db, current_user.id, data)
 

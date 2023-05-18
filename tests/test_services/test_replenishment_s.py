@@ -4,7 +4,7 @@ import pytest
 from starlette.exceptions import HTTPException
 
 from models import Replenishment
-from schemas import CreateReplenishment
+from schemas import ReplenishmentCreate
 from services import (
     create_replenishment,
     read_replenishments,
@@ -16,7 +16,7 @@ from tests.factories import ReplenishmentFactory, UserFactory
 
 def test_create_replenishment(session) -> None:
     user = UserFactory()
-    replenishment = CreateReplenishment(descriptions="descriptions", amount=999.9)
+    replenishment = ReplenishmentCreate(descriptions="descriptions", amount=999.9)
     data = create_replenishment(session, user.id, replenishment)
     db_replenishment = session.query(Replenishment).all()
     assert len(db_replenishment) == 1
@@ -31,7 +31,7 @@ def test_create_replenishment(session) -> None:
 def test_update_replenishment(session) -> None:
     user = UserFactory()
     replenishment = ReplenishmentFactory(user_id=user.id)
-    date_update_replenishment = CreateReplenishment(
+    date_update_replenishment = ReplenishmentCreate(
         descriptions="descriptions", amount=999.9
     )
     data = update_replenishment(
@@ -59,7 +59,7 @@ def test_update_replenishment_another_user(session) -> None:
     first_user = UserFactory()
     replenishment = ReplenishmentFactory(user_id=first_user.id)
     second_user = UserFactory()
-    date_update_replenishment = CreateReplenishment(
+    date_update_replenishment = ReplenishmentCreate(
         descriptions="descriptions", amount=999.9
     )
     with pytest.raises(HTTPException) as ex_info:

@@ -4,7 +4,7 @@ from schemas import GroupModel, UserModel
 from schemas.base_model import BaseModel
 
 
-class CreateInvitation(BaseModel):
+class InvitationCreate(BaseModel):
     recipient_id: int
     group_id: int
 

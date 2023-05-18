@@ -6,7 +6,7 @@ class IconColor(BaseModel):
     color_code: str
 
 
-class CreateCategory(IconColor):
+class CategoryCreate(IconColor):
     title: str
 
 

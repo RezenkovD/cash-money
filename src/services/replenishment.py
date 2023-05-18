@@ -8,11 +8,11 @@ from starlette import status
 from starlette.exceptions import HTTPException
 
 from models import Replenishment
-from schemas import CreateReplenishment, ReplenishmentModel, UserReplenishment
+from schemas import ReplenishmentCreate, ReplenishmentModel, UserReplenishment
 
 
 def create_replenishment(
-    db: Session, user_id: int, replenishment: CreateReplenishment
+    db: Session, user_id: int, replenishment: ReplenishmentCreate
 ) -> ReplenishmentModel:
     db_replenishment = Replenishment(**replenishment.dict())
     db_replenishment.user_id = user_id
@@ -30,7 +30,7 @@ def create_replenishment(
 
 
 def update_replenishment(
-    db: Session, user_id: int, replenishment: CreateReplenishment, replenishment_id: int
+    db: Session, user_id: int, replenishment: ReplenishmentCreate, replenishment_id: int
 ):
     try:
         db.query(Replenishment).filter_by(id=replenishment_id, user_id=user_id).one()

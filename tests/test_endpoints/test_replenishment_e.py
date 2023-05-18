@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
-from schemas import CreateReplenishment
+from schemas import ReplenishmentCreate
 from tests.conftest import async_return, client
 from tests.factories import ReplenishmentFactory, UserFactory
 
@@ -25,7 +25,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
         client.get("/auth/")
 
     def test_create_replenishment(self) -> None:
-        replenishment = CreateReplenishment(descriptions="descriptions", amount=999.9)
+        replenishment = ReplenishmentCreate(descriptions="descriptions", amount=999.9)
         data = client.post(
             "/replenishments/",
             json={
@@ -45,7 +45,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
 
     def test_update_replenishment(self) -> None:
         replenishment = ReplenishmentFactory(user_id=self.user.id)
-        date_update_replenishment = CreateReplenishment(
+        date_update_replenishment = ReplenishmentCreate(
             descriptions="descriptions", amount=999.9
         )
         data = client.put(

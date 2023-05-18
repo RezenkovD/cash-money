@@ -10,10 +10,10 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, unique=True, nullable=False)
 
-    groups = relationship("CategoryGroups", back_populates="category")
+    groups = relationship("CategoryGroup", back_populates="category")
 
 
-class CategoryGroups(Base):
+class CategoryGroup(Base):
     __tablename__ = "categories_groups"
 
     category_id = Column(Integer, ForeignKey("categories.id"), primary_key=True)

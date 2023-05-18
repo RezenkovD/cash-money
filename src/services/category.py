@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
 
-from models import Category, CategoryGroups, Group
+from models import Category, CategoryGroup, Group
 from enums import GroupStatusEnum
-from schemas import CategoryModel, CreateCategory, IconColor
+from schemas import CategoryModel, CategoryCreate, IconColor
 
 
 def validate_input_data(
@@ -28,7 +28,7 @@ def validate_input_data(
 
 
 def create_category(
-    db: Session, user_id: int, group_id: int, category: CreateCategory
+    db: Session, user_id: int, group_id: int, category: CategoryCreate
 ) -> CategoryModel:
     validate_input_data(db, user_id, group_id)
     db_category = (
@@ -40,7 +40,7 @@ def create_category(
         db.flush()
     else:
         db_category_group = (
-            db.query(CategoryGroups)
+            db.query(CategoryGroup)
             .filter_by(
                 group_id=group_id,
                 category_id=db_category.id,
@@ -52,7 +52,7 @@ def create_category(
                 status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
                 detail="The category is already in this group!",
             )
-    db_category_group = CategoryGroups(
+    db_category_group = CategoryGroup(
         category_id=db_category.id,
         group_id=group_id,
         icon_url=category.icon_url,
@@ -76,7 +76,7 @@ def update_category(
     validate_input_data(db, user_id, group_id)
     try:
         (
-            db.query(CategoryGroups)
+            db.query(CategoryGroup)
             .filter_by(
                 group_id=group_id,
                 category_id=category_id,
@@ -88,7 +88,7 @@ def update_category(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You do not have this category!",
         )
-    db.query(CategoryGroups).filter_by(
+    db.query(CategoryGroup).filter_by(
         group_id=group_id,
         category_id=category_id,
     ).update(values={**icon_color.dict()})

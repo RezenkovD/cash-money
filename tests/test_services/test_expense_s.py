@@ -5,7 +5,7 @@ from starlette.exceptions import HTTPException
 
 from models import Expense
 from enums import GroupStatusEnum
-from schemas import CreateExpense
+from schemas import ExpenseCreate
 from services import create_expense
 from services.expense import update_expense, delete_expense, read_expenses
 from tests.factories import UserGroupFactory
@@ -14,7 +14,7 @@ from tests.factories import UserGroupFactory
 def test_create_expense(session, dependence_factory, activity) -> None:
     factories = dependence_factory
     activity = activity
-    expense = CreateExpense(
+    expense = ExpenseCreate(
         descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
     data = create_expense(
@@ -35,7 +35,7 @@ def test_create_expense(session, dependence_factory, activity) -> None:
 def test_update_expense(session, dependence_factory, activity) -> None:
     factories = dependence_factory
     activity = activity
-    date_update_expense = CreateExpense(
+    date_update_expense = ExpenseCreate(
         descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
     data = update_expense(
@@ -74,7 +74,7 @@ def test_update_expense_another_user(session, dependence_factory, activity) -> N
     UserGroupFactory(
         user_id=factories["second_user"].id, group_id=factories["first_group"].id
     )
-    date_update_expense = CreateExpense(
+    date_update_expense = ExpenseCreate(
         descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
     with pytest.raises(HTTPException) as ex_info:
@@ -91,7 +91,7 @@ def test_update_expense_another_user(session, dependence_factory, activity) -> N
 def test_create_expense_another_group(session, dependence_factory, activity) -> None:
     factories = dependence_factory
     activity = activity
-    expense = CreateExpense(
+    expense = ExpenseCreate(
         descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
     with pytest.raises(HTTPException) as ex_info:
@@ -107,7 +107,7 @@ def test_create_expense_inactive_user(session, dependence_factory, activity) -> 
         group_id=factories["first_group"].id,
         status=GroupStatusEnum.INACTIVE,
     )
-    expense = CreateExpense(
+    expense = ExpenseCreate(
         descriptions="descriptions", amount=999.9, category_id=activity["category"].id
     )
     with pytest.raises(HTTPException) as ex_info:
@@ -119,7 +119,7 @@ def test_create_expense_inactive_user(session, dependence_factory, activity) -> 
 
 def test_create_expense_another_category(session, dependence_factory) -> None:
     factories = dependence_factory
-    expense = CreateExpense(
+    expense = ExpenseCreate(
         descriptions="descriptions",
         amount=999.9,
         category_id=9999,

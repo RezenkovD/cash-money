@@ -4,7 +4,7 @@ import pytest
 from starlette.exceptions import HTTPException
 
 from enums import GroupStatusEnum, ResponseStatusEnum
-from schemas import CreateInvitation
+from schemas import InvitationCreate
 from services import (
     create_invitation,
     leave_group,
@@ -22,7 +22,7 @@ from tests.factories import (
 
 def test_create_invitation(session, dependence_factory) -> None:
     factories = dependence_factory
-    data = CreateInvitation(
+    data = InvitationCreate(
         recipient_id=factories["second_user"].id, group_id=factories["first_group"].id
     )
     invitation = create_invitation(session, factories["first_user"].id, data)
@@ -34,7 +34,7 @@ def test_create_invitation(session, dependence_factory) -> None:
 
 def test_create_invitation_as_non_admin(session, dependence_factory) -> None:
     factories = dependence_factory
-    data = CreateInvitation(recipient_id=factories["second_user"].id, group_id=9999)
+    data = InvitationCreate(recipient_id=factories["second_user"].id, group_id=9999)
     with pytest.raises(HTTPException) as ex_info:
         create_invitation(session, factories["first_user"].id, data)
     assert "You are not admin in this group!" in str(ex_info.value.detail)
@@ -47,7 +47,7 @@ def test_create_invitation_to_inactive_group(session, dependence_factory) -> Non
         status=GroupStatusEnum.INACTIVE,
     )
     UserGroupFactory(user_id=factories["first_user"].id, group_id=group.id)
-    data = CreateInvitation(recipient_id=factories["second_user"].id, group_id=group.id)
+    data = InvitationCreate(recipient_id=factories["second_user"].id, group_id=group.id)
     with pytest.raises(HTTPException) as ex_info:
         create_invitation(session, factories["first_user"].id, data)
     assert "The group is inactive" in str(ex_info.value.detail)
@@ -55,7 +55,7 @@ def test_create_invitation_to_inactive_group(session, dependence_factory) -> Non
 
 def test_create_invitation_to_non_exist_user(session, dependence_factory) -> None:
     factories = dependence_factory
-    data = CreateInvitation(recipient_id=9999, group_id=factories["first_group"].id)
+    data = InvitationCreate(recipient_id=9999, group_id=factories["first_group"].id)
     with pytest.raises(HTTPException) as ex_info:
         create_invitation(session, factories["first_user"].id, data)
     assert "User is not found!" in str(ex_info.value.detail)
@@ -66,7 +66,7 @@ def test_create_invitation_to_group_user(session, dependence_factory) -> None:
     UserGroupFactory(
         user_id=factories["second_user"].id, group_id=factories["first_group"].id
     )
-    data = CreateInvitation(
+    data = InvitationCreate(
         recipient_id=factories["second_user"].id, group_id=factories["first_group"].id
     )
     with pytest.raises(HTTPException) as ex_info:
@@ -76,7 +76,7 @@ def test_create_invitation_to_group_user(session, dependence_factory) -> None:
 
 def test_create_invitation_twice(session, dependence_factory) -> None:
     factories = dependence_factory
-    data = CreateInvitation(
+    data = InvitationCreate(
         recipient_id=factories["second_user"].id, group_id=factories["first_group"].id
     )
     create_invitation(session, factories["first_user"].id, data)

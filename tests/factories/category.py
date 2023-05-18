@@ -1,6 +1,6 @@
 import factory
 
-from models import Category, CategoryGroups
+from models import Category, CategoryGroup
 
 from .base_factory import BaseFactory
 
@@ -20,4 +20,4 @@ class CategoryGroupFactory(BaseFactory):
     color_code = factory.Faker("word")
 
     class Meta:
-        model = CategoryGroups
+        model = CategoryGroup

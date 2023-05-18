@@ -14,7 +14,7 @@ from dependencies import (
     transform_exact_date_or_422,
 )
 from models import User
-from schemas import CreateReplenishment, ReplenishmentModel, UserReplenishment
+from schemas import ReplenishmentCreate, ReplenishmentModel, UserReplenishment
 
 router = APIRouter(
     prefix="/replenishments",
@@ -27,7 +27,7 @@ def create_replenishment(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    replenishment: CreateReplenishment,
+    replenishment: ReplenishmentCreate,
 ) -> ReplenishmentModel:
     return services.create_replenishment(db, current_user.id, replenishment)
 
@@ -37,7 +37,7 @@ def update_replenishment(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    replenishment: CreateReplenishment,
+    replenishment: ReplenishmentCreate,
     replenishment_id: int,
 ) -> ReplenishmentModel:
     return services.update_replenishment(
