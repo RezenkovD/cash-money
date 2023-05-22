@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from dependencies import oauth
 from models import User
 from services import get_user
-from tests.conftest import client, async_return
+from tests.conftest import async_return, client
 from tests.factories import UserFactory
 
 
@@ -48,4 +48,4 @@ def test_auth_login(session) -> None:
 
 def test_logout(session) -> None:
     data = client.get("/logout/")
-    assert "set-cookie" is not data.headers.keys()
+    assert "set-cookie" not in data.headers

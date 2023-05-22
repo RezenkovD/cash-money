@@ -1,12 +1,11 @@
+alembic==1.9.4
+Authlib==1.2.0
 fastapi==0.92.0
+httpx==0.23.3
+itsdangerous==2.1.2
 psycopg2==2.9.5
 pydantic==1.10.5
 SQLAlchemy==2.0.4
 SQLAlchemy-Utils==0.40.0
 starlette==0.25.0
 uvicorn==0.20.0
-uvloop==0.17.0
-alembic~=1.9.4
-Authlib~=1.2.0
-pytest~=7.2.1
-factory-boy==3.2.1

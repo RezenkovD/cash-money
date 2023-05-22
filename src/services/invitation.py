@@ -6,16 +6,14 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
 
-import schemas
 from models import (
-    Invitation,
-    ResponseStatus,
-    UserGroup,
-    User,
     Group,
-    Status,
-    UserResponse,
+    Invitation,
+    User,
+    UserGroup,
 )
+from enums import GroupStatusEnum, ResponseStatusEnum, UserResponseEnum
+from schemas import BaseInvitation, InvitationCreate, InvitationModel
 from services import add_user_in_group
 
 
@@ -23,31 +21,31 @@ def update_invitation_info(db: Session, user_id: int) -> None:
     db.query(Invitation).filter(
         and_(
             Invitation.recipient_id == user_id,
-            Invitation.status == ResponseStatus.PENDING,
+            Invitation.status == ResponseStatusEnum.PENDING,
             Invitation.creation_time + datetime.timedelta(hours=24)
             < datetime.datetime.utcnow(),
         )
-    ).update({Invitation.status: ResponseStatus.OVERDUE})
-    groups = db.query(Group.id).filter_by(status=Status.INACTIVE)
+    ).update({Invitation.status: ResponseStatusEnum.OVERDUE})
+    groups = db.query(Group.id).filter_by(status=GroupStatusEnum.INACTIVE)
     db.query(Invitation).filter(
         and_(
             Invitation.recipient_id == user_id,
-            Invitation.status == ResponseStatus.PENDING,
+            Invitation.status == ResponseStatusEnum.PENDING,
             Invitation.group_id.in_(groups),
         )
-    ).update({Invitation.status: ResponseStatus.OVERDUE})
+    ).update({Invitation.status: ResponseStatusEnum.OVERDUE})
 
 
 def response_invitation(
-    db: Session, user_id: int, invitation_id: int, response: UserResponse
-) -> schemas.Invitation:
+    db: Session, user_id: int, invitation_id: int, response: UserResponseEnum
+) -> InvitationModel:
     update_invitation_info(db, user_id)
     try:
         db_invitation = (
             db.query(Invitation)
             .filter_by(
                 recipient_id=user_id,
-                status=ResponseStatus.PENDING,
+                status=ResponseStatusEnum.PENDING,
                 id=invitation_id,
             )
             .one()
@@ -58,7 +56,7 @@ def response_invitation(
             detail="Invitation is not found",
         )
     db_invitation.status = response
-    if response == ResponseStatus.ACCEPTED:
+    if response == ResponseStatusEnum.ACCEPTED:
         try:
             add_user_in_group(db, user_id, db_invitation.group_id)
         except:
@@ -77,13 +75,13 @@ def response_invitation(
         return db_invitation
 
 
-def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
+def read_invitations(db: Session, user_id: int) -> List[BaseInvitation]:
     update_invitation_info(db, user_id)
     db_invitations = (
         db.query(Invitation)
         .filter_by(
             recipient_id=user_id,
-            status=ResponseStatus.PENDING,
+            status=ResponseStatusEnum.PENDING,
         )
         .all()
     )
@@ -91,8 +89,8 @@ def read_invitations(db: Session, user_id: int) -> List[schemas.BaseInvitation]:
 
 
 def create_invitation(
-    db: Session, user_id: int, data: schemas.CreateInvitation
-) -> schemas.Invitation:
+    db: Session, user_id: int, data: InvitationCreate
+) -> InvitationModel:
     try:
         db_group = db.query(Group).filter_by(admin_id=user_id, id=data.group_id).one()
     except exc.NoResultFound:
@@ -100,7 +98,7 @@ def create_invitation(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You are not admin in this group!",
         )
-    if db_group.status == Status.INACTIVE:
+    if db_group.status == GroupStatusEnum.INACTIVE:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail="The group is inactive",
@@ -117,7 +115,7 @@ def create_invitation(
         .filter_by(
             user_id=data.recipient_id,
             group_id=data.group_id,
-            status=Status.ACTIVE,
+            status=GroupStatusEnum.ACTIVE,
         )
         .one_or_none()
     )
@@ -129,7 +127,7 @@ def create_invitation(
     db_invitation = (
         db.query(Invitation)
         .filter_by(
-            status=ResponseStatus.PENDING,
+            status=ResponseStatusEnum.PENDING,
             recipient_id=data.recipient_id,
             group_id=data.group_id,
         )
@@ -141,7 +139,7 @@ def create_invitation(
             detail="The invitation has already been sent. Wait for a reply!",
         )
     db_invitation = Invitation(
-        status=ResponseStatus.PENDING,
+        status=ResponseStatusEnum.PENDING,
         sender_id=user_id,
         recipient_id=data.recipient_id,
         group_id=data.group_id,

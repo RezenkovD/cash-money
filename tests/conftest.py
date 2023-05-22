@@ -1,6 +1,7 @@
 import asyncio
-import pytest
+import datetime
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -12,6 +13,15 @@ from main import app as main_app
 
 engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+from tests.factories import (
+    UserFactory,
+    GroupFactory,
+    UserGroupFactory,
+    CategoryFactory,
+    CategoryGroupFactory,
+    ExpenseFactory,
+)
 
 
 def override_get_db():
@@ -76,3 +86,82 @@ def async_return(result):
     as_res = asyncio.Future()
     as_res.set_result(result)
     return as_res
+
+
+@pytest.fixture
+def dependence_factory() -> dict:
+    first_user = UserFactory()
+    second_user = UserFactory()
+    first_group = GroupFactory(admin_id=first_user.id)
+    UserGroupFactory(
+        user_id=first_user.id,
+        group_id=first_group.id,
+    )
+    factories = {
+        "first_user": first_user,
+        "second_user": second_user,
+        "first_group": first_group,
+    }
+    return factories
+
+
+@pytest.fixture
+@pytest.mark.usefixtures("dependence_factory")
+def add_second_user_in_group(dependence_factory):
+    factories = dependence_factory
+    UserGroupFactory(
+        user_id=factories["second_user"].id,
+        group_id=factories["first_group"].id,
+    )
+
+
+@pytest.fixture
+@pytest.mark.usefixtures("dependence_factory")
+def activity(dependence_factory):
+    filter_date = datetime.datetime(2022, 11, 12)
+    factories = dependence_factory
+    category = CategoryFactory()
+    CategoryGroupFactory(category_id=category.id, group_id=factories["first_group"].id)
+    first_expense = ExpenseFactory(
+        user_id=factories["first_user"].id,
+        group_id=factories["first_group"].id,
+        category_id=category.id,
+        time=filter_date,
+    )
+    activity = {
+        "filter_date": filter_date,
+        "category": category,
+        "first_expense": first_expense,
+    }
+    return activity
+
+
+@pytest.fixture
+@pytest.mark.usefixtures("activity")
+def update_activity(dependence_factory, activity):
+    start_date = datetime.datetime(2022, 12, 10)
+    end_date = datetime.datetime(2022, 12, 22)
+    factories = dependence_factory
+    second_group = GroupFactory(admin_id=factories["first_user"].id)
+    UserGroupFactory(user_id=factories["first_user"].id, group_id=second_group.id)
+    CategoryGroupFactory(category_id=activity["category"].id, group_id=second_group.id)
+    second_expense = ExpenseFactory(
+        user_id=factories["first_user"].id,
+        group_id=second_group.id,
+        category_id=activity["category"].id,
+        time=start_date,
+    )
+    third_expense = ExpenseFactory(
+        user_id=factories["first_user"].id,
+        group_id=factories["first_group"].id,
+        category_id=activity["category"].id,
+        time=end_date,
+    )
+    update_activity = {
+        "start_date": start_date,
+        "end_date": end_date,
+        "second_group": second_group,
+        "second_expense": second_expense,
+        "third_expense": third_expense,
+    }
+    return update_activity

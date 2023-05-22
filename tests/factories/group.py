@@ -2,16 +2,20 @@ import datetime
 
 import factory
 
-from models import Group, UserGroup, Status
+from models import Group, UserGroup
+from enums import GroupStatusEnum
+
 from .base_factory import BaseFactory
 
 
 class GroupFactory(BaseFactory):
-    id = factory.Sequence(lambda n: n + 1)
+    id = factory.Sequence(lambda n: n)
     title = factory.Faker("word")
     description = factory.Faker("word")
     admin_id = None
-    status = Status.ACTIVE
+    status = GroupStatusEnum.ACTIVE
+    icon_url = factory.Faker("word")
+    color_code = factory.Faker("word")
 
     class Meta:
         model = Group
@@ -21,7 +25,7 @@ class UserGroupFactory(BaseFactory):
     user_id = factory.Sequence(lambda n: n)
     group_id = factory.Sequence(lambda n: n)
     date_join = datetime.date.today()
-    status = Status.ACTIVE
+    status = GroupStatusEnum.ACTIVE
 
     class Meta:
         model = UserGroup

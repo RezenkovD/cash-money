@@ -1,15 +1,16 @@
 from datetime import date
 from typing import List
 
-
-from schemas import User
+from schemas import UserModel
 from schemas.base_model import BaseModel
-from schemas.category import Category
+from schemas.category import CategoryModel
 
 
-class CreateGroup(BaseModel):
+class GroupCreate(BaseModel):
     title: str
     description: str
+    icon_url: str
+    color_code: str
 
 
 class BaseGroup(BaseModel):
@@ -24,13 +25,13 @@ class ShortGroup(BaseModel):
     title: str
 
 
-class Group(BaseGroup):
+class GroupModel(BaseGroup):
     id: int
-    admin: User
+    admin: UserModel
 
 
 class AboutUser(BaseModel):
-    user: User
+    user: UserModel
     status: str
     date_join: date
 
@@ -50,7 +51,7 @@ class UserGroups(BaseModel):
 
 
 class AboutCategory(BaseModel):
-    category: Category
+    category: CategoryModel
 
 
 class CategoriesGroup(BaseModel):

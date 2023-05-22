@@ -1,18 +1,18 @@
 import datetime
 
 from sqlalchemy import (
+    DECIMAL,
     Column,
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     String,
-    ForeignKey,
-    DECIMAL,
-    DateTime,
-    ForeignKeyConstraint,
 )
 from sqlalchemy.orm import relationship
 
 from database import Base
-from models import CategoryGroups
+from models import CategoryGroup
 
 
 class Expense(Base):
@@ -29,10 +29,10 @@ class Expense(Base):
     __table_args__ = (
         ForeignKeyConstraint(
             [group_id, category_id],
-            [CategoryGroups.group_id, CategoryGroups.category_id],
+            [CategoryGroup.group_id, CategoryGroup.category_id],
         ),
         {},
     )
 
     user = relationship("User", back_populates="expenses")
-    category_group = relationship("CategoryGroups", back_populates="expenses")
+    category_group = relationship("CategoryGroup", back_populates="expenses")

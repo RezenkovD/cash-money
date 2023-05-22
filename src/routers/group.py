@@ -1,13 +1,19 @@
 from typing import Union
 
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter
 
+import services
 from database import get_db
 from dependencies import get_current_user
 from models import User
-from schemas import Group, CreateGroup, UsersGroup, AboutUser, CategoriesGroup
-import services
+from schemas import (
+    AboutUser,
+    CategoriesGroup,
+    GroupCreate,
+    GroupModel,
+    UsersGroup,
+)
 
 router = APIRouter(
     prefix="/groups",
@@ -15,14 +21,25 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=Group)
+@router.post("/", response_model=GroupModel)
 def create_group(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    group: CreateGroup,
-) -> Group:
+    group: GroupCreate,
+) -> GroupModel:
     return services.create_group(db, current_user.id, group)
+
+
+@router.put("/{group_id}/", response_model=GroupModel)
+def update_group(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group: GroupCreate,
+    group_id: int,
+) -> GroupModel:
+    return services.update_group(db, current_user.id, group, group_id)
 
 
 @router.get("/{group_id}/users/", response_model=UsersGroup)

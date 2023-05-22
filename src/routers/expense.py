@@ -1,17 +1,20 @@
 from typing import List
 
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter
+from starlette import status
+from starlette.exceptions import HTTPException
+from starlette.status import HTTP_204_NO_CONTENT
 
+import services
 from database import get_db
 from dependencies import (
     get_current_user,
     transform_date_or_422,
     transform_exact_date_or_422,
 )
-from schemas import BaseExpense, CreateExpense, UserExpense
 from models import User
-import services
+from schemas import ExpenseCreate, ExpenseModel, UserExpense
 
 router = APIRouter(
     prefix="/expenses",
@@ -19,98 +22,111 @@ router = APIRouter(
 )
 
 
-@router.post("/group/{group_id}/", response_model=BaseExpense)
+@router.post("/group/{group_id}/", response_model=ExpenseModel)
 def create_expense(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-    expense: CreateExpense,
-) -> BaseExpense:
+    expense: ExpenseCreate,
+) -> ExpenseModel:
     return services.create_expense(db, current_user.id, group_id, expense)
 
 
-@router.get("/group/{group_id}/all-time/", response_model=List[UserExpense])
-def read_expenses_by_group_all_time(
+@router.put("/group/{group_id}/{expense_id}/", response_model=ExpenseModel)
+def update_expense(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-) -> List[UserExpense]:
-    return services.read_expenses(db=db, user_id=current_user.id, group_id=group_id)
+    expense: ExpenseCreate,
+    expense_id: int,
+) -> ExpenseModel:
+    return services.update_expense(db, current_user.id, group_id, expense, expense_id)
 
 
-@router.get("/group/{group_id}/{year_month}/", response_model=List[UserExpense])
-def read_expenses_by_group_month(
+@router.delete("/group/{group_id}/{expense_id}/", status_code=HTTP_204_NO_CONTENT)
+def delete_expense(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-    year_month: str,
-) -> List[UserExpense]:
-    filter_date = transform_date_or_422(year_month)
-    return services.read_expenses(
-        db=db, user_id=current_user.id, group_id=group_id, filter_date=filter_date
-    )
+    expense_id: int,
+) -> None:
+    services.delete_expense(db, current_user.id, group_id, expense_id)
 
 
-@router.get(
-    "/group/{group_id}/{start_date}/{end_date}/",
-    response_model=List[UserExpense],
-)
-def read_expenses_by_group_time_range(
+@router.get("/by-group/{group_id}/", response_model=List[UserExpense])
+def read_expenses(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-    start_date: str,
-    end_date: str,
+    year_month: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
 ) -> List[UserExpense]:
-    start_date = transform_exact_date_or_422(start_date)
-    end_date = transform_exact_date_or_422(end_date)
-    return services.read_expenses(
-        db=db,
-        user_id=current_user.id,
-        group_id=group_id,
-        start_date=start_date,
-        end_date=end_date,
-    )
+    if year_month and (start_date or end_date):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot use filter_date with start_date or end_date",
+        )
+    elif (start_date and not end_date) or (end_date and not start_date):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Both start_date and end_date are required",
+        )
+    elif year_month:
+        filter_date = transform_date_or_422(year_month)
+        return services.read_expenses(
+            db=db, user_id=current_user.id, group_id=group_id, filter_date=filter_date
+        )
+    elif start_date and end_date:
+        start_date = transform_exact_date_or_422(start_date)
+        end_date = transform_exact_date_or_422(end_date)
+        return services.read_expenses(
+            db=db,
+            user_id=current_user.id,
+            group_id=group_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    else:
+        return services.read_expenses(db=db, user_id=current_user.id, group_id=group_id)
 
 
-@router.get("/all-time/", response_model=List[UserExpense])
-def read_expenses_all_time(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> List[UserExpense]:
-    return services.read_expenses(db=db, user_id=current_user.id)
-
-
-@router.get("/{year_month}/", response_model=List[UserExpense])
-def read_expenses_month(
+@router.get("/", response_model=List[UserExpense])
+def read_expenses(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    year_month: str,
+    year_month: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
 ) -> List[UserExpense]:
-    filter_date = transform_date_or_422(year_month)
-    return services.read_expenses(
-        db=db, user_id=current_user.id, filter_date=filter_date
-    )
-
-
-@router.get("/{start_date}/{end_date}/", response_model=List[UserExpense])
-def read_expenses_time_range(
-    *,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    start_date: str,
-    end_date: str,
-) -> List[UserExpense]:
-    start_date = transform_exact_date_or_422(start_date)
-    end_date = transform_exact_date_or_422(end_date)
-    return services.read_expenses(
-        db=db,
-        user_id=current_user.id,
-        start_date=start_date,
-        end_date=end_date,
-    )
+    if year_month and (start_date or end_date):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot use filter_date with start_date or end_date",
+        )
+    elif (start_date and not end_date) or (end_date and not start_date):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Both start_date and end_date are required",
+        )
+    elif year_month:
+        filter_date = transform_date_or_422(year_month)
+        return services.read_expenses(
+            db=db, user_id=current_user.id, filter_date=filter_date
+        )
+    elif start_date and end_date:
+        start_date = transform_exact_date_or_422(start_date)
+        end_date = transform_exact_date_or_422(end_date)
+        return services.read_expenses(
+            db=db,
+            user_id=current_user.id,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    else:
+        return services.read_expenses(db=db, user_id=current_user.id)
