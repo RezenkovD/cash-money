@@ -120,7 +120,7 @@ class InvitationTestCase(unittest.TestCase):
             recipient_id=self.first_user.id,
             group_id=self.second_group.id,
         )
-        data = client.get("invitations/list/")
+        data = client.get("/invitations/")
         assert data.status_code == 200
         data_invitation = [
             {
@@ -151,7 +151,10 @@ class InvitationTestCase(unittest.TestCase):
             group_id=self.second_group.id,
         )
         response = UserResponseEnum.ACCEPTED
-        data = client.post(f"invitations/response/{invitation.id}?response={response}")
+        data = client.post(
+            f"invitations/{invitation.id}/response/",
+            params={"invitation_id": invitation.id, "response": response},
+        )
         assert data.status_code == 200
         invitation_data = {
             "id": invitation.id,
@@ -191,7 +194,10 @@ class InvitationTestCase(unittest.TestCase):
 
     def test_response_invitation_not_found(self) -> None:
         response = UserResponseEnum.ACCEPTED
-        data = client.post(f"invitations/response/{9999}?response={response}")
+        data = client.post(
+            f"invitations/9999/response/",
+            params={"invitation_id": 9999, "response": response},
+        )
         assert data.status_code == 404
 
     def test_response_invitation_in_inactive_group(self) -> None:
@@ -216,5 +222,8 @@ class InvitationTestCase(unittest.TestCase):
         oauth.google.authorize_access_token = Mock(return_value=async_return(user_dict))
         client.get("/auth/")
         response = UserResponseEnum.ACCEPTED
-        data = client.post(f"invitations/response/{invitation.id}?response={response}")
+        data = client.post(
+            f"invitations/{invitation.id}/response/",
+            params={"invitation_id": invitation.id, "response": response},
+        )
         assert data.status_code == 404

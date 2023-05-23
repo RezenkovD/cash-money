@@ -26,7 +26,7 @@ def create_invitation(
     return services.create_invitation(db, current_user.id, data)
 
 
-@router.get("/list/", response_model=List[BaseInvitation])
+@router.get("/", response_model=List[BaseInvitation])
 def read_invitation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -34,7 +34,7 @@ def read_invitation(
     return services.read_invitations(db, current_user.id)
 
 
-@router.post("/response/{invitation_id}/", response_model=InvitationModel)
+@router.post("/{invitation_id}/response/", response_model=InvitationModel)
 def response_invitation(
     *,
     db: Session = Depends(get_db),
