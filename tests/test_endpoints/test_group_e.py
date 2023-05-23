@@ -62,6 +62,30 @@ class GroupTestCase(unittest.TestCase):
         }
         assert data.json() == group_data
 
+    def test_read_user_group(self) -> None:
+        oauth.google.authorize_access_token = Mock(
+            return_value=async_return(self.user_dict)
+        )
+        client.get("/auth/")
+        data = client.get("/groups/")
+        assert data.status_code == 200
+        user_data = {
+            "user_groups": [
+                {
+                    "group": {
+                        "id": self.group.id,
+                        "title": self.group.title,
+                        "description": self.group.description,
+                        "status": GroupStatusEnum.ACTIVE,
+                    },
+                    "status": GroupStatusEnum.ACTIVE,
+                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
+                }
+            ]
+        }
+        data = data.json()
+        assert data == user_data
+
     def test_update_group(self) -> None:
         group = GroupCreate(
             title="string", description="string", icon_url="string", color_code="string"
@@ -176,7 +200,7 @@ class GroupTestCase(unittest.TestCase):
     def test_remove_user(self) -> None:
         second_user = UserFactory()
         UserGroupFactory(user_id=second_user.id, group_id=self.group.id)
-        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}/")
+        data = client.post(f"/groups/{self.group.id}/users/{second_user.id}/remove")
         user_group_data = {
             "user": {
                 "id": second_user.id,
@@ -198,13 +222,13 @@ class GroupTestCase(unittest.TestCase):
             group_id=self.group.id,
             status=GroupStatusEnum.INACTIVE,
         )
-        data = client.post(f"/groups/{self.group.id}/remove/{second_user.id}/")
+        data = client.post(f"/groups/{self.group.id}/users/{second_user.id}/remove/")
         assert data.status_code == 405
 
     def test_remove_admin(self) -> None:
         second_user = UserFactory()
         UserGroupFactory(user_id=second_user.id, group_id=self.group.id)
-        data = client.post(f"/groups/{self.group.id}/remove/{self.user.id}/")
+        data = client.post(f"/groups/{self.group.id}/users/{self.user.id}/remove/")
         assert data.status_code == 200
         users_group_data = {
             "users_group": [
@@ -237,7 +261,7 @@ class GroupTestCase(unittest.TestCase):
     def test_remove_user_as_non_admin(self) -> None:
         second_user = UserFactory()
         second_group = GroupFactory(admin_id=second_user.id)
-        data = client.post(f"/groups/{second_group.id}/remove/{second_user.id}/")
+        data = client.post(f"/groups/{second_group.id}/users/{second_user.id}/remove/")
         assert data.status_code == 404
 
     def test_read_categories_group(self) -> None:

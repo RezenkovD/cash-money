@@ -13,12 +13,21 @@ from schemas import (
     GroupCreate,
     GroupModel,
     UsersGroup,
+    UserGroups,
 )
 
 router = APIRouter(
     prefix="/groups",
     tags=["groups"],
 )
+
+
+@router.get("/", response_model=UserGroups)
+def read_user_groups(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserGroups:
+    return services.read_user_groups(db, current_user.id)
 
 
 @router.post("/", response_model=GroupModel)
@@ -63,7 +72,7 @@ def leave_group(
 
 
 @router.post(
-    "/{group_id}/remove/{user_id}/",
+    "/{group_id}/users/{user_id}/remove/",
     response_model=Union[AboutUser, UsersGroup],
 )
 def remove_user(
