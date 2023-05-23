@@ -35,7 +35,7 @@ class CategoryTestCase(unittest.TestCase):
     def test_create_category(self) -> None:
         category = CategoryCreate(title="title", icon_url="string", color_code="string")
         data = client.post(
-            f"/categories/{self.group.id}/",
+            f"/groups/{self.group.id}/categories/",
             json={
                 "title": category.title,
                 "icon_url": category.icon_url,
@@ -51,7 +51,7 @@ class CategoryTestCase(unittest.TestCase):
         CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
         icon_color = IconColor(icon_url="string", color_code="string")
         data = client.put(
-            f"/categories/{self.group.id}/{category.id}",
+            f"/groups/{self.group.id}/categories/{category.id}",
             json={
                 "icon_url": icon_color.icon_url,
                 "color_code": icon_color.color_code,
@@ -64,7 +64,7 @@ class CategoryTestCase(unittest.TestCase):
     def test_create_category_not_admin(self) -> None:
         category = CategoryFactory()
         data = client.post(
-            "/categories/9999/",
+            "/groups/9999/categories/",
             json={
                 "title": category.title,
                 "icon_url": "icon_url",
@@ -85,7 +85,7 @@ class CategoryTestCase(unittest.TestCase):
             status=GroupStatusEnum.INACTIVE,
         )
         data = client.post(
-            f"/categories/{group.id}/",
+            f"/groups/{group.id}/categories/",
             json={
                 "title": category.title,
                 "icon_url": "icon_url",
@@ -98,7 +98,7 @@ class CategoryTestCase(unittest.TestCase):
         category = CategoryFactory()
         CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
         data = client.post(
-            f"/categories/{self.group.id}/",
+            f"/groups/{self.group.id}/categories/",
             json={
                 "title": category.title,
                 "icon_url": "icon_url",
