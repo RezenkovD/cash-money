@@ -14,7 +14,7 @@ from .category import CategoryModel, CategoryCreate, IconColor
 from .expense import ExpenseCreate, ExpenseModel, UserExpense
 from .replenishment import (
     ReplenishmentCreate,
-    CurrentBalance,
+    UserBalance,
     ReplenishmentModel,
     UserReplenishment,
 )

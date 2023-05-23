@@ -1,4 +1,4 @@
-from services import get_user, current_balance
+from services import get_user, calculate_user_balance
 from tests.factories import ReplenishmentFactory, UserFactory
 
 
@@ -22,8 +22,8 @@ def test_read_user_current_balance(session, dependence_factory, activity) -> Non
     activity = activity
     first_replenishment = ReplenishmentFactory(user_id=factories["first_user"].id)
     second_replenishment = ReplenishmentFactory(user_id=factories["first_user"].id)
-    data = current_balance(session, factories["first_user"].id)
-    assert data.current_balance == float(
+    data = calculate_user_balance(session, factories["first_user"].id)
+    assert data.balance == float(
         first_replenishment.amount
         + second_replenishment.amount
         - activity["first_expense"].amount
@@ -35,5 +35,5 @@ def test_read_user_negative_current_balance(
 ) -> None:
     factories = dependence_factory
     activity = activity
-    data = current_balance(session, factories["first_user"].id)
-    assert data.current_balance == -float(activity["first_expense"].amount)
+    data = calculate_user_balance(session, factories["first_user"].id)
+    assert data.balance == -float(activity["first_expense"].amount)
