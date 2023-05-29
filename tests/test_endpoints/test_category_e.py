@@ -32,6 +32,30 @@ class CategoryTestCase(unittest.TestCase):
         self.group = GroupFactory(admin_id=self.user.id)
         UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
+    def test_read_categories_group(self) -> None:
+        data = client.get(f"/groups/{self.group.id}/categories/")
+        assert data.status_code == 200
+        assert data.json() == {"categories_group": []}
+        category = CategoryFactory()
+        CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
+        data = client.get(f"/groups/{self.group.id}/categories/")
+        assert data.status_code == 200
+        categories_group_data = {
+            "categories_group": [
+                {
+                    "category": {
+                        "title": category.title,
+                        "id": category.id,
+                    }
+                }
+            ]
+        }
+        assert data.json() == categories_group_data
+
+    def test_read_categories_group_as_non_user_group(self) -> None:
+        data = client.get(f"/groups/9999/categories/")
+        assert data.status_code == 405
+
     def test_create_category(self) -> None:
         category = CategoryCreate(title="title", icon_url="string", color_code="string")
         data = client.post(

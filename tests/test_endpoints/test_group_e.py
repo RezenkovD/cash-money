@@ -7,8 +7,6 @@ from enums import GroupStatusEnum
 from schemas import GroupCreate
 from tests.conftest import async_return, client
 from tests.factories import (
-    CategoryFactory,
-    CategoryGroupFactory,
     GroupFactory,
     UserFactory,
     UserGroupFactory,
@@ -263,27 +261,3 @@ class GroupTestCase(unittest.TestCase):
         second_group = GroupFactory(admin_id=second_user.id)
         data = client.post(f"/groups/{second_group.id}/users/{second_user.id}/remove/")
         assert data.status_code == 404
-
-    def test_read_categories_group(self) -> None:
-        data = client.get(f"/groups/{self.group.id}/categories/")
-        assert data.status_code == 200
-        assert data.json() == {"categories_group": []}
-        category = CategoryFactory()
-        CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
-        data = client.get(f"/groups/{self.group.id}/categories/")
-        assert data.status_code == 200
-        categories_group_data = {
-            "categories_group": [
-                {
-                    "category": {
-                        "title": category.title,
-                        "id": category.id,
-                    }
-                }
-            ]
-        }
-        assert data.json() == categories_group_data
-
-    def test_read_categories_group_as_non_user_group(self) -> None:
-        data = client.get(f"/groups/9999/categories/")
-        assert data.status_code == 405

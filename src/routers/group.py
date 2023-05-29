@@ -9,7 +9,6 @@ from dependencies import get_current_user
 from models import User
 from schemas import (
     AboutUser,
-    CategoriesGroup,
     GroupCreate,
     GroupModel,
     UsersGroup,
@@ -83,13 +82,3 @@ def remove_user(
     user_id: int,
 ) -> Union[AboutUser, UsersGroup]:
     return services.remove_user(db, current_user.id, group_id, user_id)
-
-
-@router.get("/{group_id}/categories/", response_model=CategoriesGroup)
-def read_categories_group(
-    *,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    group_id: int,
-) -> CategoriesGroup:
-    return services.read_categories_group(db, current_user.id, group_id)
