@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -62,9 +62,9 @@ def read_expenses_by_group(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-    year_month: str | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
+    year_month: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ) -> List[UserExpense]:
     if year_month and (start_date or end_date):
         raise HTTPException(
@@ -100,9 +100,9 @@ def read_expenses(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    year_month: str | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
+    year_month: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ) -> List[UserExpense]:
     if year_month and (start_date or end_date):
         raise HTTPException(
