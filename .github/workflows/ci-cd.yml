@@ -166,11 +166,12 @@ jobs:
                 export GOOGLE_SECRET='${{ secrets.GOOGLE_SECRET }}'
                 export DOMAIN_SOURCE='${{ secrets.DOMAIN_SOURCE }}'
                 export LOCAL_SOURCE='${{ secrets.LOCAL_SOURCE }}'
+                export SSH_HOST='${{secrets.SSH_HOST}}'
             
                 git pull
                 pip3 install -r requirements.txt
                 alembic upgrade head
-                nohup uvicorn main:app --host ${{secrets.SSH_HOST}} --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
+                nohup uvicorn main:app --host $SSH_HOST --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
                 kill -HUP $(cat /tmp/uvicorn.pid)
                 sudo nginx -t
                 sudo service nginx restart
@@ -196,6 +197,7 @@ jobs:
                 export DOMAIN_NAME='${{ secrets.DOMAIN_NAME }}'
                 export DOMAIN_SOURCE='${{ secrets.DOMAIN_SOURCE }}'
                 export LOCAL_SOURCE='${{ secrets.LOCAL_SOURCE }}'
+                export SSH_HOST='${{secrets.SSH_HOST}}'
             
                 sudo apt-get install -y libpq-dev python3-dev
                 sudo apt-get install -y build-essential
@@ -212,7 +214,7 @@ jobs:
             
                 alembic upgrade head
 
-                nohup uvicorn main:app --host ${{secrets.SSH_HOST}} --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
+                nohup uvicorn main:app --host $SSH_HOST --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
                 kill -HUP $(cat /tmp/uvicorn.pid)
             
                 echo "server {
