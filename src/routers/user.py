@@ -7,7 +7,7 @@ import services
 from database import get_db
 from dependencies import get_current_user
 from models import User
-from schemas import CurrentBalance, UserGroups, UserModel
+from schemas import UserBalance, UserModel
 
 router = APIRouter(
     prefix="/users",
@@ -20,17 +20,9 @@ def read_users(db: Session = Depends(get_db)) -> List[UserModel]:
     return db.query(User).all()
 
 
-@router.get("/groups/", response_model=UserGroups)
-def read_user_groups(
+@router.get("/user-balance/", response_model=UserBalance)
+def read_user_balance(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> UserGroups:
-    return services.read_user_groups(db, current_user.id)
-
-
-@router.get("/current-balance/", response_model=CurrentBalance)
-def read_user_current_balance(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> CurrentBalance:
-    return services.current_balance(db, current_user.id)
+) -> UserBalance:
+    return services.calculate_user_balance(db, current_user.id)

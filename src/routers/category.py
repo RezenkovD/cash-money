@@ -5,15 +5,25 @@ import services
 from database import get_db
 from dependencies import get_current_user
 from models import User
-from schemas import CategoryModel, CategoryCreate, IconColor
+from schemas import CategoryModel, CategoryCreate, IconColor, CategoriesGroup
 
 router = APIRouter(
-    prefix="/categories",
+    prefix="/groups",
     tags=["categories"],
 )
 
 
-@router.post("/{group_id}/", response_model=CategoryModel)
+@router.get("/{group_id}/categories/", response_model=CategoriesGroup)
+def read_categories_group(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+) -> CategoriesGroup:
+    return services.read_categories_group(db, current_user.id, group_id)
+
+
+@router.post("/{group_id}/categories/", response_model=CategoryModel)
 def create_category(
     *,
     db: Session = Depends(get_db),
@@ -24,7 +34,7 @@ def create_category(
     return services.create_category(db, current_user.id, group_id, category)
 
 
-@router.put("/{group_id}/{category_id}", response_model=CategoryModel)
+@router.put("/{group_id}/categories/{category_id}", response_model=CategoryModel)
 def update_category(
     *,
     db: Session = Depends(get_db),

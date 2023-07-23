@@ -19,5 +19,5 @@ class UserReplenishment(ReplenishmentCreate):
     time: datetime.datetime
 
 
-class CurrentBalance(BaseModel):
-    current_balance: float
+class UserBalance(BaseModel):
+    balance: float

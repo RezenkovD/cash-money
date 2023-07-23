@@ -9,16 +9,24 @@ from dependencies import get_current_user
 from models import User
 from schemas import (
     AboutUser,
-    CategoriesGroup,
     GroupCreate,
     GroupModel,
     UsersGroup,
+    UserGroups,
 )
 
 router = APIRouter(
     prefix="/groups",
     tags=["groups"],
 )
+
+
+@router.get("/", response_model=UserGroups)
+def read_user_groups(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserGroups:
+    return services.read_user_groups(db, current_user.id)
 
 
 @router.post("/", response_model=GroupModel)
@@ -63,7 +71,7 @@ def leave_group(
 
 
 @router.post(
-    "/{group_id}/remove/{user_id}/",
+    "/{group_id}/users/{user_id}/remove/",
     response_model=Union[AboutUser, UsersGroup],
 )
 def remove_user(
@@ -74,13 +82,3 @@ def remove_user(
     user_id: int,
 ) -> Union[AboutUser, UsersGroup]:
     return services.remove_user(db, current_user.id, group_id, user_id)
-
-
-@router.get("/{group_id}/categories/", response_model=CategoriesGroup)
-def read_categories_group(
-    *,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    group_id: int,
-) -> CategoriesGroup:
-    return services.read_categories_group(db, current_user.id, group_id)

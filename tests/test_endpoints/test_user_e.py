@@ -1,9 +1,7 @@
-import datetime
 import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
-from enums import GroupStatusEnum
 from tests.conftest import async_return, client
 from tests.factories import (
     CategoryFactory,
@@ -50,44 +48,6 @@ class UserTestCase(unittest.TestCase):
         assert data.status_code == 200
         assert data.json() == self.users_data
 
-    def test_read_user_group(self) -> None:
-        oauth.google.authorize_access_token = Mock(
-            return_value=async_return(self.user_dict)
-        )
-        client.get("/auth/")
-        first_group = GroupFactory(admin_id=self.first_user.id)
-        second_group = GroupFactory(admin_id=self.first_user.id)
-        UserGroupFactory(user_id=self.first_user.id, group_id=first_group.id)
-        UserGroupFactory(user_id=self.first_user.id, group_id=second_group.id)
-        data = client.get("/users/groups/")
-        assert data.status_code == 200
-        user_data = {
-            "user_groups": [
-                {
-                    "group": {
-                        "id": first_group.id,
-                        "title": first_group.title,
-                        "description": first_group.description,
-                        "status": GroupStatusEnum.ACTIVE,
-                    },
-                    "status": GroupStatusEnum.ACTIVE,
-                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
-                },
-                {
-                    "group": {
-                        "id": second_group.id,
-                        "title": second_group.title,
-                        "description": second_group.description,
-                        "status": GroupStatusEnum.ACTIVE,
-                    },
-                    "status": GroupStatusEnum.ACTIVE,
-                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
-                },
-            ]
-        }
-        data = data.json()
-        assert data == user_data
-
     def test_read_user_current_balance(self) -> None:
         oauth.google.authorize_access_token = Mock(
             return_value=async_return(self.user_dict)
@@ -111,6 +71,6 @@ class UserTestCase(unittest.TestCase):
             + second_replenishments.amount
             - (first_expense.amount + second_expense.amount)
         )
-        data = client.get("/users/current-balance/")
+        data = client.get("/users/user-balance/")
         assert data.status_code == 200
-        assert data.json() == {"current_balance": float(balance)}
+        assert data.json() == {"balance": float(balance)}

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -17,12 +17,12 @@ from models import User
 from schemas import ExpenseCreate, ExpenseModel, UserExpense
 
 router = APIRouter(
-    prefix="/expenses",
+    prefix="/groups",
     tags=["expenses"],
 )
 
 
-@router.post("/group/{group_id}/", response_model=ExpenseModel)
+@router.post("/{group_id}/expenses/", response_model=ExpenseModel)
 def create_expense(
     *,
     db: Session = Depends(get_db),
@@ -33,7 +33,7 @@ def create_expense(
     return services.create_expense(db, current_user.id, group_id, expense)
 
 
-@router.put("/group/{group_id}/{expense_id}/", response_model=ExpenseModel)
+@router.put("/{group_id}/expenses/{expense_id}/", response_model=ExpenseModel)
 def update_expense(
     *,
     db: Session = Depends(get_db),
@@ -45,7 +45,7 @@ def update_expense(
     return services.update_expense(db, current_user.id, group_id, expense, expense_id)
 
 
-@router.delete("/group/{group_id}/{expense_id}/", status_code=HTTP_204_NO_CONTENT)
+@router.delete("/{group_id}/expenses/{expense_id}/", status_code=HTTP_204_NO_CONTENT)
 def delete_expense(
     *,
     db: Session = Depends(get_db),
@@ -56,15 +56,15 @@ def delete_expense(
     services.delete_expense(db, current_user.id, group_id, expense_id)
 
 
-@router.get("/by-group/{group_id}/", response_model=List[UserExpense])
-def read_expenses(
+@router.get("/{group_id}/expenses/", response_model=List[UserExpense])
+def read_expenses_by_group(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-    year_month: str | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
+    year_month: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ) -> List[UserExpense]:
     if year_month and (start_date or end_date):
         raise HTTPException(
@@ -95,14 +95,14 @@ def read_expenses(
         return services.read_expenses(db=db, user_id=current_user.id, group_id=group_id)
 
 
-@router.get("/", response_model=List[UserExpense])
+@router.get("/expenses/", response_model=List[UserExpense])
 def read_expenses(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    year_month: str | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
+    year_month: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ) -> List[UserExpense]:
     if year_month and (start_date or end_date):
         raise HTTPException(
