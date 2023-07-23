@@ -1,0 +1,249 @@
+name: Continuous Integration and Continuous Deployment to DigitalOcean Droplet
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install postgresql postgresql-contrib -y
+          sudo service postgresql start
+          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.POSTGRES_DB }};"
+          sudo -u postgres psql -c "ALTER USER ${{ secrets.POSTGRES_USER }} WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.POSTGRES_DB }} TO  ${{ secrets.POSTGRES_USER }};"
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements-dev.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+  tests:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install postgresql postgresql-contrib -y
+          sudo service postgresql start
+          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.POSTGRES_DB }};"
+          sudo -u postgres psql -c "ALTER USER ${{ secrets.POSTGRES_USER }} WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.POSTGRES_DB }} TO  ${{ secrets.POSTGRES_USER }};"
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements-dev.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+      - name: Test with Pytest
+        run: |
+          pytest --cov-report=xml --cov=src tests/
+        env:
+          CI: true
+          PYTHONPATH: ${{ secrets.PYTHONPATH }}
+          APP_HOST: ${{ secrets.APP_HOST }}
+          APP_PORT: ${{ secrets.APP_PORT }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          SERVER_METADATA_URL: ${{ secrets.SERVER_METADATA_URL }}
+          SQLALCHEMY_DATABASE_URI: ${{ secrets.SQLALCHEMY_DATABASE_URI }}
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest-coverage
+          path: |
+            ./coverage.xml
+
+      - name: Check coverage
+        run: |
+          export coverage=$(grep -oP 'line-rate="\K[^"]+' coverage.xml | head -1 | awk '{print $1 * 100}')
+          echo "Code coverage: $coverage%"
+          if (( $(echo "$coverage < 75" | bc -l) )); then
+            echo "Code coverage is less than 75%: $coverage%"
+            exit 1
+          fi
+
+  linters:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements-dev.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+      - name: Check code formatting with Flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Check code formatting with Black
+        run: |
+          black --check --verbose .
+
+  deploy:
+    needs: [ build, tests, linters ]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to digital ocean
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{secrets.SSH_HOST}}
+          key: ${{secrets.SSH_KEY}}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.DROPLET_PASSWORD }}
+          script: |
+            directory="/var/www/cash-money"
+            if [ -d "$directory" ]; then
+                cd /var/www/
+                cd cash-money
+                source venv/bin/activate
+                
+                export SQLALCHEMY_DATABASE_URI='${{ secrets.SQLALCHEMY_DATABASE_URI }}'
+                export SECRET_KEY='${{ secrets.SECRET_KEY }}'
+                export SERVER_METADATA_URL='${{ secrets.SERVER_METADATA_URL }}'
+                export APP_HOST=${{secrets.SSH_HOST}}
+                export APP_PORT=${{ secrets.APP_PORT }}
+                export PYTHONPATH=${{ secrets.PYTHONPATH }}
+                export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}'
+                export GOOGLE_SECRET='${{ secrets.GOOGLE_SECRET }}'
+            
+                git pull
+                pip3 install -r requirements.txt
+                alembic upgrade head
+                nohup uvicorn main:app --host ${{secrets.SSH_HOST}} --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
+                kill -HUP $(cat /tmp/uvicorn.pid)
+                sudo nginx -t
+                sudo service nginx restart
+            else
+                sudo apt-get update -y
+                sudo apt install nginx
+                cd /var/www/
+                git clone https://github.com/RezenkovD/cash-money.git
+                cd cash-money
+                sudo apt-get install -y python3.11-venv
+                python3.11 -m venv venv
+                source venv/bin/activate
+            
+                export SQLALCHEMY_DATABASE_URI='${{ secrets.SQLALCHEMY_DATABASE_URI }}'
+                export SECRET_KEY='${{ secrets.SECRET_KEY }}'
+                export SERVER_METADATA_URL='${{ secrets.SERVER_METADATA_URL }}'
+                export APP_HOST=${{secrets.SSH_HOST}}
+                export APP_PORT=${{ secrets.APP_PORT }}
+                export PYTHONPATH=${{ secrets.PYTHONPATH }}
+                export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}'
+                export GOOGLE_SECRET='${{ secrets.GOOGLE_SECRET }}'
+                export SSH_HOST = ${{ secrets.SSH_HOST }}
+                export DOMAIN_NAME = ${{ secrets.DOMAIN_NAME }}
+            
+                sudo apt-get install -y libpq-dev python3-dev
+                sudo apt-get install -y build-essential
+                sudo apt-get install -y python3.11-dev
+            
+                pip3 install -r requirements.txt
+            
+                sudo apt-get update
+                sudo apt-get install postgresql postgresql-contrib -y
+                sudo service postgresql start
+                sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.DB_NAME }};"
+                sudo -u postgres psql -c "ALTER USER ${{ secrets.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+                sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.DB_NAME }} TO  ${{ secrets.DB_USER }};"
+            
+                alembic upgrade head
+
+                nohup uvicorn main:app --host ${{secrets.SSH_HOST}} --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
+                kill -HUP $(cat /tmp/uvicorn.pid)
+            
+                echo "server {
+                  listen 80;
+                  server_name $DOMAIN_NAME;
+            
+                  location = /favicon.ico { access_log off; log_not_found off; }
+            
+                  location / {
+                    proxy_pass http://$SSH_HOST:8000;
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                  }
+                }
+            
+                server {
+                  listen 443;
+                  server_name $DOMAIN_NAME;
+            
+                  ssl                  on;
+                  ssl_certificate      /var/www/certificate.crt;
+                  ssl_certificate_key  /var/www/private.key;
+            
+                  access_log   /var/log/nginx/nginx.vhost.access.log;
+                  error_log    /var/log/nginx/nginx.vhost.error.log;
+                  location / {
+                    proxy_pass http://SSH_HOST:8000;
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                  }
+                }" > /etc/nginx/sites-available/cash-money
+            
+                sudo ln -s /etc/nginx/sites-available/cash-money /etc/nginx/sites-enabled
+                sudo nginx -t
+                sudo service nginx restart
+            fi
