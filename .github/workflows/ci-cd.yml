@@ -164,8 +164,8 @@ jobs:
                 export PYTHONPATH=${{ secrets.PYTHONPATH }}
                 export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}'
                 export GOOGLE_SECRET='${{ secrets.GOOGLE_SECRET }}'
-                export DOMAIN_SOURCE = ${{ secrets.DOMAIN_SOURCE }}
-                export LOCAL_SOURCE = ${{ secrets.LOCAL_SOURCE }}
+                export DOMAIN_SOURCE='${{ secrets.DOMAIN_SOURCE }}'
+                export LOCAL_SOURCE='${{ secrets.LOCAL_SOURCE }}'
             
                 git pull
                 pip3 install -r requirements.txt
@@ -192,10 +192,10 @@ jobs:
                 export PYTHONPATH=${{ secrets.PYTHONPATH }}
                 export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}'
                 export GOOGLE_SECRET='${{ secrets.GOOGLE_SECRET }}'
-                export SSH_HOST = ${{ secrets.SSH_HOST }}
-                export DOMAIN_NAME = ${{ secrets.DOMAIN_NAME }}
-                export DOMAIN_SOURCE = ${{ secrets.DOMAIN_SOURCE }}
-                export LOCAL_SOURCE = ${{ secrets.LOCAL_SOURCE }}
+                export SSH_HOST='${{ secrets.SSH_HOST }}'
+                export DOMAIN_NAME='${{ secrets.DOMAIN_NAME }}'
+                export DOMAIN_SOURCE='${{ secrets.DOMAIN_SOURCE }}'
+                export LOCAL_SOURCE='${{ secrets.LOCAL_SOURCE }}'
             
                 sudo apt-get install -y libpq-dev python3-dev
                 sudo apt-get install -y build-essential
