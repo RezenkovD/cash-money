@@ -83,6 +83,8 @@ jobs:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           SERVER_METADATA_URL: ${{ secrets.SERVER_METADATA_URL }}
           SQLALCHEMY_DATABASE_URI: ${{ secrets.SQLALCHEMY_DATABASE_URI }}
+          DOMAIN_SOURCE: ${{ secrets.DOMAIN_SOURCE }}
+          LOCAL_SOURCE: ${{ secrets.LOCAL_SOURCE }}
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v2
@@ -162,6 +164,8 @@ jobs:
                 export PYTHONPATH=${{ secrets.PYTHONPATH }}
                 export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}'
                 export GOOGLE_SECRET='${{ secrets.GOOGLE_SECRET }}'
+                export DOMAIN_SOURCE = ${{ secrets.DOMAIN_SOURCE }}
+                export LOCAL_SOURCE = ${{ secrets.LOCAL_SOURCE }}
             
                 git pull
                 pip3 install -r requirements.txt
