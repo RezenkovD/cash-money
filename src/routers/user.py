@@ -26,3 +26,11 @@ def read_user_balance(
     current_user: User = Depends(get_current_user),
 ) -> UserBalance:
     return services.calculate_user_balance(db, current_user.id)
+
+
+@router.get("/info/", response_model=UserModel)
+def read_user_info(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserModel:
+    return db.query(User).filter_by(id=current_user.id).one()
