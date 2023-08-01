@@ -57,6 +57,8 @@ class GroupTestCase(unittest.TestCase):
                 "last_name": self.user_dict["userinfo"]["family_name"],
                 "picture": self.user_dict["userinfo"]["picture"],
             },
+            "icon_url": group.icon_url,
+            "color_code": group.color_code,
         }
         assert data.json() == group_data
 
@@ -75,6 +77,8 @@ class GroupTestCase(unittest.TestCase):
                         "title": self.group.title,
                         "description": self.group.description,
                         "status": GroupStatusEnum.ACTIVE,
+                        "icon_url": self.group.icon_url,
+                        "color_code": self.group.color_code,
                     },
                     "status": GroupStatusEnum.ACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
@@ -110,6 +114,8 @@ class GroupTestCase(unittest.TestCase):
                 "last_name": self.user_dict["userinfo"]["family_name"],
                 "picture": self.user_dict["userinfo"]["picture"],
             },
+            "icon_url": group.icon_url,
+            "color_code": group.icon_url,
         }
         assert data.json() == group_data
 

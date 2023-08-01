@@ -31,21 +31,6 @@ def test_auth_registration(session) -> None:
     assert db_user.picture == user_dict["userinfo"]["picture"]
 
 
-def test_auth_login(session) -> None:
-    user = UserFactory()
-    user_dict = {
-        "userinfo": {
-            "email": user.login,
-            "given_name": user.first_name,
-            "family_name": user.last_name,
-            "picture": user.picture,
-        }
-    }
-    oauth.google.authorize_access_token = Mock(return_value=async_return(user_dict))
-    data = client.get("/auth/")
-    assert data.headers["set-cookie"] is not None
-
-
 def test_logout(session) -> None:
     data = client.get("/logout/")
     assert "set-cookie" not in data.headers

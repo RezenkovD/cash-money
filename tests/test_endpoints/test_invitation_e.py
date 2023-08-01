@@ -63,6 +63,8 @@ class InvitationTestCase(unittest.TestCase):
                     "last_name": self.first_user.last_name,
                     "picture": self.first_user.picture,
                 },
+                "icon_url": self.first_group.icon_url,
+                "color_code": self.first_group.color_code,
             },
             "creation_time": datetime.date.today().strftime("%Y-%m-%d"),
         }
@@ -138,6 +140,8 @@ class InvitationTestCase(unittest.TestCase):
                         "last_name": self.second_user.last_name,
                         "picture": self.second_user.picture,
                     },
+                    "icon_url": self.second_group.icon_url,
+                    "color_code": self.second_group.color_code,
                 },
                 "creation_time": datetime.date.today().strftime("%Y-%m-%d"),
             }
@@ -171,6 +175,8 @@ class InvitationTestCase(unittest.TestCase):
                     "last_name": self.second_user.last_name,
                     "picture": self.second_user.picture,
                 },
+                "icon_url": self.second_group.icon_url,
+                "color_code": self.second_group.color_code,
             },
             "creation_time": datetime.date.today().strftime("%Y-%m-%d"),
             "recipient": {
