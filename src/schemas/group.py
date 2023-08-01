@@ -25,6 +25,7 @@ class BaseGroup(BaseModel):
 class ShortGroup(BaseModel):
     id: int
     title: str
+    color_code: str
 
 
 class GroupModel(BaseGroup):

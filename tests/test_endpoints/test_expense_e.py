@@ -69,7 +69,11 @@ class ExpensesTestCase(unittest.TestCase):
             "amount": expense.amount,
             "time": data.json()["time"],
             "category_group": {
-                "group": {"id": self.first_group.id, "title": self.first_group.title},
+                "group": {
+                    "id": self.first_group.id,
+                    "title": self.first_group.title,
+                    "color_code": self.first_group.color_code,
+                },
                 "category": {"title": self.category.title, "id": self.category.id},
                 "icon_url": self.icon_url,
                 "color_code": self.color_code,
@@ -102,7 +106,11 @@ class ExpensesTestCase(unittest.TestCase):
             "amount": date_update_expense.amount,
             "time": data.json()["time"],
             "category_group": {
-                "group": {"id": self.first_group.id, "title": self.first_group.title},
+                "group": {
+                    "id": self.first_group.id,
+                    "title": self.first_group.title,
+                    "color_code": self.first_group.color_code,
+                },
                 "category": {"title": self.category.title, "id": self.category.id},
                 "icon_url": self.icon_url,
                 "color_code": self.color_code,
@@ -200,6 +208,7 @@ class ExpensesTestCase(unittest.TestCase):
                     "group": {
                         "id": self.first_group.id,
                         "title": self.first_group.title,
+                        "color_code": self.first_group.color_code,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
                     "icon_url": self.icon_url,
@@ -249,6 +258,7 @@ class ExpensesTestCase(unittest.TestCase):
                     "group": {
                         "id": self.first_group.id,
                         "title": self.first_group.title,
+                        "color_code": self.first_group.color_code,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
                     "icon_url": self.icon_url,
@@ -287,6 +297,7 @@ class ExpensesTestCase(unittest.TestCase):
                     "group": {
                         "id": self.first_group.id,
                         "title": self.first_group.title,
+                        "color_code": self.first_group.color_code,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
                     "icon_url": self.icon_url,
@@ -326,6 +337,7 @@ class ExpensesTestCase(unittest.TestCase):
                     "group": {
                         "id": self.first_group.id,
                         "title": self.first_group.title,
+                        "color_code": self.first_group.color_code,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
                     "icon_url": self.icon_url,
@@ -341,6 +353,7 @@ class ExpensesTestCase(unittest.TestCase):
                     "group": {
                         "id": self.second_group.id,
                         "title": self.second_group.title,
+                        "color_code": self.second_group.color_code,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
                     "icon_url": self.icon_url,
@@ -392,6 +405,7 @@ class ExpensesTestCase(unittest.TestCase):
                     "group": {
                         "id": self.first_group.id,
                         "title": self.first_group.title,
+                        "color_code": self.first_group.color_code,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
                     "icon_url": self.icon_url,
@@ -407,8 +421,12 @@ class ExpensesTestCase(unittest.TestCase):
                     "group": {
                         "id": self.second_group.id,
                         "title": self.second_group.title,
+                        "color_code": self.second_group.color_code,
                     },
-                    "category": {"title": self.category.title, "id": self.category.id},
+                    "category": {
+                        "title": self.category.title,
+                        "id": self.category.id,
+                    },
                     "icon_url": self.icon_url,
                     "color_code": self.color_code,
                 },
@@ -459,6 +477,7 @@ class ExpensesTestCase(unittest.TestCase):
                     "group": {
                         "id": self.first_group.id,
                         "title": self.first_group.title,
+                        "color_code": self.first_group.color_code,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
                     "icon_url": self.icon_url,
@@ -474,8 +493,12 @@ class ExpensesTestCase(unittest.TestCase):
                     "group": {
                         "id": self.second_group.id,
                         "title": self.second_group.title,
+                        "color_code": self.second_group.color_code,
                     },
-                    "category": {"title": self.category.title, "id": self.category.id},
+                    "category": {
+                        "title": self.category.title,
+                        "id": self.category.id,
+                    },
                     "icon_url": self.icon_url,
                     "color_code": self.color_code,
                 },
