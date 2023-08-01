@@ -24,9 +24,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install postgresql postgresql-contrib -y
           sudo service postgresql start
-          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.POSTGRES_DB }};"
-          sudo -u postgres psql -c "ALTER USER ${{ secrets.POSTGRES_USER }} WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
-          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.POSTGRES_DB }} TO  ${{ secrets.POSTGRES_USER }};"
+          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.DB_NAME }};"
+          sudo -u postgres psql -c "ALTER USER ${{ secrets.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.DB_NAME }} TO  ${{ secrets.DB_USER }};"
 
       - uses: actions/cache@v3
         with:
@@ -56,9 +56,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install postgresql postgresql-contrib -y
           sudo service postgresql start
-          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.POSTGRES_DB }};"
-          sudo -u postgres psql -c "ALTER USER ${{ secrets.POSTGRES_USER }} WITH PASSWORD '${{ secrets.POSTGRES_PASSWORD }}';"
-          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.POSTGRES_DB }} TO  ${{ secrets.POSTGRES_USER }};"
+          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.DB_NAME }};"
+          sudo -u postgres psql -c "ALTER USER ${{ secrets.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.DB_NAME }} TO  ${{ secrets.DB_USER }};"
 
       - uses: actions/cache@v3
         with:
@@ -82,9 +82,8 @@ jobs:
           APP_PORT: ${{ secrets.APP_PORT }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           SERVER_METADATA_URL: ${{ secrets.SERVER_METADATA_URL }}
-          SQLALCHEMY_DATABASE_URI: ${{ secrets.SQLALCHEMY_DATABASE_URI }}
-          DOMAIN_SOURCE: ${{ secrets.DOMAIN_SOURCE }}
-          LOCAL_SOURCE: ${{ secrets.LOCAL_SOURCE }}
+          SQLALCHEMY_DATABASE_URI: ${{ secrets.SQLALCHEMY_TEST_DATABASE_URI }}
+          ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v2
@@ -159,25 +158,22 @@ jobs:
                 export SQLALCHEMY_DATABASE_URI='${{ secrets.SQLALCHEMY_DATABASE_URI }}'
                 export SECRET_KEY='${{ secrets.SECRET_KEY }}'
                 export SERVER_METADATA_URL='${{ secrets.SERVER_METADATA_URL }}'
-                export APP_HOST=${{secrets.SSH_HOST}}
+                export APP_HOST=${{ secrets.SSH_HOST }}
                 export APP_PORT=${{ secrets.APP_PORT }}
                 export PYTHONPATH=${{ secrets.PYTHONPATH }}
                 export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}'
                 export GOOGLE_SECRET='${{ secrets.GOOGLE_SECRET }}'
-                export DOMAIN_SOURCE='${{ secrets.DOMAIN_SOURCE }}'
-                export LOCAL_SOURCE='${{ secrets.LOCAL_SOURCE }}'
-                export SSH_HOST='${{secrets.SSH_HOST}}'
+                export ALLOWED_HOSTS='${{ secrets.ALLOWED_HOSTS }}'
             
                 git pull
                 pip3 install -r requirements.txt
                 alembic upgrade head
-                nohup uvicorn main:app --host $SSH_HOST --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
-                kill -HUP $(cat /tmp/uvicorn.pid)
+                nohup uvicorn main:app --host $APP_HOST --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
                 sudo nginx -t
                 sudo service nginx restart
             else
                 sudo apt-get update -y
-                sudo apt install nginx
+                sudo apt install -y nginx
                 cd /var/www/
                 git clone https://github.com/RezenkovD/cash-money.git
                 cd cash-money
@@ -188,16 +184,12 @@ jobs:
                 export SQLALCHEMY_DATABASE_URI='${{ secrets.SQLALCHEMY_DATABASE_URI }}'
                 export SECRET_KEY='${{ secrets.SECRET_KEY }}'
                 export SERVER_METADATA_URL='${{ secrets.SERVER_METADATA_URL }}'
-                export APP_HOST=${{secrets.SSH_HOST}}
+                export APP_HOST=${{ secrets.SSH_HOST }}
                 export APP_PORT=${{ secrets.APP_PORT }}
                 export PYTHONPATH=${{ secrets.PYTHONPATH }}
                 export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}'
                 export GOOGLE_SECRET='${{ secrets.GOOGLE_SECRET }}'
-                export SSH_HOST='${{ secrets.SSH_HOST }}'
-                export DOMAIN_NAME='${{ secrets.DOMAIN_NAME }}'
-                export DOMAIN_SOURCE='${{ secrets.DOMAIN_SOURCE }}'
-                export LOCAL_SOURCE='${{ secrets.LOCAL_SOURCE }}'
-                export SSH_HOST='${{secrets.SSH_HOST}}'
+                export ALLOWED_HOSTS='${{ secrets.ALLOWED_HOSTS }}'
             
                 sudo apt-get install -y libpq-dev python3-dev
                 sudo apt-get install -y build-essential
@@ -214,17 +206,16 @@ jobs:
             
                 alembic upgrade head
 
-                nohup uvicorn main:app --host $SSH_HOST --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
-                kill -HUP $(cat /tmp/uvicorn.pid)
+                nohup uvicorn main:app --host $APP_HOST --port 8000 --workers 5 --forwarded-allow-ips '*' > uvicorn.log 2>&1 &echo $! > /tmp/uvicorn.pid
             
                 echo "server {
                   listen 80;
-                  server_name $DOMAIN_NAME;
+                  server_name $ALLOWED_HOSTS;
             
                   location = /favicon.ico { access_log off; log_not_found off; }
             
                   location / {
-                    proxy_pass http://$SSH_HOST:8000;
+                    proxy_pass http://$APP_HOST:8000;
                     proxy_set_header Host \$host;
                     proxy_set_header X-Real-IP \$remote_addr;
                     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -234,7 +225,7 @@ jobs:
             
                 server {
                   listen 443;
-                  server_name $DOMAIN_NAME;
+                  server_name $ALLOWED_HOSTS;
             
                   ssl                  on;
                   ssl_certificate      /var/www/certificate.crt;
@@ -243,7 +234,7 @@ jobs:
                   access_log   /var/log/nginx/nginx.vhost.access.log;
                   error_log    /var/log/nginx/nginx.vhost.error.log;
                   location / {
-                    proxy_pass http://SSH_HOST:8000;
+                    proxy_pass http://$APP_HOST:8000;
                     proxy_set_header Host \$host;
                     proxy_set_header X-Real-IP \$remote_addr;
                     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
