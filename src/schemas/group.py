@@ -43,7 +43,7 @@ class UsersGroup(BaseModel):
 
 
 class AboutGroup(BaseModel):
-    group: BaseGroup
+    group: GroupModel
     status: str
     date_join: date
 
@@ -54,6 +54,8 @@ class UserGroups(BaseModel):
 
 class AboutCategory(BaseModel):
     category: CategoryModel
+    icon_url: str
+    color_code: str
 
 
 class CategoriesGroup(BaseModel):

@@ -79,6 +79,13 @@ class GroupTestCase(unittest.TestCase):
                         "status": GroupStatusEnum.ACTIVE,
                         "icon_url": self.group.icon_url,
                         "color_code": self.group.color_code,
+                        "admin": {
+                            "id": self.user.id,
+                            "login": self.user_dict["userinfo"]["email"],
+                            "first_name": self.user_dict["userinfo"]["given_name"],
+                            "last_name": self.user_dict["userinfo"]["family_name"],
+                            "picture": self.user_dict["userinfo"]["picture"],
+                        },
                     },
                     "status": GroupStatusEnum.ACTIVE,
                     "date_join": datetime.date.today().strftime("%Y-%m-%d"),
