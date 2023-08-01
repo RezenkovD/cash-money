@@ -10,6 +10,7 @@ from database import get_db
 from dependencies import oauth
 from models import User
 from services import get_user
+from config import settings
 
 router = APIRouter(
     tags=["registration"],
@@ -47,10 +48,10 @@ async def auth(*, db: Session = Depends(get_db), request: Request):
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=f"An error occurred while create category",
             )
-    return RedirectResponse(url="/")
+    return RedirectResponse(url="https://" + settings.DOMAIN_NAME)
 
 
 @router.get("/logout")
 async def logout(request: Request):
     request.session.pop("user", None)
-    return RedirectResponse(url="/")
+    return RedirectResponse(url="https://" + settings.DOMAIN_NAME)

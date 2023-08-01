@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     SERVER_METADATA_URL: str
     SQLALCHEMY_DATABASE_URI: str
     ALLOWED_HOSTS: str
+    DOMAIN_NAME: str
 
 
 settings = Settings()
