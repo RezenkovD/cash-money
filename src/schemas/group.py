@@ -18,6 +18,8 @@ class BaseGroup(BaseModel):
     title: str
     description: str
     status: str
+    icon_url: str
+    color_code: str
 
 
 class ShortGroup(BaseModel):
@@ -56,3 +58,8 @@ class AboutCategory(BaseModel):
 
 class CategoriesGroup(BaseModel):
     categories_group: List[AboutCategory]
+
+
+class GroupInfo(GroupModel):
+    members: int
+    expenses: int

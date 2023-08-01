@@ -1,12 +1,12 @@
 import datetime
 from typing import Union
 
-from sqlalchemy import exc
+from sqlalchemy import exc, func
 from sqlalchemy.orm import Session, joinedload
 from starlette import status
 from starlette.exceptions import HTTPException
 
-from models import Group, User, UserGroup
+from models import Group, User, UserGroup, Expense
 from enums import GroupStatusEnum
 from schemas import (
     AboutUser,
@@ -15,7 +15,46 @@ from schemas import (
     GroupModel,
     UserGroups,
     UsersGroup,
+    GroupInfo,
 )
+
+
+def read_group_info(db: Session, user_id: int, group_id: int) -> GroupInfo:
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=user_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    group = (
+        db.query(Group).options(joinedload(Group.admin)).filter_by(id=group_id).one()
+    )
+    group_users_count = (
+        db.query(func.count(UserGroup.user_id)).filter_by(group_id=group_id).scalar()
+    )
+    group_expenses_count = (
+        db.query(func.count(Expense.id)).filter_by(group_id=group_id).scalar()
+    )
+    group_info = GroupInfo(
+        id=group.id,
+        title=group.title,
+        description=group.description,
+        status=group.status,
+        icon_url=group.icon_url,
+        color_code=group.color_code,
+        admin=group.admin,
+        members=group_users_count,
+        expenses=group_expenses_count,
+    )
+    return group_info
 
 
 def remove_user(

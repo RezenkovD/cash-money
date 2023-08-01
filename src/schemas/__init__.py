@@ -8,6 +8,7 @@ from .group import (
     ShortGroup,
     UserGroups,
     UsersGroup,
+    GroupInfo,
 )
 from .invintation import BaseInvitation, InvitationCreate, InvitationModel
 from .category import CategoryModel, CategoryCreate, IconColor
