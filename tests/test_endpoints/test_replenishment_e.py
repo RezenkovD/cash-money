@@ -81,11 +81,13 @@ class ReplenishmentsTestCase(unittest.TestCase):
         assert data.status_code == 200
         replenishments_data = [
             {
+                "id": first_replenishments.id,
                 "descriptions": first_replenishments.descriptions,
                 "amount": float(first_replenishments.amount),
                 "time": data.json()[0]["time"],
             },
             {
+                "id": second_replenishments.id,
                 "descriptions": second_replenishments.descriptions,
                 "amount": float(second_replenishments.amount),
                 "time": data.json()[1]["time"],
@@ -126,11 +128,13 @@ class ReplenishmentsTestCase(unittest.TestCase):
         data = client.get("/replenishments/", params=params)
         replenishments_data = [
             {
+                "id": first_replenishments.id,
                 "descriptions": first_replenishments.descriptions,
                 "amount": float(first_replenishments.amount),
                 "time": data.json()[0]["time"],
             },
             {
+                "id": second_replenishments.id,
                 "descriptions": second_replenishments.descriptions,
                 "amount": float(second_replenishments.amount),
                 "time": data.json()[1]["time"],
@@ -153,11 +157,13 @@ class ReplenishmentsTestCase(unittest.TestCase):
         data = client.get("/replenishments/", params=params)
         replenishments_data = [
             {
+                "id": first_replenishments.id,
                 "descriptions": first_replenishments.descriptions,
                 "amount": float(first_replenishments.amount),
                 "time": data.json()[0]["time"],
             },
             {
+                "id": second_replenishments.id,
                 "descriptions": second_replenishments.descriptions,
                 "amount": float(second_replenishments.amount),
                 "time": data.json()[1]["time"],

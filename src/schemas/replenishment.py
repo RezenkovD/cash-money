@@ -16,6 +16,7 @@ class ReplenishmentModel(ReplenishmentCreate):
 
 
 class UserReplenishment(ReplenishmentCreate):
+    id: int
     time: datetime.datetime
 
 
