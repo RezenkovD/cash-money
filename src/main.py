@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from config import settings
+from config import settings, ALLOWED_HOSTS
 from routers import (
     category,
     expense,
@@ -18,7 +18,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.DOMAIN_SOURCE, settings.LOCAL_SOURCE],
+    allow_origins=[f"https://{origin}" for origin in ALLOWED_HOSTS],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

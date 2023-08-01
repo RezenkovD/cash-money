@@ -30,6 +30,8 @@ class CategoryTestCase(unittest.TestCase):
         )
         client.get("/auth/")
         self.group = GroupFactory(admin_id=self.user.id)
+        self.icon_url = "icon_url"
+        self.color_code = "color_code"
         UserGroupFactory(user_id=self.user.id, group_id=self.group.id)
 
     def test_read_categories_group(self) -> None:
@@ -37,7 +39,12 @@ class CategoryTestCase(unittest.TestCase):
         assert data.status_code == 200
         assert data.json() == {"categories_group": []}
         category = CategoryFactory()
-        CategoryGroupFactory(category_id=category.id, group_id=self.group.id)
+        CategoryGroupFactory(
+            category_id=category.id,
+            group_id=self.group.id,
+            icon_url=self.icon_url,
+            color_code=self.color_code,
+        )
         data = client.get(f"/groups/{self.group.id}/categories/")
         assert data.status_code == 200
         categories_group_data = {
@@ -46,7 +53,9 @@ class CategoryTestCase(unittest.TestCase):
                     "category": {
                         "title": category.title,
                         "id": category.id,
-                    }
+                    },
+                    "color_code": self.color_code,
+                    "icon_url": self.icon_url,
                 }
             ]
         }

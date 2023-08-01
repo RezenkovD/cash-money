@@ -18,11 +18,14 @@ class BaseGroup(BaseModel):
     title: str
     description: str
     status: str
+    icon_url: str
+    color_code: str
 
 
 class ShortGroup(BaseModel):
     id: int
     title: str
+    color_code: str
 
 
 class GroupModel(BaseGroup):
@@ -41,7 +44,7 @@ class UsersGroup(BaseModel):
 
 
 class AboutGroup(BaseModel):
-    group: BaseGroup
+    group: GroupModel
     status: str
     date_join: date
 
@@ -52,7 +55,14 @@ class UserGroups(BaseModel):
 
 class AboutCategory(BaseModel):
     category: CategoryModel
+    icon_url: str
+    color_code: str
 
 
 class CategoriesGroup(BaseModel):
     categories_group: List[AboutCategory]
+
+
+class GroupInfo(GroupModel):
+    members: int
+    expenses: int

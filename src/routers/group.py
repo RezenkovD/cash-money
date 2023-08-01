@@ -13,12 +13,23 @@ from schemas import (
     GroupModel,
     UsersGroup,
     UserGroups,
+    GroupInfo,
 )
 
 router = APIRouter(
     prefix="/groups",
     tags=["groups"],
 )
+
+
+@router.get("/{group_id}/info/", response_model=GroupInfo)
+def read_group_info(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+) -> GroupInfo:
+    return services.read_group_info(db, current_user.id, group_id)
 
 
 @router.get("/", response_model=UserGroups)
