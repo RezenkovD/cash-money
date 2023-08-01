@@ -13,6 +13,8 @@ class ExpenseCreate(BaseModel):
 class CategoryGroup(BaseModel):
     group: ShortGroup
     category: CategoryModel
+    color_code: str
+    icon_url: str
 
 
 class ExpenseModel(BaseModel):

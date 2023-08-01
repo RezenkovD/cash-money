@@ -31,14 +31,24 @@ class ExpensesTestCase(unittest.TestCase):
             return_value=async_return(self.user_dict)
         )
         client.get("/auth/")
+        self.color_code = "code"
+        self.icon_url = "url"
         self.first_group = GroupFactory(admin_id=self.user.id)
         UserGroupFactory(user_id=self.user.id, group_id=self.first_group.id)
         self.category = CategoryFactory()
-        CategoryGroupFactory(category_id=self.category.id, group_id=self.first_group.id)
+        self.first_category_group = CategoryGroupFactory(
+            category_id=self.category.id,
+            group_id=self.first_group.id,
+            icon_url=self.icon_url,
+            color_code=self.color_code,
+        )
         self.second_group = GroupFactory(admin_id=self.user.id)
         UserGroupFactory(user_id=self.user.id, group_id=self.second_group.id)
-        CategoryGroupFactory(
-            category_id=self.category.id, group_id=self.second_group.id
+        self.second_category_group = CategoryGroupFactory(
+            category_id=self.category.id,
+            group_id=self.second_group.id,
+            icon_url=self.icon_url,
+            color_code=self.color_code,
         )
 
     def test_create_expense(self) -> None:
@@ -61,6 +71,8 @@ class ExpensesTestCase(unittest.TestCase):
             "category_group": {
                 "group": {"id": self.first_group.id, "title": self.first_group.title},
                 "category": {"title": self.category.title, "id": self.category.id},
+                "icon_url": self.icon_url,
+                "color_code": self.color_code,
             },
             "user": {"id": self.user.id, "login": self.user.login},
         }
@@ -92,6 +104,8 @@ class ExpensesTestCase(unittest.TestCase):
             "category_group": {
                 "group": {"id": self.first_group.id, "title": self.first_group.title},
                 "category": {"title": self.category.title, "id": self.category.id},
+                "icon_url": self.icon_url,
+                "color_code": self.color_code,
             },
             "user": {"id": self.user.id, "login": self.user.login},
         }
@@ -188,6 +202,8 @@ class ExpensesTestCase(unittest.TestCase):
                         "title": self.first_group.title,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
+                    "icon_url": self.icon_url,
+                    "color_code": self.color_code,
                 },
             },
         ]
@@ -235,6 +251,8 @@ class ExpensesTestCase(unittest.TestCase):
                         "title": self.first_group.title,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
+                    "icon_url": self.icon_url,
+                    "color_code": self.color_code,
                 },
             },
         ]
@@ -271,6 +289,8 @@ class ExpensesTestCase(unittest.TestCase):
                         "title": self.first_group.title,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
+                    "icon_url": self.icon_url,
+                    "color_code": self.color_code,
                 },
             },
         ]
@@ -308,6 +328,8 @@ class ExpensesTestCase(unittest.TestCase):
                         "title": self.first_group.title,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
+                    "icon_url": self.icon_url,
+                    "color_code": self.color_code,
                 },
             },
             {
@@ -321,6 +343,8 @@ class ExpensesTestCase(unittest.TestCase):
                         "title": self.second_group.title,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
+                    "icon_url": self.icon_url,
+                    "color_code": self.color_code,
                 },
             },
         ]
@@ -370,6 +394,8 @@ class ExpensesTestCase(unittest.TestCase):
                         "title": self.first_group.title,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
+                    "icon_url": self.icon_url,
+                    "color_code": self.color_code,
                 },
             },
             {
@@ -383,6 +409,8 @@ class ExpensesTestCase(unittest.TestCase):
                         "title": self.second_group.title,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
+                    "icon_url": self.icon_url,
+                    "color_code": self.color_code,
                 },
             },
         ]
@@ -433,6 +461,8 @@ class ExpensesTestCase(unittest.TestCase):
                         "title": self.first_group.title,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
+                    "icon_url": self.icon_url,
+                    "color_code": self.color_code,
                 },
             },
             {
@@ -446,6 +476,8 @@ class ExpensesTestCase(unittest.TestCase):
                         "title": self.second_group.title,
                     },
                     "category": {"title": self.category.title, "id": self.category.id},
+                    "icon_url": self.icon_url,
+                    "color_code": self.color_code,
                 },
             },
         ]
