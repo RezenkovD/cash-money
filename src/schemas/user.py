@@ -12,3 +12,8 @@ class UserModel(BaseUser):
     first_name: str
     last_name: str
     picture: Optional[str]
+
+
+class UserTotalExpenses(BaseModel):
+    amount: float
+    percentage_increase: float
