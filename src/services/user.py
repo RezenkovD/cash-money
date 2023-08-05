@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from dateutil.relativedelta import relativedelta
 
 from starlette import status
@@ -9,7 +9,7 @@ from sqlalchemy import and_, exc, extract
 from pydantic.schema import date
 
 from models import Expense, Replenishment, User
-from schemas import UserBalance, UserTotalExpenses
+from schemas import UserBalance, UserTotalExpenses, UserTotalReplenishments
 
 
 def get_user(db: Session, login: str) -> Optional[User]:
@@ -29,14 +29,20 @@ def calculate_user_balance(db: Session, user_id: int) -> UserBalance:
     return user_balance
 
 
-def get_total_expenses_for_month(db, user_id, year, month):
+def get_total_actions_for_month(
+    db: Session,
+    user_id: int,
+    year: date,
+    month: date,
+    model: Union[Expense, Replenishment],
+):
     return db.query(
         coalesce(
-            sum(Expense.amount).filter(
+            sum(model.amount).filter(
                 and_(
-                    Expense.user_id == user_id,
-                    extract("year", Expense.time) == year,
-                    extract("month", Expense.time) == month,
+                    model.user_id == user_id,
+                    extract("year", model.time) == year,
+                    extract("month", model.time) == month,
                 )
             ),
             0,
@@ -44,14 +50,20 @@ def get_total_expenses_for_month(db, user_id, year, month):
     ).one()[0]
 
 
-def get_total_expenses_for_time_range(db, user_id, start_date, end_date):
+def get_total_actions_for_time_range(
+    db: Session,
+    user_id: int,
+    start_date: date,
+    end_date: date,
+    model: Union[Expense, Replenishment],
+):
     return db.query(
         coalesce(
-            sum(Expense.amount).filter(
+            sum(model.amount).filter(
                 and_(
-                    Expense.user_id == user_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
+                    model.user_id == user_id,
+                    model.time >= start_date,
+                    model.time <= end_date,
                 )
             ),
             0,
@@ -78,12 +90,12 @@ def user_total_expenses(
 
     if filter_date:
         year, month = filter_date.year, filter_date.month
-        amount = get_total_expenses_for_month(db, user_id, year, month)
+        amount = get_total_actions_for_month(db, user_id, year, month, Expense)
 
         filter_date = filter_date - relativedelta(months=1)
         previous_year, previous_month = filter_date.year, filter_date.month
-        previous_month_amount = get_total_expenses_for_month(
-            db, user_id, previous_year, previous_month
+        previous_month_amount = get_total_actions_for_month(
+            db, user_id, previous_year, previous_month, Expense
         )
 
         if previous_month_amount != 0:
@@ -92,12 +104,14 @@ def user_total_expenses(
             ) / previous_month_amount
 
     elif start_date and end_date:
-        amount = get_total_expenses_for_time_range(db, user_id, start_date, end_date)
+        amount = get_total_actions_for_time_range(
+            db, user_id, start_date, end_date, Expense
+        )
 
         days_difference = (end_date - start_date).days
         zero_date = start_date - relativedelta(days=days_difference)
-        previous_days_amount = get_total_expenses_for_time_range(
-            db, user_id, zero_date, start_date
+        previous_days_amount = get_total_actions_for_time_range(
+            db, user_id, zero_date, start_date, Expense
         )
 
         if previous_days_amount != 0:
