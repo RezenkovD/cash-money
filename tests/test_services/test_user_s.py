@@ -1,5 +1,10 @@
 import datetime
-from services import get_user, calculate_user_balance, user_total_expenses
+from services import (
+    get_user,
+    calculate_user_balance,
+    user_total_expenses,
+    user_total_replenishments,
+)
 from tests.factories import ReplenishmentFactory, UserFactory, ExpenseFactory
 
 
@@ -40,7 +45,7 @@ def test_read_user_negative_current_balance(
     assert data.balance == -float(activity["first_expense"].amount)
 
 
-def test_user_percentage_increase_for_month(
+def test_user_percentage_increase_expenses_for_month(
     session, dependence_factory, activity
 ) -> None:
     factories = dependence_factory
@@ -69,7 +74,7 @@ def test_user_percentage_increase_for_month(
     )
 
 
-def test_user_percentage_increase_for_range_time(
+def test_user_percentage_increase_expenses_for_range_time(
     session, dependence_factory, activity
 ) -> None:
     factories = dependence_factory
@@ -104,4 +109,36 @@ def test_user_percentage_increase_for_range_time(
     )
     assert data.percentage_increase == float(
         (third_expense.amount - second_expense.amount) / second_expense.amount
+    )
+
+
+def test_user_percentage_increase_replenishments_for_range_time(
+    session, dependence_factory, activity
+) -> None:
+    factories = dependence_factory
+    filter_date = datetime.datetime(2022, 12, 7)
+    ReplenishmentFactory(
+        user_id=factories["first_user"].id,
+        time=filter_date,
+    )
+    filter_date = datetime.datetime(2022, 12, 12)
+    first_replenishments = ReplenishmentFactory(
+        user_id=factories["first_user"].id,
+        time=filter_date,
+    )
+    start_date = datetime.datetime(2022, 12, 20)
+    end_date = datetime.datetime(2023, 1, 1)
+    second_replenishments = ReplenishmentFactory(
+        user_id=factories["first_user"].id,
+        time=end_date,
+    )
+    data = user_total_replenishments(
+        db=session,
+        user_id=factories["first_user"].id,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    assert data.percentage_increase == float(
+        (second_replenishments.amount - first_replenishments.amount)
+        / first_replenishments.amount
     )
