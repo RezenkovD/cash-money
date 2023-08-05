@@ -1,10 +1,13 @@
 from typing import Optional
 from dateutil.relativedelta import relativedelta
 
+from starlette import status
+from starlette.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import coalesce, sum
 from sqlalchemy import and_, exc, extract
 from pydantic.schema import date
+
 from models import Expense, Replenishment, User
 from schemas import UserBalance, UserTotalExpenses
 
