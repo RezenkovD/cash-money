@@ -17,3 +17,8 @@ class UserModel(BaseUser):
 class UserTotalExpenses(BaseModel):
     amount: float
     percentage_increase: float
+
+
+class UserTotalReplenishments(BaseModel):
+    amount: float
+    percentage_increase: float
