@@ -35,7 +35,7 @@ def get_total_actions_for_month(
     year: date,
     month: date,
     model: Union[Expense, Replenishment],
-):
+) -> float:
     return db.query(
         coalesce(
             sum(model.amount).filter(
@@ -56,7 +56,7 @@ def get_total_actions_for_time_range(
     start_date: date,
     end_date: date,
     model: Union[Expense, Replenishment],
-):
+) -> float:
     return db.query(
         coalesce(
             sum(model.amount).filter(
@@ -121,3 +121,55 @@ def user_total_expenses(
         amount=amount, percentage_increase=percentage_increase
     )
     return total_expenses
+
+
+def user_total_replenishments(
+    db: Session,
+    user_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> UserTotalReplenishments:
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    (amount,) = db.query(
+        coalesce(sum(Replenishment.amount).filter(Replenishment.user_id == user_id), 0)
+    ).one()
+    percentage_increase = 0
+
+    if filter_date:
+        year, month = filter_date.year, filter_date.month
+        amount = get_total_actions_for_month(db, user_id, year, month, Replenishment)
+
+        filter_date = filter_date - relativedelta(months=1)
+        previous_year, previous_month = filter_date.year, filter_date.month
+        previous_month_amount = get_total_actions_for_month(
+            db, user_id, previous_year, previous_month, Replenishment
+        )
+
+        if previous_month_amount != 0:
+            percentage_increase = (
+                amount - previous_month_amount
+            ) / previous_month_amount
+
+    elif start_date and end_date:
+        amount = get_total_actions_for_time_range(
+            db, user_id, start_date, end_date, Replenishment
+        )
+
+        days_difference = (end_date - start_date).days
+        zero_date = start_date - relativedelta(days=days_difference)
+        previous_days_amount = get_total_actions_for_time_range(
+            db, user_id, zero_date, start_date, Replenishment
+        )
+
+        if previous_days_amount != 0:
+            percentage_increase = (amount - previous_days_amount) / previous_days_amount
+
+    total_replenishments = UserTotalReplenishments(
+        amount=amount, percentage_increase=percentage_increase
+    )
+    return total_replenishments

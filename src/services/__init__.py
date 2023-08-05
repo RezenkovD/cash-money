@@ -26,4 +26,9 @@ from .replenishment import (
     update_replenishment,
     delete_replenishment,
 )
-from .user import get_user, calculate_user_balance, user_total_expenses
+from .user import (
+    get_user,
+    calculate_user_balance,
+    user_total_expenses,
+    user_total_replenishments,
+)
