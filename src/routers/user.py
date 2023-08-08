@@ -79,7 +79,7 @@ def read_user_total_expenses(
 
 
 @router.get("/total-replenishments/", response_model=UserTotalReplenishments)
-def read_user_total_expenses(
+def read_user_total_replenishments(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     year_month: Optional[str] = None,
