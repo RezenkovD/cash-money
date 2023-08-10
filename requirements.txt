@@ -10,3 +10,4 @@ SQLAlchemy-Utils==0.40.0
 starlette==0.25.0
 uvicorn==0.20.0
 python-dateutil~=2.8.2
+fastapi-pagination~=0.12.6
