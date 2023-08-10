@@ -154,24 +154,20 @@ def read_expenses(
 def read_expenses_by_group_all_time(
     db: Session, group_id: int, user_id: int
 ) -> List[UserExpense]:
-    expenses = db.query(Expense).filter_by(user_id=user_id, group_id=group_id).all()
+    expenses = db.query(Expense).filter_by(user_id=user_id, group_id=group_id)
     return expenses
 
 
 def read_expenses_by_group_month(
     db: Session, group_id: int, user_id: int, filter_date: date
 ) -> List[UserExpense]:
-    expenses = (
-        db.query(Expense)
-        .filter(
-            and_(
-                Expense.user_id == user_id,
-                Expense.group_id == group_id,
-                extract("year", Expense.time) == filter_date.year,
-                extract("month", Expense.time) == filter_date.month,
-            )
+    expenses = db.query(Expense).filter(
+        and_(
+            Expense.user_id == user_id,
+            Expense.group_id == group_id,
+            extract("year", Expense.time) == filter_date.year,
+            extract("month", Expense.time) == filter_date.month,
         )
-        .all()
     )
     return expenses
 
@@ -184,26 +180,18 @@ def read_expenses_by_group_time_range(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="The start date cannot be older than the end date!",
         )
-    expenses = (
-        db.query(Expense)
-        .filter(
-            Expense.user_id == user_id,
-            Expense.group_id == group_id,
-            Expense.time >= start_date,
-            Expense.time <= end_date,
-        )
-        .all()
+    expenses = db.query(Expense).filter(
+        Expense.user_id == user_id,
+        Expense.group_id == group_id,
+        Expense.time >= start_date,
+        Expense.time <= end_date,
     )
     return expenses
 
 
 def read_expenses_all_time(db: Session, user_id: int) -> List[UserExpense]:
-    expenses = (
-        db.query(Expense)
-        .filter_by(
-            user_id=user_id,
-        )
-        .all()
+    expenses = db.query(Expense).filter_by(
+        user_id=user_id,
     )
     return expenses
 
@@ -211,16 +199,12 @@ def read_expenses_all_time(db: Session, user_id: int) -> List[UserExpense]:
 def read_expenses_month(
     db: Session, user_id: int, filter_date: date
 ) -> List[UserExpense]:
-    expenses = (
-        db.query(Expense)
-        .filter(
-            and_(
-                Expense.user_id == user_id,
-                extract("year", Expense.time) == filter_date.year,
-                extract("month", Expense.time) == filter_date.month,
-            )
+    expenses = db.query(Expense).filter(
+        and_(
+            Expense.user_id == user_id,
+            extract("year", Expense.time) == filter_date.year,
+            extract("month", Expense.time) == filter_date.month,
         )
-        .all()
     )
     return expenses
 
@@ -233,13 +217,9 @@ def read_expenses_time_range(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="The start date cannot be older than the end date!",
         )
-    expenses = (
-        db.query(Expense)
-        .filter(
-            Expense.user_id == user_id,
-            Expense.time >= start_date,
-            Expense.time <= end_date,
-        )
-        .all()
+    expenses = db.query(Expense).filter(
+        Expense.user_id == user_id,
+        Expense.time >= start_date,
+        Expense.time <= end_date,
     )
     return expenses

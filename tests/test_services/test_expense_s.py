@@ -149,6 +149,7 @@ def test_read_expenses_by_group_all_time(
         group_id=factories["first_group"].id,
         user_id=factories["first_user"].id,
     )
+    data = data.all()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
         assert data.id == expense.id
@@ -171,6 +172,7 @@ def test_read_expenses_by_group_month(
         user_id=factories["first_user"].id,
         filter_date=activity["filter_date"],
     )
+    data = data.all()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
         assert data.id == expense.id
@@ -194,6 +196,7 @@ def test_read_expenses_by_group_time_range(
         start_date=update_activity["start_date"],
         end_date=update_activity["end_date"],
     )
+    data = data.all()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
         assert data.id == expense.id
@@ -243,6 +246,7 @@ def test_read_expenses_all_time(session, dependence_factory, activity, update_ac
     activity = activity
     update_activity = update_activity
     data = read_expenses(db=session, user_id=factories["first_user"].id)
+    data = data.all()
     expenses = [
         activity["first_expense"],
         update_activity["second_expense"],
@@ -267,6 +271,7 @@ def test_read_expenses_month(session, dependence_factory, activity, update_activ
         user_id=factories["first_user"].id,
         filter_date=update_activity["start_date"],
     )
+    data = data.all()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
         assert data.id == expense.id
@@ -289,6 +294,7 @@ def test_read_expenses_time_range(
         start_date=update_activity["start_date"],
         end_date=update_activity["end_date"],
     )
+    data = data.all()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
         assert data.id == expense.id
