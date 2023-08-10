@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi_pagination import add_pagination
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -32,6 +33,8 @@ app.include_router(invitation.router)
 app.include_router(category.router)
 app.include_router(expense.router)
 app.include_router(replenishment.router)
+
+add_pagination(app)
 
 if __name__ == "__main__":
     uvicorn.run(
