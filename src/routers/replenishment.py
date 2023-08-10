@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.exceptions import HTTPException
@@ -12,6 +13,7 @@ from dependencies import (
     get_current_user,
     transform_date_or_422,
     transform_exact_date_or_422,
+    Page,
 )
 from models import User
 from schemas import ReplenishmentCreate, ReplenishmentModel, UserReplenishment
@@ -55,7 +57,7 @@ def delete_replenishment(
     services.delete_replenishment(db, current_user.id, replenishment_id)
 
 
-@router.get("/", response_model=List[UserReplenishment])
+@router.get("/", response_model=Page[UserReplenishment])
 def read_replenishments(
     *,
     db: Session = Depends(get_db),
@@ -63,7 +65,7 @@ def read_replenishments(
     year_month: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-) -> List[UserReplenishment]:
+) -> Page[UserReplenishment]:
     if year_month and (start_date or end_date):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -76,17 +78,25 @@ def read_replenishments(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.read_replenishments(
-            db=db, user_id=current_user.id, filter_date=filter_date
+        return paginate(
+            db,
+            services.read_replenishments(
+                db=db, user_id=current_user.id, filter_date=filter_date
+            ),
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.read_replenishments(
-            db=db,
-            user_id=current_user.id,
-            start_date=start_date,
-            end_date=end_date,
+        return paginate(
+            db,
+            services.read_replenishments(
+                db=db,
+                user_id=current_user.id,
+                start_date=start_date,
+                end_date=end_date,
+            ),
         )
     else:
-        return services.read_replenishments(db=db, user_id=current_user.id)
+        return paginate(
+            db, services.read_replenishments(db=db, user_id=current_user.id)
+        )

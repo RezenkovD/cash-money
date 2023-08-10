@@ -94,6 +94,7 @@ def test_read_replenishments_all_time(session) -> None:
         first_replenishments,
         second_replenishments,
     ]
+    data = data.all()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
         assert data.id == expense.id
@@ -117,6 +118,7 @@ def test_read_replenishments_month(session) -> None:
         user_id=user.id,
         filter_date=datetime.date.today(),
     )
+    data = data.all()
     assert len(data) == len(replenishments)
     for data, replenishments in zip(data, replenishments):
         assert data.id == replenishments.id
@@ -127,6 +129,7 @@ def test_read_replenishments_month(session) -> None:
 
     replenishments = [second_replenishments, third_replenishments]
     data = read_replenishments(db=session, user_id=user.id, filter_date=time)
+    data = data.all()
     assert len(data) == len(replenishments)
     for data, replenishments in zip(data, replenishments):
         assert data.id == replenishments.id
@@ -159,6 +162,7 @@ def test_read_replenishments_time_range(session) -> None:
         start_date=second_date,
         end_date=third_date,
     )
+    data = data.all()
     assert len(data) == len(replenishments)
     for data, replenishments in zip(data, replenishments):
         assert data.id == replenishments.id

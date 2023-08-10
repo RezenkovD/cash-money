@@ -29,7 +29,7 @@ oauth.register(
 )
 
 Page = Page.with_custom_options(
-    size=Field(8, ge=1, le=99999999),
+    size=Field(8, ge=1, le=500),
 )
 
 

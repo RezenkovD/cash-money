@@ -90,12 +90,8 @@ def read_replenishments(
 
 
 def read_replenishments_all_time(db: Session, user_id: int) -> List[UserReplenishment]:
-    replenishments = (
-        db.query(Replenishment)
-        .filter_by(
-            user_id=user_id,
-        )
-        .all()
+    replenishments = db.query(Replenishment).filter_by(
+        user_id=user_id,
     )
     return replenishments
 
@@ -103,16 +99,12 @@ def read_replenishments_all_time(db: Session, user_id: int) -> List[UserReplenis
 def read_replenishments_month(
     db: Session, user_id: int, filter_date: date
 ) -> List[UserReplenishment]:
-    replenishments = (
-        db.query(Replenishment)
-        .filter(
-            and_(
-                Replenishment.user_id == user_id,
-                extract("year", Replenishment.time) == filter_date.year,
-                extract("month", Replenishment.time) == filter_date.month,
-            )
+    replenishments = db.query(Replenishment).filter(
+        and_(
+            Replenishment.user_id == user_id,
+            extract("year", Replenishment.time) == filter_date.year,
+            extract("month", Replenishment.time) == filter_date.month,
         )
-        .all()
     )
     return replenishments
 
@@ -125,13 +117,9 @@ def read_replenishments_time_range(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="The start date cannot be older than the end date!",
         )
-    replenishments = (
-        db.query(Replenishment)
-        .filter(
-            Replenishment.user_id == user_id,
-            Replenishment.time >= start_date,
-            Replenishment.time <= end_date,
-        )
-        .all()
+    replenishments = db.query(Replenishment).filter(
+        Replenishment.user_id == user_id,
+        Replenishment.time >= start_date,
+        Replenishment.time <= end_date,
     )
     return replenishments

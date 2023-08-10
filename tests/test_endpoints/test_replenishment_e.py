@@ -72,7 +72,14 @@ class ReplenishmentsTestCase(unittest.TestCase):
         data = client.get(f"/replenishments/")
         assert data.status_code == 200
         replenishments_data = []
-        assert data.json() == replenishments_data
+        response_data = {
+            "items": replenishments_data,
+            "total": 0,
+            "page": 1,
+            "size": 8,
+            "pages": 0,
+        }
+        assert data.json() == response_data
 
     def test_read_replenishments_all_time(self) -> None:
         first_replenishments = ReplenishmentFactory(user_id=self.user.id)
@@ -84,16 +91,23 @@ class ReplenishmentsTestCase(unittest.TestCase):
                 "id": first_replenishments.id,
                 "descriptions": first_replenishments.descriptions,
                 "amount": float(first_replenishments.amount),
-                "time": data.json()[0]["time"],
+                "time": data.json()["items"][0]["time"],
             },
             {
                 "id": second_replenishments.id,
                 "descriptions": second_replenishments.descriptions,
                 "amount": float(second_replenishments.amount),
-                "time": data.json()[1]["time"],
+                "time": data.json()["items"][1]["time"],
             },
         ]
-        assert data.json() == replenishments_data
+        response_data = {
+            "items": replenishments_data,
+            "total": 2,
+            "page": 1,
+            "size": 8,
+            "pages": 1,
+        }
+        assert data.json() == response_data
 
     def test_read_replenishments_exc_three_args(self) -> None:
         params = {
@@ -118,7 +132,13 @@ class ReplenishmentsTestCase(unittest.TestCase):
         time = datetime.datetime(2022, 12, 1)
         params = {"year_month": "2022-12"}
         data = client.get("/replenishments", params=params)
-        assert not data.json()
+        assert data.json() == {
+            "items": [],
+            "total": 0,
+            "page": 1,
+            "size": 8,
+            "pages": 0,
+        }
         first_replenishments = ReplenishmentFactory(user_id=self.user.id, time=time)
         second_replenishments = ReplenishmentFactory(user_id=self.user.id, time=time)
 
@@ -131,22 +151,35 @@ class ReplenishmentsTestCase(unittest.TestCase):
                 "id": first_replenishments.id,
                 "descriptions": first_replenishments.descriptions,
                 "amount": float(first_replenishments.amount),
-                "time": data.json()[0]["time"],
+                "time": data.json()["items"][0]["time"],
             },
             {
                 "id": second_replenishments.id,
                 "descriptions": second_replenishments.descriptions,
                 "amount": float(second_replenishments.amount),
-                "time": data.json()[1]["time"],
+                "time": data.json()["items"][1]["time"],
             },
         ]
-        assert data.json() == replenishments_data
+        response_data = {
+            "items": replenishments_data,
+            "total": 2,
+            "page": 1,
+            "size": 8,
+            "pages": 1,
+        }
+        assert data.json() == response_data
 
     def test_read_replenishments_time_range(self) -> None:
         time = datetime.datetime(2022, 12, 1)
         params = {"start_date": "2022-12-1", "end_date": "2022-12-12"}
         data = client.get("/replenishments/", params=params)
-        assert not data.json()
+        assert data.json() == {
+            "items": [],
+            "total": 0,
+            "page": 1,
+            "size": 8,
+            "pages": 0,
+        }
         first_replenishments = ReplenishmentFactory(user_id=self.user.id, time=time)
         second_replenishments = ReplenishmentFactory(user_id=self.user.id, time=time)
         time = datetime.datetime(2022, 11, 13)
@@ -160,16 +193,23 @@ class ReplenishmentsTestCase(unittest.TestCase):
                 "id": first_replenishments.id,
                 "descriptions": first_replenishments.descriptions,
                 "amount": float(first_replenishments.amount),
-                "time": data.json()[0]["time"],
+                "time": data.json()["items"][0]["time"],
             },
             {
                 "id": second_replenishments.id,
                 "descriptions": second_replenishments.descriptions,
                 "amount": float(second_replenishments.amount),
-                "time": data.json()[1]["time"],
+                "time": data.json()["items"][1]["time"],
             },
         ]
-        assert data.json() == replenishments_data
+        response_data = {
+            "items": replenishments_data,
+            "total": 2,
+            "page": 1,
+            "size": 8,
+            "pages": 1,
+        }
+        assert data.json() == response_data
 
     def test_read_replenishments_time_range_date_exc(self) -> None:
         params = {"start_date": "2022-12-31", "end_date": "2022-12-09"}
