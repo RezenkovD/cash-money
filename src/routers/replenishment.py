@@ -81,7 +81,7 @@ def read_replenishments(
         return paginate(
             db,
             services.read_replenishments(
-                db=db, user_id=current_user.id, filter_date=filter_date
+                user_id=current_user.id, filter_date=filter_date
             ),
         )
     elif start_date and end_date:
@@ -90,13 +90,10 @@ def read_replenishments(
         return paginate(
             db,
             services.read_replenishments(
-                db=db,
                 user_id=current_user.id,
                 start_date=start_date,
                 end_date=end_date,
             ),
         )
     else:
-        return paginate(
-            db, services.read_replenishments(db=db, user_id=current_user.id)
-        )
+        return paginate(db, services.read_replenishments(user_id=current_user.id))

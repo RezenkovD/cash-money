@@ -75,7 +75,6 @@ def test_read_replenishments_by_group_time_range_date_exc(session) -> None:
     end_date = datetime.datetime(2022, 11, 22)
     with pytest.raises(HTTPException) as ex_info:
         read_replenishments(
-            db=session,
             user_id=user.id,
             start_date=start_date,
             end_date=end_date,
@@ -89,18 +88,18 @@ def test_read_replenishments_all_time(session) -> None:
     user = UserFactory()
     first_replenishments = ReplenishmentFactory(user_id=user.id)
     second_replenishments = ReplenishmentFactory(user_id=user.id)
-    data = read_replenishments(db=session, user_id=user.id)
+    data = read_replenishments(user_id=user.id)
     expenses = [
         first_replenishments,
         second_replenishments,
     ]
-    data = data.all()
-    assert len(data) == len(expenses)
+    data = session.execute(data).fetchall()
     for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
+        data_instance = data[0]
+        assert data_instance.id == expense.id
+        assert data_instance.time == expense.time
+        assert data_instance.amount == expense.amount
+        assert data_instance.descriptions == expense.descriptions
 
 
 def test_read_replenishments_month(session) -> None:
@@ -114,29 +113,30 @@ def test_read_replenishments_month(session) -> None:
 
     replenishments = [first_replenishments]
     data = read_replenishments(
-        db=session,
         user_id=user.id,
         filter_date=datetime.date.today(),
     )
-    data = data.all()
+    data = session.execute(data).fetchall()
     assert len(data) == len(replenishments)
     for data, replenishments in zip(data, replenishments):
-        assert data.id == replenishments.id
-        assert data.time == replenishments.time
-        assert data.amount == replenishments.amount
-        assert data.descriptions == replenishments.descriptions
-        assert data.user.id == user.id
+        data_instance = data[0]
+        assert data_instance.id == replenishments.id
+        assert data_instance.time == replenishments.time
+        assert data_instance.amount == replenishments.amount
+        assert data_instance.descriptions == replenishments.descriptions
+        assert data_instance.user.id == user.id
 
     replenishments = [second_replenishments, third_replenishments]
-    data = read_replenishments(db=session, user_id=user.id, filter_date=time)
-    data = data.all()
+    data = read_replenishments(user_id=user.id, filter_date=time)
+    data = session.execute(data).fetchall()
     assert len(data) == len(replenishments)
     for data, replenishments in zip(data, replenishments):
-        assert data.id == replenishments.id
-        assert data.time == replenishments.time
-        assert data.amount == replenishments.amount
-        assert data.descriptions == replenishments.descriptions
-        assert data.user.id == user.id
+        data_instance = data[0]
+        assert data_instance.id == replenishments.id
+        assert data_instance.time == replenishments.time
+        assert data_instance.amount == replenishments.amount
+        assert data_instance.descriptions == replenishments.descriptions
+        assert data_instance.user.id == user.id
 
 
 def test_read_replenishments_time_range(session) -> None:
@@ -157,16 +157,16 @@ def test_read_replenishments_time_range(session) -> None:
 
     replenishments = [second_replenishments, third_replenishments]
     data = read_replenishments(
-        db=session,
         user_id=user.id,
         start_date=second_date,
         end_date=third_date,
     )
-    data = data.all()
+    data = session.execute(data).fetchall()
     assert len(data) == len(replenishments)
     for data, replenishments in zip(data, replenishments):
-        assert data.id == replenishments.id
-        assert data.time == replenishments.time
-        assert data.amount == replenishments.amount
-        assert data.descriptions == replenishments.descriptions
-        assert data.user.id == user.id
+        data_instance = data[0]
+        assert data_instance.id == replenishments.id
+        assert data_instance.time == replenishments.time
+        assert data_instance.amount == replenishments.amount
+        assert data_instance.descriptions == replenishments.descriptions
+        assert data_instance.user.id == user.id

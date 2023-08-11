@@ -3,6 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from starlette import status
 from starlette.exceptions import HTTPException
 
@@ -25,7 +26,7 @@ router = APIRouter(
 
 @router.get("/", response_model=Page[UserModel])
 def read_users(db: Session = Depends(get_db)) -> Page[UserModel]:
-    return paginate(db, db.query(User))
+    return paginate(db, select(User))
 
 
 @router.get("/user-balance/", response_model=UserBalance)
