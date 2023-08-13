@@ -1,4 +1,10 @@
-from .user import BaseUser, UserModel, UserTotalExpenses, UserTotalReplenishments
+from .user import (
+    BaseUser,
+    UserModel,
+    UserTotalExpenses,
+    UserTotalReplenishments,
+    UserHistory,
+)
 from .group import (
     AboutCategory,
     AboutUser,
