@@ -1,12 +1,12 @@
 import datetime
-from typing import Union
+from typing import Union, List
 
-from sqlalchemy import exc, func
+from sqlalchemy import exc, func, select, desc
 from sqlalchemy.orm import Session, joinedload
 from starlette import status
 from starlette.exceptions import HTTPException
 
-from models import Group, User, UserGroup, Expense
+from models import Group, User, UserGroup, Expense, CategoryGroup, Category
 from enums import GroupStatusEnum
 from schemas import (
     AboutUser,
@@ -16,7 +16,47 @@ from schemas import (
     UserGroups,
     UsersGroup,
     GroupInfo,
+    GroupHistory,
 )
+
+
+def group_history(db: Session, user_id: int, group_id: int) -> List[GroupHistory]:
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=user_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    history = (
+        select(
+            Expense.id,
+            Expense.descriptions,
+            Expense.amount,
+            Expense.time,
+            Expense.category_id,
+            CategoryGroup.color_code.label("color_code_category"),
+            Category.title.label("title_category"),
+            User.id.label("user_id"),
+            User.login.label("user_login"),
+            User.first_name.label("user_first_name"),
+            User.last_name.label("user_last_name"),
+            User.picture.label("user_picture"),
+        )
+        .join(CategoryGroup, Expense.category_id == CategoryGroup.category_id)
+        .join(Category, CategoryGroup.category_id == Category.id)
+        .join(User, User.id == Expense.user_id)
+        .filter(Expense.group_id == group_id)
+        .order_by(desc(Expense.time))
+    )
+    return history
 
 
 def read_group_info(db: Session, user_id: int, group_id: int) -> GroupInfo:
