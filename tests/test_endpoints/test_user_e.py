@@ -46,7 +46,14 @@ class UserTestCase(unittest.TestCase):
     def test_read_users(self) -> None:
         data = client.get("/users/")
         assert data.status_code == 200
-        assert data.json() == self.users_data
+        response_data = {
+            "items": self.users_data,
+            "total": 2,
+            "page": 1,
+            "size": 8,
+            "pages": 1,
+        }
+        assert data.json() == response_data
 
     def test_read_user_current_balance(self) -> None:
         oauth.google.authorize_access_token = Mock(

@@ -149,14 +149,16 @@ def test_read_expenses_by_group_all_time(
         group_id=factories["first_group"].id,
         user_id=factories["first_user"].id,
     )
+    data = session.execute(data).fetchall()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
+        data_instance = data[0]
+        assert data_instance.id == expense.id
+        assert data_instance.time == expense.time
+        assert data_instance.amount == expense.amount
+        assert data_instance.descriptions == expense.descriptions
+        assert data_instance.category_group.group.id == expense.group_id
+        assert data_instance.category_group.category.id == expense.category_id
 
 
 def test_read_expenses_by_group_month(
@@ -171,14 +173,16 @@ def test_read_expenses_by_group_month(
         user_id=factories["first_user"].id,
         filter_date=activity["filter_date"],
     )
+    data = session.execute(data).fetchall()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
+        data_instance = data[0]
+        assert data_instance.id == expense.id
+        assert data_instance.time == expense.time
+        assert data_instance.amount == expense.amount
+        assert data_instance.descriptions == expense.descriptions
+        assert data_instance.category_group.group.id == expense.group_id
+        assert data_instance.category_group.category.id == expense.category_id
 
 
 def test_read_expenses_by_group_time_range(
@@ -194,14 +198,16 @@ def test_read_expenses_by_group_time_range(
         start_date=update_activity["start_date"],
         end_date=update_activity["end_date"],
     )
+    data = session.execute(data).fetchall()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
+        data_instance = data[0]
+        assert data_instance.id == expense.id
+        assert data_instance.time == expense.time
+        assert data_instance.amount == expense.amount
+        assert data_instance.descriptions == expense.descriptions
+        assert data_instance.category_group.group.id == expense.group_id
+        assert data_instance.category_group.category.id == expense.category_id
 
 
 def test_read_expenses_by_group_time_range_date_exc(session, dependence_factory):
@@ -243,6 +249,7 @@ def test_read_expenses_all_time(session, dependence_factory, activity, update_ac
     activity = activity
     update_activity = update_activity
     data = read_expenses(db=session, user_id=factories["first_user"].id)
+    data = session.execute(data).fetchall()
     expenses = [
         activity["first_expense"],
         update_activity["second_expense"],
@@ -250,12 +257,13 @@ def test_read_expenses_all_time(session, dependence_factory, activity, update_ac
     ]
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
+        data_instance = data[0]
+        assert data_instance.id == expense.id
+        assert data_instance.time == expense.time
+        assert data_instance.amount == expense.amount
+        assert data_instance.descriptions == expense.descriptions
+        assert data_instance.category_group.group.id == expense.group_id
+        assert data_instance.category_group.category.id == expense.category_id
 
 
 def test_read_expenses_month(session, dependence_factory, activity, update_activity):
@@ -267,14 +275,16 @@ def test_read_expenses_month(session, dependence_factory, activity, update_activ
         user_id=factories["first_user"].id,
         filter_date=update_activity["start_date"],
     )
+    data = session.execute(data).fetchall()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
+        data_instance = data[0]
+        assert data_instance.id == expense.id
+        assert data_instance.time == expense.time
+        assert data_instance.amount == expense.amount
+        assert data_instance.descriptions == expense.descriptions
+        assert data_instance.category_group.group.id == expense.group_id
+        assert data_instance.category_group.category.id == expense.category_id
 
 
 def test_read_expenses_time_range(
@@ -289,11 +299,13 @@ def test_read_expenses_time_range(
         start_date=update_activity["start_date"],
         end_date=update_activity["end_date"],
     )
+    data = session.execute(data).fetchall()
     assert len(data) == len(expenses)
     for data, expense in zip(data, expenses):
-        assert data.id == expense.id
-        assert data.time == expense.time
-        assert data.amount == expense.amount
-        assert data.descriptions == expense.descriptions
-        assert data.category_group.group.id == expense.group_id
-        assert data.category_group.category.id == expense.category_id
+        data_instance = data[0]
+        assert data_instance.id == expense.id
+        assert data_instance.time == expense.time
+        assert data_instance.amount == expense.amount
+        assert data_instance.descriptions == expense.descriptions
+        assert data_instance.category_group.group.id == expense.group_id
+        assert data_instance.category_group.category.id == expense.category_id

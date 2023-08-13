@@ -1,5 +1,5 @@
-from datetime import date
-from typing import List
+from datetime import date, datetime
+from typing import List, Optional
 
 from schemas import UserModel
 from schemas.base_model import BaseModel
@@ -66,3 +66,18 @@ class CategoriesGroup(BaseModel):
 class GroupInfo(GroupModel):
     members: int
     expenses: int
+
+
+class GroupHistory(BaseModel):
+    id: int
+    descriptions: str
+    amount: float
+    time: datetime
+    category_id: Optional[int] = None
+    color_code_category: Optional[str] = None
+    title_category: Optional[str] = None
+    user_id: int
+    user_login: str
+    user_first_name: str
+    user_last_name: str
+    user_picture: str

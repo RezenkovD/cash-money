@@ -3,7 +3,9 @@ from datetime import datetime
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi import Depends, HTTPException
+from fastapi_pagination import Page
 from pydantic.schema import date
+from pydantic import Field
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.config import Config
@@ -24,6 +26,10 @@ oauth.register(
         "scope": "openid email profile",
         "prompt": "select_account",
     },
+)
+
+Page = Page.with_custom_options(
+    size=Field(8, ge=1, le=500),
 )
 
 

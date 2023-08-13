@@ -1,6 +1,7 @@
 from typing import Union
 
 from fastapi import APIRouter, Depends
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
 import services
@@ -14,12 +15,24 @@ from schemas import (
     UsersGroup,
     UserGroups,
     GroupInfo,
+    GroupHistory,
 )
+from dependencies import Page
 
 router = APIRouter(
     prefix="/groups",
     tags=["groups"],
 )
+
+
+@router.get("/{group_id}/history/", response_model=Page[GroupHistory])
+def read_user_history(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+) -> Page[GroupHistory]:
+    return paginate(db, services.group_history(db, current_user.id, group_id))
 
 
 @router.get("/{group_id}/info/", response_model=GroupInfo)

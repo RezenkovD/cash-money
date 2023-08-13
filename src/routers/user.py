@@ -1,7 +1,9 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from starlette import status
 from starlette.exceptions import HTTPException
 
@@ -11,9 +13,16 @@ from dependencies import (
     get_current_user,
     transform_date_or_422,
     transform_exact_date_or_422,
+    Page,
 )
-from models import User
-from schemas import UserBalance, UserModel, UserTotalExpenses, UserTotalReplenishments
+from models import User, Expense
+from schemas import (
+    UserBalance,
+    UserModel,
+    UserTotalExpenses,
+    UserTotalReplenishments,
+    UserHistory,
+)
 
 router = APIRouter(
     prefix="/users",
@@ -21,9 +30,9 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[UserModel])
-def read_users(db: Session = Depends(get_db)) -> List[UserModel]:
-    return db.query(User).all()
+@router.get("/", response_model=Page[UserModel])
+def read_users(db: Session = Depends(get_db)) -> Page[UserModel]:
+    return paginate(db, select(User))
 
 
 @router.get("/user-balance/", response_model=UserBalance)
@@ -40,6 +49,14 @@ def read_user_info(
     current_user: User = Depends(get_current_user),
 ) -> UserModel:
     return db.query(User).filter_by(id=current_user.id).one()
+
+
+@router.get("/history/", response_model=Page[UserHistory])
+def read_user_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Page[UserHistory]:
+    return paginate(db, services.user_history(current_user.id))
 
 
 @router.get("/total-expenses/", response_model=UserTotalExpenses)
@@ -79,7 +96,7 @@ def read_user_total_expenses(
 
 
 @router.get("/total-replenishments/", response_model=UserTotalReplenishments)
-def read_user_total_expenses(
+def read_user_total_replenishments(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     year_month: Optional[str] = None,

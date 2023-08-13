@@ -18,6 +18,7 @@ from .group import (
     read_users_group,
     remove_user,
     read_group_info,
+    group_history,
 )
 from .invitation import create_invitation, read_invitations, response_invitation
 from .replenishment import (
@@ -31,4 +32,5 @@ from .user import (
     calculate_user_balance,
     user_total_expenses,
     user_total_replenishments,
+    user_history,
 )

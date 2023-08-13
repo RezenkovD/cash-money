@@ -1,4 +1,10 @@
-from .user import BaseUser, UserModel, UserTotalExpenses, UserTotalReplenishments
+from .user import (
+    BaseUser,
+    UserModel,
+    UserTotalExpenses,
+    UserTotalReplenishments,
+    UserHistory,
+)
 from .group import (
     AboutCategory,
     AboutUser,
@@ -9,6 +15,7 @@ from .group import (
     UserGroups,
     UsersGroup,
     GroupInfo,
+    GroupHistory,
 )
 from .invintation import BaseInvitation, InvitationCreate, InvitationModel
 from .category import CategoryModel, CategoryCreate, IconColor
