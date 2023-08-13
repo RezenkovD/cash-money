@@ -15,8 +15,14 @@ from dependencies import (
     transform_exact_date_or_422,
     Page,
 )
-from models import User
-from schemas import UserBalance, UserModel, UserTotalExpenses, UserTotalReplenishments
+from models import User, Expense
+from schemas import (
+    UserBalance,
+    UserModel,
+    UserTotalExpenses,
+    UserTotalReplenishments,
+    UserHistory,
+)
 
 router = APIRouter(
     prefix="/users",
@@ -43,6 +49,14 @@ def read_user_info(
     current_user: User = Depends(get_current_user),
 ) -> UserModel:
     return db.query(User).filter_by(id=current_user.id).one()
+
+
+@router.get("/history/", response_model=Page[UserHistory])
+def read_user_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Page[UserHistory]:
+    return paginate(db, services.user_history(current_user.id))
 
 
 @router.get("/total-expenses/", response_model=UserTotalExpenses)
