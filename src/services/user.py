@@ -1,15 +1,16 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 from dateutil.relativedelta import relativedelta
 
 from starlette import status
 from starlette.exceptions import HTTPException
+from sqlalchemy import select, union, literal, desc, func
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import coalesce, sum
 from sqlalchemy import and_, exc, extract
 from pydantic.schema import date
 
-from models import Expense, Replenishment, User
-from schemas import UserBalance, UserTotalExpenses, UserTotalReplenishments
+from models import Expense, Replenishment, User, CategoryGroup, Category, Group
+from schemas import UserBalance, UserTotalExpenses, UserTotalReplenishments, UserHistory
 
 
 def get_user(db: Session, login: str) -> Optional[User]:
@@ -27,6 +28,43 @@ def calculate_user_balance(db: Session, user_id: int) -> UserBalance:
     user_balance = replenishments - expenses
     user_balance = UserBalance(balance=user_balance)
     return user_balance
+
+
+def user_history(user_id: int) -> List[UserHistory]:
+    history = (
+        select(
+            Expense.id,
+            Expense.descriptions,
+            Expense.amount,
+            Expense.time,
+            Expense.category_id,
+            Expense.group_id,
+            CategoryGroup.color_code.label("color_code_category"),
+            Category.title.label("title_category"),
+            Group.title.label("title_group"),
+            Group.color_code.label("color_code_group"),
+        )
+        .join(CategoryGroup, Expense.category_id == CategoryGroup.category_id)
+        .join(Group, Expense.group_id == Group.id)
+        .join(Category, CategoryGroup.category_id == Category.id)
+        .filter(Expense.user_id == user_id)
+        .union(
+            select(
+                Replenishment.id,
+                Replenishment.descriptions,
+                Replenishment.amount,
+                Replenishment.time,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ).filter(Replenishment.user_id == user_id)
+        )
+        .order_by(desc(Replenishment.time))
+    )
+    return history
 
 
 def get_total_actions_for_month(
