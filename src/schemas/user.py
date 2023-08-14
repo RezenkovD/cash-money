@@ -36,3 +36,8 @@ class UserHistory(BaseModel):
     title_category: Optional[str] = None
     title_group: Optional[str] = None
     color_code_group: Optional[str] = None
+
+
+class UserDailyExpenses(BaseModel):
+    date: datetime.date
+    amount: float
