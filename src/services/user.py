@@ -10,7 +10,13 @@ from sqlalchemy import and_, exc, extract
 from pydantic.schema import date
 
 from models import Expense, Replenishment, User, CategoryGroup, Category, Group
-from schemas import UserBalance, UserTotalExpenses, UserTotalReplenishments, UserHistory
+from schemas import (
+    UserBalance,
+    UserTotalExpenses,
+    UserTotalReplenishments,
+    UserHistory,
+    UserDailyExpenses,
+)
 
 
 def get_user(db: Session, login: str) -> Optional[User]:
@@ -65,6 +71,62 @@ def user_history(user_id: int) -> List[UserHistory]:
         .order_by(desc(Replenishment.time))
     )
     return history
+
+
+def read_user_daily_expenses(
+    db: Session,
+    user_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> List[UserDailyExpenses]:
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    daily_expenses = (
+        db.query(
+            func.date(Expense.time).label("date"),
+            func.sum(Expense.amount).label("amount"),
+        )
+        .filter_by(user_id=user_id)
+        .group_by(func.date(Expense.time))
+        .all()
+    )
+    if filter_date:
+        daily_expenses = (
+            db.query(
+                func.date(Expense.time).label("date"),
+                func.sum(Expense.amount).label("amount"),
+            )
+            .filter(
+                and_(
+                    user_id == user_id,
+                    extract("year", Expense.time) == filter_date.year,
+                    extract("month", Expense.time) == filter_date.month,
+                )
+            )
+            .group_by(func.date(Expense.time))
+            .all()
+        )
+    elif start_date and end_date:
+        daily_expenses = (
+            db.query(
+                func.date(Expense.time).label("date"),
+                func.sum(Expense.amount).label("amount"),
+            )
+            .filter(
+                and_(
+                    user_id == user_id,
+                    Expense.time >= start_date,
+                    Expense.time <= end_date,
+                )
+            )
+            .group_by(func.date(Expense.time))
+            .all()
+        )
+    return daily_expenses
 
 
 def get_total_actions_for_month(
