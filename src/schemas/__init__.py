@@ -5,6 +5,7 @@ from .user import (
     UserTotalReplenishments,
     UserHistory,
     UserDailyExpenses,
+    UserCategoryExpenses,
 )
 from .group import (
     AboutCategory,

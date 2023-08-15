@@ -41,3 +41,9 @@ class UserHistory(BaseModel):
 class UserDailyExpenses(BaseModel):
     date: datetime.date
     amount: float
+
+
+class UserCategoryExpenses(BaseModel):
+    id: int
+    title: str
+    amount: float
