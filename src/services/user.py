@@ -16,6 +16,7 @@ from schemas import (
     UserTotalReplenishments,
     UserHistory,
     UserDailyExpenses,
+    UserCategoryExpenses,
 )
 
 
@@ -34,6 +35,68 @@ def calculate_user_balance(db: Session, user_id: int) -> UserBalance:
     user_balance = replenishments - expenses
     user_balance = UserBalance(balance=user_balance)
     return user_balance
+
+
+def read_category_expenses(
+    db: Session,
+    user_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> UserCategoryExpenses:
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    category_expenses = (
+        db.query(
+            Category.id.label("id"),
+            Category.title.label("title"),
+            func.sum(Expense.amount).label("amount"),
+        )
+        .join(Category, Expense.category_id == Category.id)
+        .filter(Expense.user_id == user_id)
+        .group_by(Category.id, Category.title)
+        .all()
+    )
+    if filter_date:
+        category_expenses = (
+            db.query(
+                Category.id.label("id"),
+                Category.title.label("title"),
+                func.sum(Expense.amount).label("amount"),
+            )
+            .join(Category, Expense.category_id == Category.id)
+            .filter(
+                and_(
+                    user_id == user_id,
+                    extract("year", Expense.time) == filter_date.year,
+                    extract("month", Expense.time) == filter_date.month,
+                )
+            )
+            .group_by(Category.id, Category.title)
+            .all()
+        )
+    elif start_date and end_date:
+        category_expenses = (
+            db.query(
+                Category.id.label("id"),
+                Category.title.label("title"),
+                func.sum(Expense.amount).label("amount"),
+            )
+            .join(Category, Expense.category_id == Category.id)
+            .filter(
+                and_(
+                    user_id == user_id,
+                    Expense.time >= start_date,
+                    Expense.time <= end_date,
+                )
+            )
+            .group_by(Category.id, Category.title)
+            .all()
+        )
+    return category_expenses
 
 
 def user_history(user_id: int) -> List[UserHistory]:
