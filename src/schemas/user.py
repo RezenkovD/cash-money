@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional
+from typing import Optional, List
 
 from schemas.base_model import BaseModel
 
@@ -36,3 +36,28 @@ class UserHistory(BaseModel):
     title_category: Optional[str] = None
     title_group: Optional[str] = None
     color_code_group: Optional[str] = None
+
+
+class UserDailyExpenses(BaseModel):
+    date: datetime.date
+    amount: float
+
+
+class UserCategoryExpenses(BaseModel):
+    id: int
+    title: str
+    amount: float
+
+
+class CategoryExpenses(BaseModel):
+    id: int
+    title: str
+    color_code: str
+    icon_url: str
+    amount: float
+
+
+class UserGroupExpenses(BaseModel):
+    group_id: int
+    group_title: str
+    categories: List[CategoryExpenses]
