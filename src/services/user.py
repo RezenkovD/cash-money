@@ -277,7 +277,7 @@ def read_user_daily_expenses(
             )
             .filter(
                 and_(
-                    user_id == user_id,
+                    Expense.user_id == user_id,
                     extract("year", Expense.time) == filter_date.year,
                     extract("month", Expense.time) == filter_date.month,
                 )
@@ -293,7 +293,7 @@ def read_user_daily_expenses(
             )
             .filter(
                 and_(
-                    user_id == user_id,
+                    Expense.user_id == user_id,
                     Expense.time >= start_date,
                     Expense.time <= end_date,
                 )
