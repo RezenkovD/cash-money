@@ -54,7 +54,7 @@ class CategoryExpenses(BaseModel):
     title: str
     color_code: str
     icon_url: str
-    amount: float
+    amount: Optional[float] = None
 
 
 class UserGroupExpenses(BaseModel):
