@@ -3,7 +3,7 @@ from dateutil.relativedelta import relativedelta
 
 from starlette import status
 from starlette.exceptions import HTTPException
-from sqlalchemy import select, union, literal, desc, func
+from sqlalchemy import select, union, literal, desc, func, outerjoin
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import coalesce, sum
 from sqlalchemy import and_, exc, extract
@@ -74,103 +74,77 @@ def read_group_expenses(
             detail="You are not in this group!",
         )
     group_info = db.query(Group.id, Group.title).filter_by(id=group_id).one()
-    from sqlalchemy import and_
-
-    group_expenses = (
+    categories_expenses_subquery = (
+        db.query(
+            Expense.category_id.label("id"),
+            func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+        )
+        .filter(
+            Expense.group_id == group_id,
+            Expense.user_id == user_id,
+        )
+        .group_by(Expense.category_id)
+        .subquery()
+    )
+    if filter_date:
+        categories_expenses_subquery = (
+            db.query(
+                Expense.category_id.label("id"),
+                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+            )
+            .filter(
+                and_(
+                    Expense.group_id == group_id,
+                    Expense.user_id == user_id,
+                    extract("year", Expense.time) == filter_date.year,
+                    extract("month", Expense.time) == filter_date.month,
+                )
+            )
+            .group_by(Expense.category_id)
+            .subquery()
+        )
+    elif start_date and end_date:
+        categories_expenses_subquery = (
+            db.query(
+                Expense.category_id.label("id"),
+                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+            )
+            .filter(
+                and_(
+                    Expense.group_id == group_id,
+                    Expense.user_id == user_id,
+                    Expense.time >= start_date,
+                    Expense.time <= end_date,
+                ),
+            )
+            .group_by(Expense.category_id)
+            .subquery()
+        )
+    categories_group = (
         db.query(
             Category.id.label("id"),
             Category.title.label("title"),
             CategoryGroup.color_code.label("color_code"),
             CategoryGroup.icon_url.label("icon_url"),
-            func.sum(Expense.amount).label("amount"),
+            categories_expenses_subquery.c.amount,
         )
-        .join(Category, Expense.category_id == Category.id)
         .join(
             CategoryGroup,
             and_(
-                Expense.category_id == CategoryGroup.category_id,
-                Expense.group_id == CategoryGroup.group_id,
+                CategoryGroup.category_id == Category.id,
+                CategoryGroup.group_id == group_id,
             ),
         )
-        .filter(Expense.user_id == user_id, Expense.group_id == group_id)
-        .group_by(
-            Category.id,
-            Category.title,
-            CategoryGroup.color_code,
-            CategoryGroup.icon_url,
+        .outerjoin(
+            categories_expenses_subquery,
+            Category.id == categories_expenses_subquery.c.id,
         )
         .all()
     )
-    if filter_date:
-        group_expenses = (
-            db.query(
-                Category.id.label("id"),
-                Category.title.label("title"),
-                CategoryGroup.color_code.label("color_code"),
-                CategoryGroup.icon_url.label("icon_url"),
-                func.sum(Expense.amount).label("amount"),
-            )
-            .join(Category, Expense.category_id == Category.id)
-            .join(
-                CategoryGroup,
-                and_(
-                    Expense.category_id == CategoryGroup.category_id,
-                    Expense.group_id == CategoryGroup.group_id,
-                ),
-            )
-            .filter(
-                and_(
-                    Expense.user_id == user_id,
-                    Expense.group_id == group_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                )
-            )
-            .group_by(
-                Category.id,
-                Category.title,
-                CategoryGroup.color_code,
-                CategoryGroup.icon_url,
-            )
-            .all()
-        )
-    elif start_date and end_date:
-        group_expenses = (
-            db.query(
-                Category.id.label("id"),
-                Category.title.label("title"),
-                CategoryGroup.color_code.label("color_code"),
-                CategoryGroup.icon_url.label("icon_url"),
-                func.sum(Expense.amount).label("amount"),
-            )
-            .join(Category, Expense.category_id == Category.id)
-            .join(
-                CategoryGroup,
-                and_(
-                    Expense.category_id == CategoryGroup.category_id,
-                    Expense.group_id == CategoryGroup.group_id,
-                ),
-            )
-            .filter(
-                and_(
-                    Expense.user_id == user_id,
-                    Expense.group_id == group_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                )
-            )
-            .group_by(
-                Category.id,
-                Category.title,
-                CategoryGroup.color_code,
-                CategoryGroup.icon_url,
-            )
-            .all()
-        )
     user_group_expenses = UserGroupExpenses(
         group_id=group_info.id,
         group_title=group_info.title,
-        categories=group_expenses,
+        categories=categories_group,
     )
     return user_group_expenses
 
