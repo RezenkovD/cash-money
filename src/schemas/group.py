@@ -81,3 +81,8 @@ class GroupHistory(BaseModel):
     user_first_name: str
     user_last_name: str
     user_picture: str
+
+
+class GroupTotalExpenses(BaseModel):
+    amount: float
+    percentage_increase: float
