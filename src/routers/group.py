@@ -1,8 +1,10 @@
-from typing import Union
+from typing import Union, Optional
 
 from fastapi import APIRouter, Depends
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
+from starlette import status
+from starlette.exceptions import HTTPException
 
 import services
 from database import get_db
@@ -16,33 +18,14 @@ from schemas import (
     UserGroups,
     GroupInfo,
     GroupHistory,
+    GroupTotalExpenses,
 )
-from dependencies import Page
+from dependencies import Page, transform_date_or_422, transform_exact_date_or_422
 
 router = APIRouter(
     prefix="/groups",
     tags=["groups"],
 )
-
-
-@router.get("/{group_id}/history/", response_model=Page[GroupHistory])
-def read_user_history(
-    *,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    group_id: int,
-) -> Page[GroupHistory]:
-    return paginate(db, services.group_history(db, current_user.id, group_id))
-
-
-@router.get("/{group_id}/info/", response_model=GroupInfo)
-def read_group_info(
-    *,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    group_id: int,
-) -> GroupInfo:
-    return services.read_group_info(db, current_user.id, group_id)
 
 
 @router.get("/", response_model=UserGroups)
@@ -106,3 +89,58 @@ def remove_user(
     user_id: int,
 ) -> Union[AboutUser, UsersGroup]:
     return services.remove_user(db, current_user.id, group_id, user_id)
+
+
+@router.get("/{group_id}/history/", response_model=Page[GroupHistory])
+def read_user_history(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+) -> Page[GroupHistory]:
+    return paginate(db, services.group_history(db, current_user.id, group_id))
+
+
+@router.get("/{group_id}/info/", response_model=GroupInfo)
+def read_group_info(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+) -> GroupInfo:
+    return services.read_group_info(db, current_user.id, group_id)
+
+
+@router.get("/{group_id}/total-expenses/", response_model=GroupTotalExpenses)
+def read_user_total_expenses(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+    year_month: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> GroupTotalExpenses:
+    if year_month and (start_date or end_date):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot use filter_date with start_date or end_date",
+        )
+    elif (start_date and not end_date) or (end_date and not start_date):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Both start_date and end_date are required",
+        )
+    elif year_month:
+        filter_date = transform_date_or_422(year_month)
+        return services.group_total_expenses(
+            db, current_user.id, group_id, filter_date=filter_date
+        )
+    elif start_date and end_date:
+        start_date = transform_exact_date_or_422(start_date)
+        end_date = transform_exact_date_or_422(end_date)
+        return services.group_total_expenses(
+            db, current_user.id, group_id, start_date=start_date, end_date=end_date
+        )
+    else:
+        return services.group_total_expenses(db, current_user.id, group_id)
