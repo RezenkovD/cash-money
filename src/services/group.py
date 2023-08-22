@@ -1,10 +1,13 @@
 import datetime
-from typing import Union, List
+from dateutil.relativedelta import relativedelta
+from typing import Union, List, Optional
 
-from sqlalchemy import exc, func, select, desc
+from sqlalchemy import exc, func, select, desc, and_, extract
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.sql.functions import coalesce, sum
 from starlette import status
 from starlette.exceptions import HTTPException
+from pydantic.schema import date
 
 from models import Group, User, UserGroup, Expense, CategoryGroup, Category
 from enums import GroupStatusEnum
@@ -17,6 +20,7 @@ from schemas import (
     UsersGroup,
     GroupInfo,
     GroupHistory,
+    GroupTotalExpenses,
 )
 
 
@@ -318,3 +322,108 @@ def read_categories_group(db: Session, user_id: int, group_id: int) -> Categorie
         .one()
     )
     return db_query
+
+
+def get_group_expenses_for_month(
+    db: Session,
+    group_id: int,
+    year: date,
+    month: date,
+) -> float:
+    return db.query(
+        coalesce(
+            sum(Expense.amount).filter(
+                and_(
+                    Expense.group_id == group_id,
+                    extract("year", Expense.time) == year,
+                    extract("month", Expense.time) == month,
+                )
+            ),
+            0,
+        )
+    ).one()[0]
+
+
+def get_group_expenses_for_time_range(
+    db: Session,
+    group_id: int,
+    start_date: date,
+    end_date: date,
+) -> float:
+    return db.query(
+        coalesce(
+            sum(Expense.amount).filter(
+                and_(
+                    Expense.group_id == group_id,
+                    Expense.time >= start_date,
+                    Expense.time <= end_date,
+                )
+            ),
+            0,
+        )
+    ).one()[0]
+
+
+def group_total_expenses(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> GroupTotalExpenses:
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=user_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    (amount,) = db.query(
+        coalesce(sum(Expense.amount).filter(Expense.group_id == group_id), 0)
+    ).one()
+    percentage_increase = 0
+
+    if filter_date:
+        year, month = filter_date.year, filter_date.month
+        amount = get_group_expenses_for_month(db, group_id, year, month)
+
+        filter_date = filter_date - relativedelta(months=1)
+        previous_year, previous_month = filter_date.year, filter_date.month
+        previous_month_amount = get_group_expenses_for_month(
+            db, group_id, previous_year, previous_month
+        )
+
+        if previous_month_amount != 0:
+            percentage_increase = (
+                amount - previous_month_amount
+            ) / previous_month_amount
+
+    elif start_date and end_date:
+        amount = get_group_expenses_for_time_range(db, group_id, start_date, end_date)
+
+        days_difference = (end_date - start_date).days
+        zero_date = start_date - relativedelta(days=days_difference)
+        previous_days_amount = get_group_expenses_for_time_range(
+            db, group_id, zero_date, start_date
+        )
+
+        if previous_days_amount != 0:
+            percentage_increase = (amount - previous_days_amount) / previous_days_amount
+
+    total_expenses = GroupTotalExpenses(
+        amount=amount, percentage_increase=percentage_increase
+    )
+    return total_expenses
