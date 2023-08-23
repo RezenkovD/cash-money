@@ -21,6 +21,7 @@ from schemas import (
     GroupInfo,
     GroupHistory,
     GroupTotalExpenses,
+    GroupUserTotalExpenses,
 )
 
 
@@ -424,6 +425,122 @@ def group_total_expenses(
             percentage_increase = (amount - previous_days_amount) / previous_days_amount
 
     total_expenses = GroupTotalExpenses(
+        amount=amount, percentage_increase=percentage_increase
+    )
+    return total_expenses
+
+
+def get_group_user_expenses_for_month(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    year: date,
+    month: date,
+) -> float:
+    return db.query(
+        coalesce(
+            sum(Expense.amount).filter(
+                and_(
+                    Expense.user_id == user_id,
+                    Expense.group_id == group_id,
+                    extract("year", Expense.time) == year,
+                    extract("month", Expense.time) == month,
+                )
+            ),
+            0,
+        )
+    ).one()[0]
+
+
+def get_group_user_expenses_for_time_range(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    start_date: date,
+    end_date: date,
+) -> float:
+    return db.query(
+        coalesce(
+            sum(Expense.amount).filter(
+                and_(
+                    Expense.user_id == user_id,
+                    Expense.group_id == group_id,
+                    Expense.time >= start_date,
+                    Expense.time <= end_date,
+                )
+            ),
+            0,
+        )
+    ).one()[0]
+
+
+def group_user_total_expenses(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> GroupTotalExpenses:
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=user_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    (amount,) = db.query(
+        coalesce(
+            sum(Expense.amount).filter(
+                and_(Expense.group_id == group_id, Expense.user_id == user_id)
+            ),
+            0,
+        )
+    ).one()
+    percentage_increase = 0
+
+    if filter_date:
+        year, month = filter_date.year, filter_date.month
+        amount = get_group_user_expenses_for_month(db, user_id, group_id, year, month)
+
+        filter_date = filter_date - relativedelta(months=1)
+        previous_year, previous_month = filter_date.year, filter_date.month
+        previous_month_amount = get_group_user_expenses_for_month(
+            db, user_id, group_id, previous_year, previous_month
+        )
+
+        if previous_month_amount != 0:
+            percentage_increase = (
+                amount - previous_month_amount
+            ) / previous_month_amount
+
+    elif start_date and end_date:
+        amount = get_group_user_expenses_for_time_range(
+            db, user_id, group_id, start_date, end_date
+        )
+
+        days_difference = (end_date - start_date).days
+        zero_date = start_date - relativedelta(days=days_difference)
+        previous_days_amount = get_group_user_expenses_for_time_range(
+            db, user_id, group_id, zero_date, start_date
+        )
+
+        if previous_days_amount != 0:
+            percentage_increase = (amount - previous_days_amount) / previous_days_amount
+
+    total_expenses = GroupUserTotalExpenses(
         amount=amount, percentage_increase=percentage_increase
     )
     return total_expenses

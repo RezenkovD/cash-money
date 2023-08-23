@@ -20,6 +20,7 @@ from .group import (
     GroupInfo,
     GroupHistory,
     GroupTotalExpenses,
+    GroupUserTotalExpenses,
 )
 from .invintation import BaseInvitation, InvitationCreate, InvitationModel
 from .category import CategoryModel, CategoryCreate, IconColor
