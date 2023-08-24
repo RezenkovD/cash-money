@@ -104,3 +104,16 @@ class UserSpender(BaseModel):
 class GroupDailyExpenses(BaseModel):
     date: date
     amount: float
+
+
+class GroupUser(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    amount: float
+
+
+class GroupDailyExpensesDetail(BaseModel):
+    date: date
+    total_amount: float
+    users: List[GroupUser]
