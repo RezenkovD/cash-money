@@ -91,3 +91,11 @@ class GroupTotalExpenses(BaseModel):
 class GroupUserTotalExpenses(BaseModel):
     amount: float
     percentage_increase: float
+
+
+class UserSpender(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    picture: Optional[str]
+    amount: float

@@ -544,3 +544,102 @@ def group_user_total_expenses(
         amount=amount, percentage_increase=percentage_increase
     )
     return total_expenses
+
+
+def group_users_spenders(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> GroupTotalExpenses:
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=user_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    users_spenders = (
+        db.query(
+            User.id.label("id"),
+            User.first_name.label("first_name"),
+            User.last_name.label("last_name"),
+            User.picture.label("picture"),
+            func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+        )
+        .join(UserGroup, User.id == UserGroup.user_id)
+        .outerjoin(
+            Expense,
+            and_(
+                Expense.user_id == User.id,
+                Expense.group_id == group_id,
+            ),
+        )
+        .filter(UserGroup.group_id == group_id)
+        .group_by(User.id)
+        .order_by(func.coalesce(func.sum(Expense.amount), 0).desc())
+        .all()
+    )
+    if filter_date:
+        users_spenders = (
+            db.query(
+                User.id.label("id"),
+                User.first_name.label("first_name"),
+                User.last_name.label("last_name"),
+                User.picture.label("picture"),
+                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+            )
+            .join(UserGroup, User.id == UserGroup.user_id)
+            .outerjoin(
+                Expense,
+                and_(
+                    Expense.user_id == User.id,
+                    Expense.group_id == group_id,
+                    extract("year", Expense.time) == filter_date.year,
+                    extract("month", Expense.time) == filter_date.month,
+                ),
+            )
+            .filter(UserGroup.group_id == group_id)
+            .group_by(User.id)
+            .order_by(func.coalesce(func.sum(Expense.amount), 0).desc())
+            .all()
+        )
+    elif start_date and end_date:
+        users_spenders = (
+            db.query(
+                User.id.label("id"),
+                User.first_name.label("first_name"),
+                User.last_name.label("last_name"),
+                User.picture.label("picture"),
+                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+            )
+            .join(UserGroup, User.id == UserGroup.user_id)
+            .outerjoin(
+                Expense,
+                and_(
+                    Expense.user_id == User.id,
+                    Expense.group_id == group_id,
+                    Expense.time >= start_date,
+                    Expense.time <= end_date,
+                ),
+            )
+            .filter(UserGroup.group_id == group_id)
+            .group_by(User.id)
+            .order_by(func.coalesce(func.sum(Expense.amount), 0).desc())
+            .all()
+        )
+    return users_spenders
