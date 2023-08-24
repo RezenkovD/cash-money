@@ -170,6 +170,7 @@ def read_category_expenses(
         .join(Category, Expense.category_id == Category.id)
         .filter(Expense.user_id == user_id)
         .group_by(Category.id, Category.title)
+        .order_by(func.sum(Expense.amount).desc())
         .all()
     )
     if filter_date:
@@ -188,6 +189,7 @@ def read_category_expenses(
                 )
             )
             .group_by(Category.id, Category.title)
+            .order_by(func.sum(Expense.amount).desc())
             .all()
         )
     elif start_date and end_date:
@@ -206,6 +208,7 @@ def read_category_expenses(
                 )
             )
             .group_by(Category.id, Category.title)
+            .order_by(func.sum(Expense.amount).desc())
             .all()
         )
     return category_expenses

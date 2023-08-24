@@ -19,6 +19,12 @@ from .group import (
     remove_user,
     read_group_info,
     group_history,
+    group_total_expenses,
+    group_user_total_expenses,
+    group_users_spenders,
+    group_category_expenses,
+    read_group_daily_expenses,
+    read_group_daily_expenses_detail,
 )
 from .invitation import create_invitation, read_invitations, response_invitation
 from .replenishment import (

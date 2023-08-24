@@ -81,3 +81,39 @@ class GroupHistory(BaseModel):
     user_first_name: str
     user_last_name: str
     user_picture: str
+
+
+class GroupTotalExpenses(BaseModel):
+    amount: float
+    percentage_increase: float
+
+
+class GroupUserTotalExpenses(BaseModel):
+    amount: float
+    percentage_increase: float
+
+
+class UserSpender(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    picture: Optional[str]
+    amount: float
+
+
+class GroupDailyExpenses(BaseModel):
+    date: date
+    amount: float
+
+
+class GroupUser(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    amount: float
+
+
+class GroupDailyExpensesDetail(BaseModel):
+    date: date
+    total_amount: float
+    users: List[GroupUser]

@@ -7,6 +7,7 @@ from .user import (
     UserDailyExpenses,
     UserCategoryExpenses,
     UserGroupExpenses,
+    CategoryExpenses,
 )
 from .group import (
     AboutCategory,
@@ -19,6 +20,11 @@ from .group import (
     UsersGroup,
     GroupInfo,
     GroupHistory,
+    GroupTotalExpenses,
+    GroupUserTotalExpenses,
+    UserSpender,
+    GroupDailyExpenses,
+    GroupDailyExpensesDetail,
 )
 from .invintation import BaseInvitation, InvitationCreate, InvitationModel
 from .category import CategoryModel, CategoryCreate, IconColor
