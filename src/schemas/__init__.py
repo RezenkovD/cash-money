@@ -7,6 +7,7 @@ from .user import (
     UserDailyExpenses,
     UserCategoryExpenses,
     UserGroupExpenses,
+    CategoryExpenses,
 )
 from .group import (
     AboutCategory,
