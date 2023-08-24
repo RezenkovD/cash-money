@@ -23,6 +23,7 @@ from .group import (
     GroupTotalExpenses,
     GroupUserTotalExpenses,
     UserSpender,
+    GroupDailyExpenses,
 )
 from .invintation import BaseInvitation, InvitationCreate, InvitationModel
 from .category import CategoryModel, CategoryCreate, IconColor

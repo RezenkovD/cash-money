@@ -23,6 +23,7 @@ from schemas import (
     GroupTotalExpenses,
     GroupUserTotalExpenses,
     CategoryExpenses,
+    GroupDailyExpenses,
 )
 
 
@@ -739,3 +740,74 @@ def group_category_expenses(
         .all()
     )
     return categories_expenses
+
+
+def read_group_daily_expenses(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> List[GroupDailyExpenses]:
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=user_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    daily_expenses = (
+        db.query(
+            func.date(Expense.time).label("date"),
+            func.sum(Expense.amount).label("amount"),
+        )
+        .filter_by(group_id=group_id)
+        .group_by(func.date(Expense.time))
+        .all()
+    )
+    if filter_date:
+        daily_expenses = (
+            db.query(
+                func.date(Expense.time).label("date"),
+                func.sum(Expense.amount).label("amount"),
+            )
+            .filter(
+                and_(
+                    Expense.group_id == group_id,
+                    extract("year", Expense.time) == filter_date.year,
+                    extract("month", Expense.time) == filter_date.month,
+                )
+            )
+            .group_by(func.date(Expense.time))
+            .all()
+        )
+    elif start_date and end_date:
+        daily_expenses = (
+            db.query(
+                func.date(Expense.time).label("date"),
+                func.sum(Expense.amount).label("amount"),
+            )
+            .filter(
+                and_(
+                    Expense.group_id == group_id,
+                    Expense.time >= start_date,
+                    Expense.time <= end_date,
+                )
+            )
+            .group_by(func.date(Expense.time))
+            .all()
+        )
+    return daily_expenses

@@ -99,3 +99,8 @@ class UserSpender(BaseModel):
     last_name: str
     picture: Optional[str]
     amount: float
+
+
+class GroupDailyExpenses(BaseModel):
+    date: date
+    amount: float
