@@ -299,10 +299,7 @@ def read_users_group(db: Session, user_id: int, group_id: int) -> UsersGroup:
             detail="You are not in this group!",
         )
     db_query = (
-        db.query(Group)
-        .options(joinedload(Group.users_group))
-        .filter_by(id=group_id)
-        .one()
+        select(Group).options(joinedload(Group.users_group)).filter_by(id=group_id)
     )
     return db_query
 
