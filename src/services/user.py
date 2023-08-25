@@ -228,9 +228,15 @@ def user_history(user_id: int) -> List[UserHistory]:
             Group.title.label("title_group"),
             Group.color_code.label("color_code_group"),
         )
-        .join(CategoryGroup, Expense.category_id == CategoryGroup.category_id)
+        .join(
+            CategoryGroup,
+            and_(
+                Expense.category_id == CategoryGroup.category_id,
+                Expense.group_id == CategoryGroup.category_id,
+            ),
+        )
         .join(Group, Expense.group_id == Group.id)
-        .join(Category, CategoryGroup.category_id == Category.id)
+        .join(Category, Expense.category_id == Category.id)
         .filter(Expense.user_id == user_id)
         .union(
             select(

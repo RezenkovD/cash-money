@@ -97,7 +97,7 @@ def remove_user(
 
 
 @router.get("/{group_id}/history/", response_model=Page[GroupHistory])
-def read_user_history(
+def read_group_history(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
