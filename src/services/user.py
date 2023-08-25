@@ -232,7 +232,7 @@ def user_history(user_id: int) -> List[UserHistory]:
             CategoryGroup,
             and_(
                 Expense.category_id == CategoryGroup.category_id,
-                Expense.group_id == CategoryGroup.category_id,
+                Expense.group_id == CategoryGroup.group_id,
             ),
         )
         .join(Group, Expense.group_id == Group.id)

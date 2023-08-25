@@ -62,7 +62,7 @@ def group_history(db: Session, user_id: int, group_id: int) -> List[GroupHistory
             CategoryGroup,
             and_(
                 Expense.category_id == CategoryGroup.category_id,
-                Expense.group_id == CategoryGroup.category_id,
+                Expense.group_id == CategoryGroup.group_id,
             ),
         )
         .join(Category, Expense.category_id == Category.id)
