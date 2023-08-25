@@ -58,8 +58,14 @@ def group_history(db: Session, user_id: int, group_id: int) -> List[GroupHistory
             User.last_name.label("user_last_name"),
             User.picture.label("user_picture"),
         )
-        .join(CategoryGroup, Expense.category_id == CategoryGroup.category_id)
-        .join(Category, CategoryGroup.category_id == Category.id)
+        .join(
+            CategoryGroup,
+            and_(
+                Expense.category_id == CategoryGroup.category_id,
+                Expense.group_id == CategoryGroup.category_id,
+            ),
+        )
+        .join(Category, Expense.category_id == Category.id)
         .join(User, User.id == Expense.user_id)
         .filter(Expense.group_id == group_id)
         .order_by(desc(Expense.time))
