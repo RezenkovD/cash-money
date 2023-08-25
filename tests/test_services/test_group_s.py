@@ -3,6 +3,7 @@ from operator import and_
 
 import pytest
 from starlette.exceptions import HTTPException
+from sqlalchemy.orm import joinedload
 
 from models import Group, UserGroup
 from enums import GroupStatusEnum
@@ -135,8 +136,11 @@ def test_read_users_group(
     session, dependence_factory, add_second_user_in_group
 ) -> None:
     factories = dependence_factory
-    users_group = read_users_group(
-        session, factories["first_user"].id, factories["first_group"].id
+    users_group = (
+        session.query(Group)
+        .options(joinedload(Group.users_group))
+        .filter_by(id=factories["first_group"].id)
+        .one()
     )
     users = [factories["first_user"], factories["second_user"]]
     for data, user in zip(users_group.users_group, users):
@@ -217,8 +221,11 @@ def test_leave_group_admin(
 ) -> None:
     factories = dependence_factory
     leave_group(session, factories["first_user"].id, factories["first_group"].id)
-    users_group = read_users_group(
-        session, factories["first_user"].id, factories["first_group"].id
+    users_group = (
+        session.query(Group)
+        .options(joinedload(Group.users_group))
+        .filter_by(id=factories["first_group"].id)
+        .one()
     )
     for user in users_group.users_group:
         assert user.status == GroupStatusEnum.INACTIVE

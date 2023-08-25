@@ -2,14 +2,15 @@ import datetime
 
 import pytest
 from starlette.exceptions import HTTPException
+from sqlalchemy.orm import joinedload
 
 from enums import GroupStatusEnum, ResponseStatusEnum
 from schemas import InvitationCreate
+from models import Group
 from services import (
     create_invitation,
     leave_group,
     read_invitations,
-    read_users_group,
     response_invitation,
 )
 from tests.factories import (
@@ -124,9 +125,13 @@ def test_response_invitation_denied(session, dependence_factory) -> None:
         "%Y-%m-%d"
     ) == datetime.date.today().strftime("%Y-%m-%d")
     assert invitation.recipient.id == factories["second_user"].id
-    users_group = read_users_group(
-        session, factories["first_user"].id, factories["first_group"].id
-    ).users_group
+    db_query = (
+        session.query(Group)
+        .options(joinedload(Group.users_group))
+        .filter_by(id=factories["first_group"].id)
+        .one()
+    )
+    users_group = db_query.users_group
     users = [factories["first_user"]]
     assert len(users_group) == len(users)
     for user_group, user in zip(users_group, users):
@@ -153,9 +158,13 @@ def test_response_invitation_accepted(session, dependence_factory) -> None:
     ) == datetime.date.today().strftime("%Y-%m-%d")
     assert invitation.recipient.id == factories["second_user"].id
     users = [factories["first_user"], factories["second_user"]]
-    users_group = read_users_group(
-        session, factories["first_user"].id, factories["first_group"].id
-    ).users_group
+    db_query = (
+        session.query(Group)
+        .options(joinedload(Group.users_group))
+        .filter_by(id=factories["first_group"].id)
+        .one()
+    )
+    users_group = db_query.users_group
     assert len(users_group) == len(users)
     for user_group, user in zip(users_group, users):
         assert user_group.user.id == user.id

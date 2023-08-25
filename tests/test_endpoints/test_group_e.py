@@ -146,19 +146,27 @@ class GroupTestCase(unittest.TestCase):
         assert data.status_code == 200
         data = data.json()
         users_group_data = {
-            "users_group": [
+            "items": [
                 {
-                    "status": GroupStatusEnum.ACTIVE,
-                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
-                    "user": {
-                        "id": self.user.id,
-                        "first_name": self.user.first_name,
-                        "last_name": self.user.last_name,
-                        "login": self.user.login,
-                        "picture": self.user.picture,
-                    },
+                    "users_group": [
+                        {
+                            "status": GroupStatusEnum.ACTIVE,
+                            "date_join": datetime.date.today().strftime("%Y-%m-%d"),
+                            "user": {
+                                "id": self.user.id,
+                                "first_name": self.user.first_name,
+                                "last_name": self.user.last_name,
+                                "login": self.user.login,
+                                "picture": self.user.picture,
+                            },
+                        }
+                    ],
                 }
-            ]
+            ],
+            "total": 1,
+            "page": 1,
+            "size": 8,
+            "pages": 1,
         }
         assert data == users_group_data
 
