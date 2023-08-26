@@ -33,10 +33,18 @@ async def auth(*, db: Session = Depends(get_db), request: Request):
     request.session["user"] = dict(user)
     db_user = get_user(db, login=user["email"])
     if not db_user:
+        try:
+            first_name = (user["given_name"],)
+        except KeyError:
+            first_name = ""
+        try:
+            last_name = (user["family_name"],)
+        except KeyError:
+            last_name = ""
         db_user = User(
             login=user["email"],
-            first_name=user["given_name"],
-            last_name=user["family_name"],
+            first_name=first_name,
+            last_name=last_name,
             picture=user["picture"],
         )
         db.add(db_user)
