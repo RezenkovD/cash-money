@@ -61,3 +61,9 @@ class UserGroupExpenses(BaseModel):
     group_id: int
     group_title: str
     categories: List[CategoryExpenses]
+
+
+class GroupMember(UserModel):
+    count_expenses: int
+    total_expenses: UserTotalExpenses
+    best_category: Optional[CategoryExpenses] = None

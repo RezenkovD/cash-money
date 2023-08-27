@@ -4,7 +4,7 @@ from typing import Union, List, Optional
 
 from sqlalchemy import exc, func, select, desc, and_, extract
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.sql.functions import coalesce, sum
+from sqlalchemy.sql.functions import coalesce, sum, count
 from starlette import status
 from starlette.exceptions import HTTPException
 from pydantic.schema import date
@@ -25,6 +25,7 @@ from schemas import (
     CategoryExpenses,
     GroupDailyExpenses,
     GroupDailyExpensesDetail,
+    GroupMember,
 )
 
 
@@ -917,3 +918,228 @@ def read_group_daily_expenses_detail(
             date_entry["users"].append(user_data)
         result_structure.append(date_entry)
     return result_structure
+
+
+def group_member_info(
+    db: Session,
+    current_user: int,
+    group_id: int,
+    user_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> GroupMember:
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=current_user,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=user_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user is not in this group!",
+        )
+    user_info = db.query(User).filter_by(id=user_id).one()
+    if filter_date:
+        total_expenses = group_user_total_expenses(
+            db, user_id, group_id, filter_date=filter_date
+        )
+        try:
+            (count_expenses,) = (
+                db.query(count(Expense.id))
+                .filter(
+                    and_(
+                        Expense.group_id == group_id,
+                        Expense.user_id == user_id,
+                        extract("year", Expense.time) == filter_date.year,
+                        extract("month", Expense.time) == filter_date.month,
+                    )
+                )
+                .one()
+            )
+        except:
+            count_expenses = 0
+        try:
+            best_category = (
+                db.query(
+                    Category.id,
+                    Category.title,
+                    CategoryGroup.color_code,
+                    CategoryGroup.icon_url,
+                    func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+                )
+                .join(Category, Category.id == Expense.category_id)
+                .join(
+                    CategoryGroup,
+                    and_(
+                        CategoryGroup.group_id == group_id,
+                        CategoryGroup.category_id == Expense.category_id,
+                    ),
+                )
+                .filter(
+                    and_(
+                        Expense.group_id == group_id,
+                        Expense.user_id == user_id,
+                        extract("year", Expense.time) == filter_date.year,
+                        extract("month", Expense.time) == filter_date.month,
+                    )
+                )
+                .group_by(
+                    Category.id,
+                    Category.title,
+                    CategoryGroup.color_code,
+                    CategoryGroup.icon_url,
+                )
+                .order_by(
+                    func.sum(Expense.amount).desc(),
+                )
+                .limit(1)
+            ).first()
+        except:
+            best_category = None
+    elif start_date and end_date:
+        total_expenses = group_user_total_expenses(
+            db,
+            user_id,
+            group_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        try:
+            (count_expenses,) = (
+                db.query(count(Expense.id))
+                .filter(
+                    and_(
+                        Expense.group_id == group_id,
+                        Expense.user_id == user_id,
+                        Expense.time >= start_date,
+                        Expense.time <= end_date,
+                    )
+                )
+                .one()
+            )
+        except:
+            count_expenses = 0
+        try:
+            best_category = (
+                db.query(
+                    Category.id,
+                    Category.title,
+                    CategoryGroup.color_code,
+                    CategoryGroup.icon_url,
+                    func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+                )
+                .join(Category, Category.id == Expense.category_id)
+                .join(
+                    CategoryGroup,
+                    and_(
+                        CategoryGroup.group_id == group_id,
+                        CategoryGroup.category_id == Expense.category_id,
+                    ),
+                )
+                .filter(
+                    and_(
+                        Expense.group_id == group_id,
+                        Expense.user_id == user_id,
+                        Expense.time >= start_date,
+                        Expense.time <= end_date,
+                    )
+                )
+                .group_by(
+                    Category.id,
+                    Category.title,
+                    CategoryGroup.color_code,
+                    CategoryGroup.icon_url,
+                )
+                .order_by(
+                    func.sum(Expense.amount).desc(),
+                )
+                .limit(1)
+            ).first()
+        except:
+            best_category = None
+    else:
+        total_expenses = group_user_total_expenses(db, user_id, group_id)
+        try:
+            (count_expenses,) = (
+                db.query(count(Expense.id))
+                .filter(
+                    and_(
+                        Expense.group_id == group_id,
+                        Expense.user_id == user_id,
+                    )
+                )
+                .one()
+            )
+        except:
+            count_expenses = 0
+        try:
+            best_category = (
+                db.query(
+                    Category.id,
+                    Category.title,
+                    CategoryGroup.color_code,
+                    CategoryGroup.icon_url,
+                    func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+                )
+                .join(Category, Category.id == Expense.category_id)
+                .join(
+                    CategoryGroup,
+                    and_(
+                        CategoryGroup.group_id == group_id,
+                        CategoryGroup.category_id == Expense.category_id,
+                    ),
+                )
+                .filter(
+                    and_(
+                        Expense.group_id == group_id,
+                        Expense.user_id == user_id,
+                    )
+                )
+                .group_by(
+                    Category.id,
+                    Category.title,
+                    CategoryGroup.color_code,
+                    CategoryGroup.icon_url,
+                )
+                .order_by(
+                    func.sum(Expense.amount).desc(),
+                )
+                .limit(1)
+            ).first()
+        except:
+            best_category = None
+    group_member = GroupMember(
+        id=user_info.id,
+        login=user_info.login,
+        first_name=user_info.first_name,
+        last_name=user_info.last_name,
+        picture=user_info.picture,
+        total_expenses=total_expenses,
+        best_category=best_category,
+        count_expenses=count_expenses,
+    )
+    return group_member

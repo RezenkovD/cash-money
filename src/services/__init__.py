@@ -7,6 +7,16 @@ from .expense import (
     read_expenses_by_group_month,
     read_expenses_by_group_time_range,
 )
+from .user import (
+    get_user,
+    calculate_user_balance,
+    user_total_expenses,
+    user_total_replenishments,
+    user_history,
+    read_user_daily_expenses,
+    read_category_expenses,
+    read_group_expenses,
+)
 from .group import (
     add_user_in_group,
     create_group,
@@ -25,6 +35,7 @@ from .group import (
     group_category_expenses,
     read_group_daily_expenses,
     read_group_daily_expenses_detail,
+    group_member_info,
 )
 from .invitation import create_invitation, read_invitations, response_invitation
 from .replenishment import (
@@ -32,14 +43,4 @@ from .replenishment import (
     read_replenishments,
     update_replenishment,
     delete_replenishment,
-)
-from .user import (
-    get_user,
-    calculate_user_balance,
-    user_total_expenses,
-    user_total_replenishments,
-    user_history,
-    read_user_daily_expenses,
-    read_category_expenses,
-    read_group_expenses,
 )
