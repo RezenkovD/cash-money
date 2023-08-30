@@ -341,7 +341,7 @@ def read_group_daily_expenses(
 
 
 @router.get(
-    "/{group_id}/user/{user_id}/info/",
+    "/{group_id}/member/{member_id}/info/",
     response_model=GroupMember,
 )
 def read_group_member_info(
@@ -349,7 +349,7 @@ def read_group_member_info(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-    user_id: int,
+    member_id: int,
     year_month: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
@@ -367,7 +367,7 @@ def read_group_member_info(
     elif year_month:
         filter_date = transform_date_or_422(year_month)
         return services.group_member_info(
-            db, current_user.id, group_id, user_id, filter_date=filter_date
+            db, current_user.id, group_id, member_id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
@@ -376,9 +376,9 @@ def read_group_member_info(
             db,
             current_user.id,
             group_id,
-            user_id,
+            member_id,
             start_date=start_date,
             end_date=end_date,
         )
     else:
-        return services.group_member_info(db, current_user.id, group_id, user_id)
+        return services.group_member_info(db, current_user.id, group_id, member_id)

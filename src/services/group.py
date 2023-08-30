@@ -924,7 +924,7 @@ def group_member_info(
     db: Session,
     current_user: int,
     group_id: int,
-    user_id: int,
+    member_id: int,
     filter_date: Optional[date] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
@@ -952,7 +952,7 @@ def group_member_info(
         (
             db.query(UserGroup)
             .filter_by(
-                user_id=user_id,
+                user_id=member_id,
                 group_id=group_id,
             )
             .one()
@@ -962,10 +962,10 @@ def group_member_info(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="This user is not in this group!",
         )
-    user_info = db.query(User).filter_by(id=user_id).one()
+    user_info = db.query(User).filter_by(id=member_id).one()
     if filter_date:
         total_expenses = group_user_total_expenses(
-            db, user_id, group_id, filter_date=filter_date
+            db, member_id, group_id, filter_date=filter_date
         )
         try:
             (count_expenses,) = (
@@ -973,7 +973,7 @@ def group_member_info(
                 .filter(
                     and_(
                         Expense.group_id == group_id,
-                        Expense.user_id == user_id,
+                        Expense.user_id == member_id,
                         extract("year", Expense.time) == filter_date.year,
                         extract("month", Expense.time) == filter_date.month,
                     )
@@ -1002,7 +1002,7 @@ def group_member_info(
                 .filter(
                     and_(
                         Expense.group_id == group_id,
-                        Expense.user_id == user_id,
+                        Expense.user_id == member_id,
                         extract("year", Expense.time) == filter_date.year,
                         extract("month", Expense.time) == filter_date.month,
                     )
@@ -1023,7 +1023,7 @@ def group_member_info(
     elif start_date and end_date:
         total_expenses = group_user_total_expenses(
             db,
-            user_id,
+            member_id,
             group_id,
             start_date=start_date,
             end_date=end_date,
@@ -1034,7 +1034,7 @@ def group_member_info(
                 .filter(
                     and_(
                         Expense.group_id == group_id,
-                        Expense.user_id == user_id,
+                        Expense.user_id == member_id,
                         Expense.time >= start_date,
                         Expense.time <= end_date,
                     )
@@ -1063,7 +1063,7 @@ def group_member_info(
                 .filter(
                     and_(
                         Expense.group_id == group_id,
-                        Expense.user_id == user_id,
+                        Expense.user_id == member_id,
                         Expense.time >= start_date,
                         Expense.time <= end_date,
                     )
@@ -1082,14 +1082,14 @@ def group_member_info(
         except:
             best_category = None
     else:
-        total_expenses = group_user_total_expenses(db, user_id, group_id)
+        total_expenses = group_user_total_expenses(db, member_id, group_id)
         try:
             (count_expenses,) = (
                 db.query(count(Expense.id))
                 .filter(
                     and_(
                         Expense.group_id == group_id,
-                        Expense.user_id == user_id,
+                        Expense.user_id == member_id,
                     )
                 )
                 .one()
@@ -1116,7 +1116,7 @@ def group_member_info(
                 .filter(
                     and_(
                         Expense.group_id == group_id,
-                        Expense.user_id == user_id,
+                        Expense.user_id == member_id,
                     )
                 )
                 .group_by(
