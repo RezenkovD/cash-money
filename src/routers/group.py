@@ -382,3 +382,49 @@ def read_group_member_info(
         )
     else:
         return services.group_member_info(db, current_user.id, group_id, member_id)
+
+
+@router.get(
+    "/{group_id}/member/{member_id}/category-expenses/",
+    response_model=List[CategoryExpenses],
+)
+def read_group_category_expenses(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+    member_id: int,
+    year_month: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> List[CategoryExpenses]:
+    if year_month and (start_date or end_date):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot use filter_date with start_date or end_date",
+        )
+    elif (start_date and not end_date) or (end_date and not start_date):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Both start_date and end_date are required",
+        )
+    elif year_month:
+        filter_date = transform_date_or_422(year_month)
+        return services.group_member_category_expenses(
+            db, current_user.id, group_id, member_id, filter_date=filter_date
+        )
+    elif start_date and end_date:
+        start_date = transform_exact_date_or_422(start_date)
+        end_date = transform_exact_date_or_422(end_date)
+        return services.group_member_category_expenses(
+            db,
+            current_user.id,
+            group_id,
+            member_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    else:
+        return services.group_member_category_expenses(
+            db, current_user.id, group_id, member_id
+        )
