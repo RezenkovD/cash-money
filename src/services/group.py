@@ -10,6 +10,7 @@ from starlette.exceptions import HTTPException
 from pydantic.schema import date
 
 from models import Group, User, UserGroup, Expense, CategoryGroup, Category
+from services import read_user_daily_expenses
 from enums import GroupStatusEnum
 from schemas import (
     AboutUser,
@@ -26,6 +27,7 @@ from schemas import (
     GroupDailyExpenses,
     GroupDailyExpensesDetail,
     GroupMember,
+    UserDailyExpenses,
 )
 
 
@@ -1258,3 +1260,96 @@ def group_member_category_expenses(
         .all()
     )
     return categories_expenses
+
+
+def group_member_daily_expenses(
+    db: Session,
+    current_user: int,
+    group_id: int,
+    member_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> List[UserDailyExpenses]:
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=current_user,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=member_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user is not in this group!",
+        )
+    member_daily_expenses = (
+        db.query(
+            func.date(Expense.time).label("date"),
+            func.sum(Expense.amount).label("amount"),
+        )
+        .filter(
+            and_(
+                Expense.user_id == member_id,
+                Expense.group_id == group_id,
+            )
+        )
+        .group_by(func.date(Expense.time))
+        .all()
+    )
+    if filter_date:
+        member_daily_expenses = (
+            db.query(
+                func.date(Expense.time).label("date"),
+                func.sum(Expense.amount).label("amount"),
+            )
+            .filter(
+                and_(
+                    Expense.user_id == member_id,
+                    Expense.group_id == group_id,
+                    extract("year", Expense.time) == filter_date.year,
+                    extract("month", Expense.time) == filter_date.month,
+                )
+            )
+            .group_by(func.date(Expense.time))
+            .all()
+        )
+    elif start_date and end_date:
+        member_daily_expenses = (
+            db.query(
+                func.date(Expense.time).label("date"),
+                func.sum(Expense.amount).label("amount"),
+            )
+            .filter(
+                and_(
+                    Expense.user_id == member_id,
+                    Expense.group_id == group_id,
+                    Expense.time >= start_date,
+                    Expense.time <= end_date,
+                )
+            )
+            .group_by(func.date(Expense.time))
+            .all()
+        )
+    return member_daily_expenses
