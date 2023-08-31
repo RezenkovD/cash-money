@@ -9,6 +9,7 @@ from .user import (
     UserGroupExpenses,
     CategoryExpenses,
     GroupMember,
+    UserDailyExpensesDetail,
 )
 from .group import (
     AboutCategory,

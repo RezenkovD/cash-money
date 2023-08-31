@@ -28,6 +28,7 @@ from schemas import (
     GroupDailyExpensesDetail,
     GroupMember,
     UserDailyExpenses,
+    UserDailyExpensesDetail,
 )
 
 
@@ -1353,3 +1354,121 @@ def group_member_daily_expenses(
             .all()
         )
     return member_daily_expenses
+
+
+def group_member_daily_expenses_detail(
+    db: Session,
+    current_user: int,
+    group_id: int,
+    member_id: int,
+    filter_date: Optional[date] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> List[UserDailyExpensesDetail]:
+    if filter_date and start_date or filter_date and end_date:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
+        )
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=current_user,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=member_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user is not in this group!",
+        )
+    result_structure = (
+        db.query(
+            func.date(Expense.time).label("date"),
+            Category.id.label("category_id"),
+            Category.title.label("category_title"),
+            CategoryGroup.color_code.label("color_code"),
+            CategoryGroup.icon_url.label("icon_url"),
+            func.sum(Expense.amount).label("category_amount"),
+        )
+        .join(
+            CategoryGroup,
+            and_(
+                CategoryGroup.category_id == Expense.category_id,
+                CategoryGroup.group_id == Expense.group_id,
+            ),
+        )
+        .join(
+            Category,
+            Category.id == Expense.category_id,
+        )
+        .filter(
+            and_(
+                Expense.user_id == member_id,
+                Expense.group_id == group_id,
+            )
+        )
+        .group_by(
+            func.date(Expense.time),
+            Category.id,
+            CategoryGroup.color_code,
+            CategoryGroup.icon_url,
+        )
+        .distinct()
+    )
+
+    if filter_date:
+        result_structure = result_structure.filter(
+            and_(
+                extract("year", Expense.time) == filter_date.year,
+                extract("month", Expense.time) == filter_date.month,
+            )
+        )
+    elif start_date and end_date:
+        result_structure = result_structure.filter(
+            and_(
+                Expense.time >= start_date,
+                Expense.time <= end_date,
+            )
+        )
+
+    result_structure = result_structure.all()
+
+    result_dict = {}
+    for row in result_structure:
+        date_str = row.date.strftime("%Y-%m-%d")
+        if date_str not in result_dict:
+            result_dict[date_str] = {
+                "date": date_str,
+                "amount": 0,
+                "categories": [],
+            }
+        result_dict[date_str]["amount"] += row.category_amount
+        result_dict[date_str]["categories"].append(
+            {
+                "id": row.category_id,
+                "title": row.category_title,
+                "color_code": row.color_code,
+                "icon_url": row.icon_url,
+                "amount": row.category_amount,
+            }
+        )
+
+    result_list = list(result_dict.values())
+    return result_list

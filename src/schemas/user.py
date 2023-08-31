@@ -67,3 +67,9 @@ class GroupMember(UserModel):
     count_expenses: int
     total_expenses: UserTotalExpenses
     best_category: Optional[CategoryExpenses] = None
+
+
+class UserDailyExpensesDetail(BaseModel):
+    date: datetime.date
+    amount: float
+    categories: List[CategoryExpenses]
