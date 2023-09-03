@@ -522,3 +522,18 @@ def read_group_member_daily_expenses_detail(
         return services.group_member_daily_expenses_detail(
             db, current_user.id, group_id, member_id
         )
+
+
+@router.get(
+    "/{group_id}/member/{member_id}/history/", response_model=Page[GroupHistory]
+)
+def read_group_history(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    group_id: int,
+    member_id: int,
+) -> Page[GroupHistory]:
+    return paginate(
+        db, services.group_member_history(db, current_user.id, group_id, member_id)
+    )

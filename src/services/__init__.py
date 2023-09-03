@@ -39,6 +39,7 @@ from .group import (
     group_member_category_expenses,
     group_member_daily_expenses,
     group_member_daily_expenses_detail,
+    group_member_history,
 )
 from .invitation import create_invitation, read_invitations, response_invitation
 from .replenishment import (
