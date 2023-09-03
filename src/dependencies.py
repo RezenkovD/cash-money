@@ -33,6 +33,16 @@ Page = Page.with_custom_options(
 )
 
 
+def is_user_authenticated(request: Request, db: Session = Depends(get_db)) -> bool:
+    try:
+        user_info = request.session["user"]
+    except KeyError:
+        return False
+    if get_user(db, user_info["email"]) is None:
+        return False
+    return True
+
+
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     try:
         user_info = request.session["user"]
