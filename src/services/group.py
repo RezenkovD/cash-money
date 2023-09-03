@@ -1472,3 +1472,67 @@ def group_member_daily_expenses_detail(
 
     result_list = list(result_dict.values())
     return result_list
+
+
+def group_member_history(
+    db: Session,
+    current_user: int,
+    group_id: int,
+    member_id: int,
+) -> List[GroupHistory]:
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=current_user,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=member_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user is not in this group!",
+        )
+    member_history = (
+        select(
+            Expense.id,
+            Expense.descriptions,
+            Expense.amount,
+            Expense.time,
+            Expense.category_id,
+            CategoryGroup.color_code.label("color_code_category"),
+            Category.title.label("title_category"),
+            User.id.label("user_id"),
+            User.login.label("user_login"),
+            User.first_name.label("user_first_name"),
+            User.last_name.label("user_last_name"),
+            User.picture.label("user_picture"),
+        )
+        .join(
+            CategoryGroup,
+            and_(
+                Expense.category_id == CategoryGroup.category_id,
+                Expense.group_id == CategoryGroup.group_id,
+            ),
+        )
+        .join(Category, Expense.category_id == Category.id)
+        .join(User, User.id == Expense.user_id)
+        .filter(and_(Expense.group_id == group_id, Expense.user_id == member_id))
+        .order_by(desc(Expense.time))
+    )
+    return member_history

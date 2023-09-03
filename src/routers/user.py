@@ -14,6 +14,7 @@ from dependencies import (
     transform_date_or_422,
     transform_exact_date_or_422,
     Page,
+    is_user_authenticated,
 )
 from models import User, Expense
 from schemas import (
@@ -31,6 +32,11 @@ router = APIRouter(
     prefix="/users",
     tags=["users"],
 )
+
+
+@router.get("/check-auth/")
+def check_authentication(authenticated: bool = Depends(is_user_authenticated)):
+    return authenticated
 
 
 @router.get("/", response_model=Page[UserModel])
