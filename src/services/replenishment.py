@@ -79,45 +79,26 @@ def read_replenishments(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
 ) -> List[UserReplenishment]:
-    replenishments = read_replenishments_all_time(user_id)
-    if filter_date:
-        replenishments = read_replenishments_month(user_id, filter_date)
-    elif start_date and end_date:
-        replenishments = read_replenishments_time_range(user_id, start_date, end_date)
-    return replenishments
-
-
-def read_replenishments_all_time(user_id: int) -> List[UserReplenishment]:
     replenishments = select(Replenishment).filter_by(
         user_id=user_id,
     )
-    return replenishments
-
-
-def read_replenishments_month(
-    user_id: int, filter_date: date
-) -> List[UserReplenishment]:
-    replenishments = select(Replenishment).filter(
-        and_(
+    if filter_date:
+        replenishments = replenishments.filter(
+            and_(
+                Replenishment.user_id == user_id,
+                extract("year", Replenishment.time) == filter_date.year,
+                extract("month", Replenishment.time) == filter_date.month,
+            )
+        )
+    elif start_date and end_date:
+        if start_date > end_date:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="The start date cannot be older than the end date!",
+            )
+        replenishments = replenishments.filter(
             Replenishment.user_id == user_id,
-            extract("year", Replenishment.time) == filter_date.year,
-            extract("month", Replenishment.time) == filter_date.month,
+            Replenishment.time >= start_date,
+            Replenishment.time <= end_date,
         )
-    )
-    return replenishments
-
-
-def read_replenishments_time_range(
-    user_id: int, start_date: date, end_date: date
-) -> List[UserReplenishment]:
-    if start_date > end_date:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="The start date cannot be older than the end date!",
-        )
-    replenishments = select(Replenishment).filter(
-        Replenishment.user_id == user_id,
-        Replenishment.time >= start_date,
-        Replenishment.time <= end_date,
-    )
     return replenishments
