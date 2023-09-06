@@ -134,10 +134,17 @@ def create_invitation(
         .one_or_none()
     )
     if db_invitation:
-        raise HTTPException(
-            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-            detail="The invitation has already been sent. Wait for a reply!",
-        )
+        if (
+            db_invitation.creation_time + datetime.timedelta(hours=24)
+            < datetime.datetime.utcnow()
+        ):
+            db_invitation.status = ResponseStatusEnum.OVERDUE
+            db.commit()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                detail="The invitation has already been sent. Wait for a reply!",
+            )
     db_invitation = Invitation(
         status=ResponseStatusEnum.PENDING,
         sender_id=user_id,
