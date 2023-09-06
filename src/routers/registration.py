@@ -54,7 +54,7 @@ async def auth(*, db: Session = Depends(get_db), request: Request):
         except:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"An error occurred while create category",
+                detail="An error occurred while create category",
             )
     return RedirectResponse(url="https://" + settings.DOMAIN_NAME)
 

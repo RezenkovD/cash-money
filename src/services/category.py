@@ -64,7 +64,7 @@ def create_category(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while create category",
+            detail="An error occurred while create category",
         )
     else:
         return db_category
@@ -104,7 +104,7 @@ def update_category(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while update category",
+            detail="An error occurred while update category",
         )
     else:
         return db_category_group

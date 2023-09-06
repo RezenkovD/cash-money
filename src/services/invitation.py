@@ -62,14 +62,14 @@ def response_invitation(
         except:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"An error occurred while add user in group",
+                detail="An error occurred while add user in group",
             )
     try:
         db.commit()
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while response invitation",
+            detail="An error occurred while response invitation",
         )
     else:
         return db_invitation
@@ -151,7 +151,7 @@ def create_invitation(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while create invitation",
+            detail="An error occurred while create invitation",
         )
     else:
         return db_invitation

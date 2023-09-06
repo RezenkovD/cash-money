@@ -69,7 +69,7 @@ def create_expense(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while create expense",
+            detail="An error occurred while create expense",
         )
     else:
         return db_expense
@@ -92,7 +92,7 @@ def update_expense(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while update expense",
+            detail="An error occurred while update expense",
         )
     else:
         return db_expense
@@ -108,7 +108,7 @@ def delete_expense(db: Session, user_id: int, group_id: int, expense_id: int) ->
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while delete expense",
+            detail="An error occurred while delete expense",
         )
 
 

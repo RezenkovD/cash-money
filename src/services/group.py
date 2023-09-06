@@ -147,7 +147,7 @@ def remove_user(
         except:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"An error occurred while disband group",
+                detail="An error occurred while disband group",
             )
         else:
             return db_users_group
@@ -158,7 +158,7 @@ def remove_user(
         except:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"An error occurred while remove user",
+                detail="An error occurred while remove user",
             )
         else:
             return db_user_group
@@ -192,7 +192,7 @@ def leave_group(
         except:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"An error occurred while leave group",
+                detail="An error occurred while leave group",
             )
         else:
             return db_users_group
@@ -216,7 +216,7 @@ def leave_group(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while leave group",
+            detail="An error occurred while leave group",
         )
     else:
         return db_user_group
@@ -236,7 +236,7 @@ def create_group(db: Session, user_id: int, group: GroupCreate) -> GroupModel:
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while create group",
+            detail="An error occurred while create group",
         )
     else:
         return db_group
@@ -259,7 +259,7 @@ def update_group(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while update group",
+            detail="An error occurred while update group",
         )
     else:
         return db_group

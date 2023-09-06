@@ -24,7 +24,7 @@ def create_replenishment(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while create replenishments",
+            detail="An error occurred while create replenishments",
         )
     else:
         return db_replenishment
@@ -49,7 +49,7 @@ def update_replenishment(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while update replenishment",
+            detail="An error occurred while update replenishment",
         )
     else:
         return db_replenishment
@@ -69,7 +69,7 @@ def delete_replenishment(db: Session, user_id: int, replenishment_id: int):
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while delete replenishment",
+            detail="An error occurred while delete replenishment",
         )
 
 

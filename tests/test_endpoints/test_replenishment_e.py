@@ -69,7 +69,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
         replenishment = ReplenishmentFactory(user_id=self.user.id)
         data = client.delete(f"/replenishments/{replenishment.id}/")
         assert data.status_code == 204
-        data = client.get(f"/replenishments/")
+        data = client.get("/replenishments/")
         assert data.status_code == 200
         replenishments_data = []
         response_data = {
@@ -84,7 +84,7 @@ class ReplenishmentsTestCase(unittest.TestCase):
     def test_read_replenishments_all_time(self) -> None:
         first_replenishments = ReplenishmentFactory(user_id=self.user.id)
         second_replenishments = ReplenishmentFactory(user_id=self.user.id)
-        data = client.get(f"/replenishments/")
+        data = client.get("/replenishments/")
         assert data.status_code == 200
         replenishments_data = [
             {
@@ -115,17 +115,17 @@ class ReplenishmentsTestCase(unittest.TestCase):
             "end_date": "2022-12-12",
             "year_month": "2022-12",
         }
-        data = client.get(f"/replenishments/", params=params)
+        data = client.get("/replenishments/", params=params)
         assert data.status_code == 422
 
     def test_read_replenishments_exc_args_no_match(self) -> None:
         params = {"end_date": "2022-12-12", "year_month": "2022-12"}
-        data = client.get(f"/replenishments/", params=params)
+        data = client.get("/replenishments/", params=params)
         assert data.status_code == 422
 
     def test_read_replenishments_month_exc(self) -> None:
         params = {"year_month": "12-2022"}
-        data = client.get(f"/replenishments/", params=params)
+        data = client.get("/replenishments/", params=params)
         assert data.status_code == 422
 
     def test_read_replenishments_month(self) -> None:
@@ -213,5 +213,5 @@ class ReplenishmentsTestCase(unittest.TestCase):
 
     def test_read_replenishments_time_range_date_exc(self) -> None:
         params = {"start_date": "2022-12-31", "end_date": "2022-12-09"}
-        data = client.get(f"/replenishments/", params=params)
+        data = client.get("/replenishments/", params=params)
         assert data.status_code == 404

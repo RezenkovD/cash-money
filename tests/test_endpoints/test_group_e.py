@@ -131,7 +131,7 @@ class GroupTestCase(unittest.TestCase):
             title="string", description="string", icon_url="string", color_code="string"
         )
         data = client.put(
-            f"/groups/9999",
+            "/groups/9999",
             json={
                 "title": group.title,
                 "description": group.description,
@@ -192,7 +192,7 @@ class GroupTestCase(unittest.TestCase):
         assert data == user_group_data
 
     def test_leave_group_not_found(self) -> None:
-        data = client.post(f"/groups/9999/leave/")
+        data = client.post("/groups/9999/leave/")
         assert data.status_code == 404
 
     def test_leave_group_admin(self) -> None:
