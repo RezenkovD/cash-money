@@ -32,7 +32,11 @@ from schemas import (
 )
 
 
-def read_group_history(db: Session, user_id: int, group_id: int) -> List[GroupHistory]:
+def user_validate_input_date(
+    db: Session,
+    user_id: int,
+    group_id: int,
+) -> None:
     try:
         (
             db.query(UserGroup)
@@ -47,6 +51,46 @@ def read_group_history(db: Session, user_id: int, group_id: int) -> List[GroupHi
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You are not in this group!",
         )
+
+
+def group_member_validate_input_data(
+    db: Session,
+    current_user: int,
+    member_id: int,
+    group_id: int,
+) -> None:
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=current_user,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not in this group!",
+        )
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=member_id,
+                group_id=group_id,
+            )
+            .one()
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user is not in this group!",
+        )
+
+
+def read_group_history(db: Session, user_id: int, group_id: int) -> List[GroupHistory]:
+    user_validate_input_date(db, user_id, group_id)
     history = (
         select(
             Expense.id,
@@ -78,20 +122,7 @@ def read_group_history(db: Session, user_id: int, group_id: int) -> List[GroupHi
 
 
 def read_group_info(db: Session, user_id: int, group_id: int) -> GroupInfo:
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=user_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
+    user_validate_input_date(db, user_id, group_id)
     group = (
         db.query(Group).options(joinedload(Group.admin)).filter_by(id=group_id).one()
     )
@@ -288,20 +319,7 @@ def add_user_in_group(db: Session, user_id: int, group_id: int) -> None:
 
 
 def read_users_group(db: Session, user_id: int, group_id: int) -> UsersGroup:
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=user_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
+    user_validate_input_date(db, user_id, group_id)
     db_query = (
         select(Group).options(joinedload(Group.users_group)).filter_by(id=group_id)
     )
@@ -383,20 +401,7 @@ def read_group_total_expenses(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
 ) -> GroupTotalExpenses:
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=user_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
+    user_validate_input_date(db, user_id, group_id)
     if filter_date and start_date or filter_date and end_date:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -492,20 +497,7 @@ def read_group_user_total_expenses(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
 ) -> GroupTotalExpenses:
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=user_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
+    user_validate_input_date(db, user_id, group_id)
     if filter_date and start_date or filter_date and end_date:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -564,20 +556,7 @@ def read_group_users_spenders(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
 ) -> List[GroupTotalExpenses]:
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=user_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
+    user_validate_input_date(db, user_id, group_id)
     if filter_date and start_date or filter_date and end_date:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -602,56 +581,22 @@ def read_group_users_spenders(
         .filter(UserGroup.group_id == group_id)
         .group_by(User.id)
         .order_by(func.coalesce(func.sum(Expense.amount), 0).desc())
-        .all()
     )
     if filter_date:
-        users_spenders = (
-            db.query(
-                User.id.label("id"),
-                User.first_name.label("first_name"),
-                User.last_name.label("last_name"),
-                User.picture.label("picture"),
-                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+        users_spenders = users_spenders.filter(
+            and_(
+                extract("year", Expense.time) == filter_date.year,
+                extract("month", Expense.time) == filter_date.month,
             )
-            .join(UserGroup, User.id == UserGroup.user_id)
-            .outerjoin(
-                Expense,
-                and_(
-                    Expense.user_id == User.id,
-                    Expense.group_id == group_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                ),
-            )
-            .filter(UserGroup.group_id == group_id)
-            .group_by(User.id)
-            .order_by(func.coalesce(func.sum(Expense.amount), 0).desc())
-            .all()
         )
     elif start_date and end_date:
-        users_spenders = (
-            db.query(
-                User.id.label("id"),
-                User.first_name.label("first_name"),
-                User.last_name.label("last_name"),
-                User.picture.label("picture"),
-                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+        users_spenders = users_spenders.filter(
+            and_(
+                Expense.time >= start_date,
+                Expense.time <= end_date,
             )
-            .join(UserGroup, User.id == UserGroup.user_id)
-            .outerjoin(
-                Expense,
-                and_(
-                    Expense.user_id == User.id,
-                    Expense.group_id == group_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                ),
-            )
-            .filter(UserGroup.group_id == group_id)
-            .group_by(User.id)
-            .order_by(func.coalesce(func.sum(Expense.amount), 0).desc())
-            .all()
         )
+    users_spenders = users_spenders.all()
     return users_spenders
 
 
@@ -668,20 +613,7 @@ def read_group_category_expenses(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
         )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=user_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
+    user_validate_input_date(db, user_id, group_id)
     categories_expenses_subquery = (
         db.query(
             Expense.category_id.label("id"),
@@ -691,40 +623,22 @@ def read_group_category_expenses(
             Expense.group_id == group_id,
         )
         .group_by(Expense.category_id)
-        .subquery()
     )
     if filter_date:
-        categories_expenses_subquery = (
-            db.query(
-                Expense.category_id.label("id"),
-                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+        categories_expenses_subquery = categories_expenses_subquery.filter(
+            and_(
+                extract("year", Expense.time) == filter_date.year,
+                extract("month", Expense.time) == filter_date.month,
             )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                )
-            )
-            .group_by(Expense.category_id)
-            .subquery()
         )
     elif start_date and end_date:
-        categories_expenses_subquery = (
-            db.query(
-                Expense.category_id.label("id"),
-                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
-            )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                ),
-            )
-            .group_by(Expense.category_id)
-            .subquery()
+        categories_expenses_subquery = categories_expenses_subquery.filter(
+            and_(
+                Expense.time >= start_date,
+                Expense.time <= end_date,
+            ),
         )
+    categories_expenses_subquery = categories_expenses_subquery.subquery()
     categories_expenses = (
         db.query(
             Category.id.label("id"),
@@ -763,20 +677,7 @@ def read_group_daily_expenses(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
         )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=user_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
+    user_validate_input_date(db, user_id, group_id)
     daily_expenses = (
         db.query(
             func.date(Expense.time).label("date"),
@@ -784,40 +685,22 @@ def read_group_daily_expenses(
         )
         .filter_by(group_id=group_id)
         .group_by(func.date(Expense.time))
-        .all()
     )
     if filter_date:
-        daily_expenses = (
-            db.query(
-                func.date(Expense.time).label("date"),
-                func.sum(Expense.amount).label("amount"),
+        daily_expenses = daily_expenses.filter(
+            and_(
+                extract("year", Expense.time) == filter_date.year,
+                extract("month", Expense.time) == filter_date.month,
             )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                )
-            )
-            .group_by(func.date(Expense.time))
-            .all()
         )
     elif start_date and end_date:
-        daily_expenses = (
-            db.query(
-                func.date(Expense.time).label("date"),
-                func.sum(Expense.amount).label("amount"),
+        daily_expenses = daily_expenses.filter(
+            and_(
+                Expense.time >= start_date,
+                Expense.time <= end_date,
             )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                )
-            )
-            .group_by(func.date(Expense.time))
-            .all()
         )
+    daily_expenses = daily_expenses.all()
     return daily_expenses
 
 
@@ -834,20 +717,7 @@ def read_group_daily_expenses_detail(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
         )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=user_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
+    user_validate_input_date(db, user_id, group_id)
     group_users = (
         db.query(User).join(UserGroup).filter(UserGroup.group_id == group_id).all()
     )
@@ -859,42 +729,22 @@ def read_group_daily_expenses_detail(
         .filter(Expense.group_id == group_id)
         .group_by(func.date(Expense.time))
         .distinct()
-        .all()
     )
     if filter_date:
-        possible_dates = (
-            db.query(
-                func.date(Expense.time),
-                func.sum(Expense.amount).label("amount"),
+        possible_dates = possible_dates.filter(
+            and_(
+                extract("year", Expense.time) == filter_date.year,
+                extract("month", Expense.time) == filter_date.month,
             )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                )
-            )
-            .group_by(func.date(Expense.time))
-            .distinct()
-            .all()
         )
     elif start_date and end_date:
-        possible_dates = (
-            db.query(
-                func.date(Expense.time),
-                func.sum(Expense.amount).label("amount"),
+        possible_dates = possible_dates.filter(
+            and_(
+                Expense.time >= start_date,
+                Expense.time <= end_date,
             )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                )
-            )
-            .group_by(func.date(Expense.time))
-            .distinct()
-            .all()
         )
+    possible_dates = possible_dates.all()
     result_structure = []
     for date_row in possible_dates:
         date = date_row[0]
@@ -937,34 +787,7 @@ def read_group_member_info(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
         )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=current_user,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=member_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This user is not in this group!",
-        )
+    group_member_validate_input_data(db, current_user, member_id, group_id)
     user_info = db.query(User).filter_by(id=member_id).one()
     if filter_date:
         total_expenses = read_group_user_total_expenses(
@@ -1162,34 +985,7 @@ def read_group_member_category_expenses(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
         )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=current_user,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=member_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This user is not in this group!",
-        )
+    group_member_validate_input_data(db, current_user, member_id, group_id)
     categories_expenses_subquery = (
         db.query(
             Expense.category_id.label("id"),
@@ -1202,42 +998,22 @@ def read_group_member_category_expenses(
             )
         )
         .group_by(Expense.category_id)
-        .subquery()
     )
     if filter_date:
-        categories_expenses_subquery = (
-            db.query(
-                Expense.category_id.label("id"),
-                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
+        categories_expenses_subquery = categories_expenses_subquery.filter(
+            and_(
+                extract("year", Expense.time) == filter_date.year,
+                extract("month", Expense.time) == filter_date.month,
             )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    Expense.user_id == member_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                )
-            )
-            .group_by(Expense.category_id)
-            .subquery()
         )
     elif start_date and end_date:
-        categories_expenses_subquery = (
-            db.query(
-                Expense.category_id.label("id"),
-                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
-            )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    Expense.user_id == member_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                ),
-            )
-            .group_by(Expense.category_id)
-            .subquery()
+        categories_expenses_subquery = categories_expenses_subquery.filter(
+            and_(
+                Expense.time >= start_date,
+                Expense.time <= end_date,
+            ),
         )
+    categories_expenses_subquery = categories_expenses_subquery.subquery()
     categories_expenses = (
         db.query(
             Category.id.label("id"),
@@ -1277,34 +1053,7 @@ def read_group_member_daily_expenses(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
         )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=current_user,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=member_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This user is not in this group!",
-        )
+    group_member_validate_input_data(db, current_user, member_id, group_id)
     member_daily_expenses = (
         db.query(
             func.date(Expense.time).label("date"),
@@ -1317,42 +1066,24 @@ def read_group_member_daily_expenses(
             )
         )
         .group_by(func.date(Expense.time))
-        .all()
     )
     if filter_date:
-        member_daily_expenses = (
-            db.query(
-                func.date(Expense.time).label("date"),
-                func.sum(Expense.amount).label("amount"),
+        member_daily_expenses = member_daily_expenses.filter(
+            and_(
+                extract("year", Expense.time) == filter_date.year,
+                extract("month", Expense.time) == filter_date.month,
             )
-            .filter(
-                and_(
-                    Expense.user_id == member_id,
-                    Expense.group_id == group_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                )
-            )
-            .group_by(func.date(Expense.time))
-            .all()
         )
     elif start_date and end_date:
-        member_daily_expenses = (
-            db.query(
-                func.date(Expense.time).label("date"),
-                func.sum(Expense.amount).label("amount"),
+        member_daily_expenses = member_daily_expenses.filter(
+            and_(
+                Expense.user_id == member_id,
+                Expense.group_id == group_id,
+                Expense.time >= start_date,
+                Expense.time <= end_date,
             )
-            .filter(
-                and_(
-                    Expense.user_id == member_id,
-                    Expense.group_id == group_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                )
-            )
-            .group_by(func.date(Expense.time))
-            .all()
         )
+    member_daily_expenses = member_daily_expenses.all()
     return member_daily_expenses
 
 
@@ -1370,34 +1101,7 @@ def read_group_member_daily_expenses_detail(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
         )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=current_user,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=member_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This user is not in this group!",
-        )
+    group_member_validate_input_data(db, current_user, member_id, group_id)
     result_structure = (
         db.query(
             func.date(Expense.time).label("date"),
@@ -1480,34 +1184,7 @@ def read_group_member_history(
     group_id: int,
     member_id: int,
 ) -> List[GroupHistory]:
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=current_user,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not in this group!",
-        )
-    try:
-        (
-            db.query(UserGroup)
-            .filter_by(
-                user_id=member_id,
-                group_id=group_id,
-            )
-            .one()
-        )
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This user is not in this group!",
-        )
+    group_member_validate_input_data(db, current_user, member_id, group_id)
     member_history = (
         select(
             Expense.id,
