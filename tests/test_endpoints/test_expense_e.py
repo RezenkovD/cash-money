@@ -128,7 +128,7 @@ class ExpensesTestCase(unittest.TestCase):
         )
         data = client.delete(f"/groups/{self.first_group.id}/expenses/{expense.id}/")
         assert data.status_code == 204
-        data = client.get(f"/groups/expenses/")
+        data = client.get("/groups/expenses/")
         assert data.status_code == 200
         expenses_data = []
         response_data = {
@@ -359,7 +359,7 @@ class ExpensesTestCase(unittest.TestCase):
             group_id=self.second_group.id,
             category_id=self.category.id,
         )
-        data = client.get(f"/groups/expenses/")
+        data = client.get("/groups/expenses/")
         assert data.status_code == 200
         expenses_data = [
             {
@@ -405,12 +405,12 @@ class ExpensesTestCase(unittest.TestCase):
         assert data.json() == response_data
 
     def test_read_expenses_month_exc(self) -> None:
-        data = client.get(f"/groups/expenses/", params={"year_month": "11-2022"})
+        data = client.get("/groups/expenses/", params={"year_month": "11-2022"})
         assert data.status_code == 422
 
     def test_read_expenses_month(self) -> None:
         time = datetime.datetime(2022, 12, 1)
-        data = client.get(f"/groups/expenses/", params={"year_month": "2022-12"})
+        data = client.get("/groups/expenses/", params={"year_month": "2022-12"})
         assert data.json() == {
             "items": [],
             "total": 0,
@@ -440,7 +440,7 @@ class ExpensesTestCase(unittest.TestCase):
             time=time,
         )
 
-        data = client.get(f"/groups/expenses/", params={"year_month": "2022-12"})
+        data = client.get("/groups/expenses/", params={"year_month": "2022-12"})
 
         expenses_data = [
             {
@@ -491,7 +491,7 @@ class ExpensesTestCase(unittest.TestCase):
     def test_read_expenses_time_range(self):
         time = datetime.datetime(2022, 12, 1)
         data = client.get(
-            f"/groups/expenses/",
+            "/groups/expenses/",
             params={"start_date": "2022-12-1", "end_date": "2022-12-12"},
         )
         assert data.json() == {
@@ -524,7 +524,7 @@ class ExpensesTestCase(unittest.TestCase):
         )
 
         data = client.get(
-            f"/groups/expenses/",
+            "/groups/expenses/",
             params={"start_date": "2022-12-1", "end_date": "2022-12-12"},
         )
         expenses_data = [
@@ -575,7 +575,7 @@ class ExpensesTestCase(unittest.TestCase):
 
     def test_read_expenses_time_range_date_exc(self):
         data = client.get(
-            f"/groups/expenses/",
+            "/groups/expenses/",
             params={"start_date": "2022-12-31", "end_date": "2022-12-09"},
         )
         assert data.status_code == 404

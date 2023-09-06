@@ -49,7 +49,7 @@ def read_user_balance(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> UserBalance:
-    return services.calculate_user_balance(db, current_user.id)
+    return services.read_user_balance(db, current_user.id)
 
 
 @router.get("/info/", response_model=UserModel)
@@ -65,7 +65,7 @@ def read_user_history(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Page[UserHistory]:
-    return paginate(db, services.user_history(current_user.id))
+    return paginate(db, services.read_user_history(current_user.id))
 
 
 @router.get("/{group_id}/expenses/", response_model=UserGroupExpenses)
@@ -199,20 +199,20 @@ def read_user_total_expenses(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.user_total_expenses(
+        return services.read_user_total_expenses(
             db, current_user.id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.user_total_expenses(
+        return services.read_user_total_expenses(
             db,
             current_user.id,
             start_date=start_date,
             end_date=end_date,
         )
     else:
-        return services.user_total_expenses(db, current_user.id)
+        return services.read_user_total_expenses(db, current_user.id)
 
 
 @router.get("/total-replenishments/", response_model=UserTotalReplenishments)
@@ -235,17 +235,17 @@ def read_user_total_replenishments(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.user_total_replenishments(
+        return services.read_user_total_replenishments(
             db, current_user.id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.user_total_replenishments(
+        return services.read_user_total_replenishments(
             db,
             current_user.id,
             start_date=start_date,
             end_date=end_date,
         )
     else:
-        return services.user_total_replenishments(db, current_user.id)
+        return services.read_user_total_replenishments(db, current_user.id)

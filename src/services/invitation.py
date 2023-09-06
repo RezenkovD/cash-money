@@ -62,14 +62,14 @@ def response_invitation(
         except:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"An error occurred while add user in group",
+                detail="An error occurred while add user in group",
             )
     try:
         db.commit()
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while response invitation",
+            detail="An error occurred while response invitation",
         )
     else:
         return db_invitation
@@ -134,10 +134,17 @@ def create_invitation(
         .one_or_none()
     )
     if db_invitation:
-        raise HTTPException(
-            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-            detail="The invitation has already been sent. Wait for a reply!",
-        )
+        if (
+            db_invitation.creation_time + datetime.timedelta(hours=24)
+            < datetime.datetime.utcnow()
+        ):
+            db_invitation.status = ResponseStatusEnum.OVERDUE
+            db.commit()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                detail="The invitation has already been sent. Wait for a reply!",
+            )
     db_invitation = Invitation(
         status=ResponseStatusEnum.PENDING,
         sender_id=user_id,
@@ -151,7 +158,7 @@ def create_invitation(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while create invitation",
+            detail="An error occurred while create invitation",
         )
     else:
         return db_invitation

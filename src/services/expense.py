@@ -69,7 +69,7 @@ def create_expense(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while create expense",
+            detail="An error occurred while create expense",
         )
     else:
         return db_expense
@@ -92,7 +92,7 @@ def update_expense(
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while update expense",
+            detail="An error occurred while update expense",
         )
     else:
         return db_expense
@@ -108,7 +108,7 @@ def delete_expense(db: Session, user_id: int, group_id: int, expense_id: int) ->
     except:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"An error occurred while delete expense",
+            detail="An error occurred while delete expense",
         )
 
 
@@ -125,7 +125,7 @@ def read_expenses(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Too many arguments! It is necessary to select either a month or a start date and an end date!",
         )
-    if group_id is not None:
+    if group_id:
         try:
             db.query(UserGroup).filter_by(
                 group_id=group_id,
@@ -136,87 +136,28 @@ def read_expenses(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="You are not a user of this group!",
             )
-        expenses = read_expenses_by_group_all_time(group_id, user_id)
-        if filter_date:
-            expenses = read_expenses_by_group_month(group_id, user_id, filter_date)
-        elif start_date and end_date:
-            expenses = read_expenses_by_group_time_range(
-                group_id, user_id, start_date, end_date
-            )
-        return expenses
-    expenses = read_expenses_all_time(user_id)
+        expenses = select(Expense).filter_by(user_id=user_id, group_id=group_id)
+    else:
+        expenses = select(Expense).filter_by(
+            user_id=user_id,
+        )
     if filter_date:
-        expenses = read_expenses_month(user_id, filter_date)
+        expenses = expenses.filter(
+            and_(
+                Expense.user_id == user_id,
+                extract("year", Expense.time) == filter_date.year,
+                extract("month", Expense.time) == filter_date.month,
+            )
+        )
     elif start_date and end_date:
-        expenses = read_expenses_time_range(user_id, start_date, end_date)
-    return expenses
-
-
-def read_expenses_by_group_all_time(group_id: int, user_id: int) -> List[UserExpense]:
-    expenses = select(Expense).filter_by(user_id=user_id, group_id=group_id)
-    return expenses
-
-
-def read_expenses_by_group_month(
-    group_id: int, user_id: int, filter_date: date
-) -> List[UserExpense]:
-    expenses = select(Expense).filter(
-        and_(
+        if start_date > end_date:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="The start date cannot be older than the end date!",
+            )
+        expenses = expenses.filter(
             Expense.user_id == user_id,
-            Expense.group_id == group_id,
-            extract("year", Expense.time) == filter_date.year,
-            extract("month", Expense.time) == filter_date.month,
+            Expense.time >= start_date,
+            Expense.time <= end_date,
         )
-    )
-    return expenses
-
-
-def read_expenses_by_group_time_range(
-    group_id: int, user_id: int, start_date: date, end_date: date
-) -> List[UserExpense]:
-    if start_date > end_date:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="The start date cannot be older than the end date!",
-        )
-    expenses = select(Expense).filter(
-        Expense.user_id == user_id,
-        Expense.group_id == group_id,
-        Expense.time >= start_date,
-        Expense.time <= end_date,
-    )
-    return expenses
-
-
-def read_expenses_all_time(user_id: int) -> List[UserExpense]:
-    expenses = select(Expense).filter_by(
-        user_id=user_id,
-    )
-    return expenses
-
-
-def read_expenses_month(user_id: int, filter_date: date) -> List[UserExpense]:
-    expenses = select(Expense).filter(
-        and_(
-            Expense.user_id == user_id,
-            extract("year", Expense.time) == filter_date.year,
-            extract("month", Expense.time) == filter_date.month,
-        )
-    )
-    return expenses
-
-
-def read_expenses_time_range(
-    user_id: int, start_date: date, end_date: date
-) -> List[UserExpense]:
-    if start_date > end_date:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="The start date cannot be older than the end date!",
-        )
-    expenses = select(Expense).filter(
-        Expense.user_id == user_id,
-        Expense.time >= start_date,
-        Expense.time <= end_date,
-    )
     return expenses

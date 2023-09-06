@@ -33,7 +33,7 @@ def get_user(db: Session, login: str) -> Optional[User]:
     return db.query(User).filter_by(login=login).one_or_none()
 
 
-def calculate_user_balance(db: Session, user_id: int) -> UserBalance:
+def read_user_balance(db: Session, user_id: int) -> UserBalance:
     (replenishments,) = db.query(
         coalesce(sum(Replenishment.amount).filter(Replenishment.user_id == user_id), 0)
     ).one()
@@ -84,42 +84,18 @@ def read_group_expenses(
             Expense.user_id == user_id,
         )
         .group_by(Expense.category_id)
-        .subquery()
     )
     if filter_date:
-        categories_expenses_subquery = (
-            db.query(
-                Expense.category_id.label("id"),
-                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
-            )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    Expense.user_id == user_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                )
-            )
-            .group_by(Expense.category_id)
-            .subquery()
+        categories_expenses_subquery = categories_expenses_subquery.filter(
+            extract("year", Expense.time) == filter_date.year,
+            extract("month", Expense.time) == filter_date.month,
         )
     elif start_date and end_date:
-        categories_expenses_subquery = (
-            db.query(
-                Expense.category_id.label("id"),
-                func.coalesce(func.sum(Expense.amount), 0).label("amount"),
-            )
-            .filter(
-                and_(
-                    Expense.group_id == group_id,
-                    Expense.user_id == user_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                ),
-            )
-            .group_by(Expense.category_id)
-            .subquery()
+        categories_expenses_subquery = categories_expenses_subquery.filter(
+            Expense.time >= start_date,
+            Expense.time <= end_date,
         )
+    categories_expenses_subquery = categories_expenses_subquery.subquery()
     categories_group = (
         db.query(
             Category.id.label("id"),
@@ -171,50 +147,22 @@ def read_category_expenses(
         .filter(Expense.user_id == user_id)
         .group_by(Category.id, Category.title)
         .order_by(func.sum(Expense.amount).desc())
-        .all()
     )
     if filter_date:
-        category_expenses = (
-            db.query(
-                Category.id.label("id"),
-                Category.title.label("title"),
-                func.sum(Expense.amount).label("amount"),
-            )
-            .join(Category, Expense.category_id == Category.id)
-            .filter(
-                and_(
-                    Expense.user_id == user_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                )
-            )
-            .group_by(Category.id, Category.title)
-            .order_by(func.sum(Expense.amount).desc())
-            .all()
+        category_expenses = category_expenses.filter(
+            extract("year", Expense.time) == filter_date.year,
+            extract("month", Expense.time) == filter_date.month,
         )
     elif start_date and end_date:
-        category_expenses = (
-            db.query(
-                Category.id.label("id"),
-                Category.title.label("title"),
-                func.sum(Expense.amount).label("amount"),
-            )
-            .join(Category, Expense.category_id == Category.id)
-            .filter(
-                and_(
-                    Expense.user_id == user_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                )
-            )
-            .group_by(Category.id, Category.title)
-            .order_by(func.sum(Expense.amount).desc())
-            .all()
+        category_expenses = category_expenses.filter(
+            Expense.time >= start_date,
+            Expense.time <= end_date,
         )
+    category_expenses = category_expenses.all()
     return category_expenses
 
 
-def user_history(user_id: int) -> List[UserHistory]:
+def read_user_history(user_id: int) -> List[UserHistory]:
     history = (
         select(
             Expense.id,
@@ -276,40 +224,18 @@ def read_user_daily_expenses(
         )
         .filter_by(user_id=user_id)
         .group_by(func.date(Expense.time))
-        .all()
     )
     if filter_date:
-        daily_expenses = (
-            db.query(
-                func.date(Expense.time).label("date"),
-                func.sum(Expense.amount).label("amount"),
-            )
-            .filter(
-                and_(
-                    Expense.user_id == user_id,
-                    extract("year", Expense.time) == filter_date.year,
-                    extract("month", Expense.time) == filter_date.month,
-                )
-            )
-            .group_by(func.date(Expense.time))
-            .all()
+        daily_expenses = daily_expenses.filter(
+            extract("year", Expense.time) == filter_date.year,
+            extract("month", Expense.time) == filter_date.month,
         )
     elif start_date and end_date:
-        daily_expenses = (
-            db.query(
-                func.date(Expense.time).label("date"),
-                func.sum(Expense.amount).label("amount"),
-            )
-            .filter(
-                and_(
-                    Expense.user_id == user_id,
-                    Expense.time >= start_date,
-                    Expense.time <= end_date,
-                )
-            )
-            .group_by(func.date(Expense.time))
-            .all()
+        daily_expenses = daily_expenses.filter(
+            Expense.time >= start_date,
+            Expense.time <= end_date,
         )
+    daily_expenses = daily_expenses.all()
     return daily_expenses
 
 
@@ -355,7 +281,7 @@ def get_total_actions_for_time_range(
     ).one()[0]
 
 
-def user_total_expenses(
+def read_user_total_expenses(
     db: Session,
     user_id: int,
     filter_date: Optional[date] = None,
@@ -407,7 +333,7 @@ def user_total_expenses(
     return total_expenses
 
 
-def user_total_replenishments(
+def read_user_total_replenishments(
     db: Session,
     user_id: int,
     filter_date: Optional[date] = None,

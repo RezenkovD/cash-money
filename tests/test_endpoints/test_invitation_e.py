@@ -201,7 +201,7 @@ class InvitationTestCase(unittest.TestCase):
     def test_response_invitation_not_found(self) -> None:
         response = UserResponseEnum.ACCEPTED
         data = client.post(
-            f"invitations/9999/response/",
+            "invitations/9999/response/",
             params={"invitation_id": 9999, "response": response},
         )
         assert data.status_code == 404

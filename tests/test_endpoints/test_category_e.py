@@ -62,7 +62,7 @@ class CategoryTestCase(unittest.TestCase):
         assert data.json() == categories_group_data
 
     def test_read_categories_group_as_non_user_group(self) -> None:
-        data = client.get(f"/groups/9999/categories/")
+        data = client.get("/groups/9999/categories/")
         assert data.status_code == 405
 
     def test_create_category(self) -> None:
