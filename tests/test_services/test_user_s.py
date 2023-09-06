@@ -1,9 +1,9 @@
 import datetime
 from services import (
     get_user,
-    calculate_user_balance,
-    user_total_expenses,
-    user_total_replenishments,
+    read_user_balance,
+    read_user_total_expenses,
+    read_user_total_replenishments,
 )
 from tests.factories import ReplenishmentFactory, UserFactory, ExpenseFactory
 
@@ -28,7 +28,7 @@ def test_read_user_current_balance(session, dependence_factory, activity) -> Non
     activity = activity
     first_replenishment = ReplenishmentFactory(user_id=factories["first_user"].id)
     second_replenishment = ReplenishmentFactory(user_id=factories["first_user"].id)
-    data = calculate_user_balance(session, factories["first_user"].id)
+    data = read_user_balance(session, factories["first_user"].id)
     assert data.balance == float(
         first_replenishment.amount
         + second_replenishment.amount
@@ -41,7 +41,7 @@ def test_read_user_negative_current_balance(
 ) -> None:
     factories = dependence_factory
     activity = activity
-    data = calculate_user_balance(session, factories["first_user"].id)
+    data = read_user_balance(session, factories["first_user"].id)
     assert data.balance == -float(activity["first_expense"].amount)
 
 
@@ -64,7 +64,7 @@ def test_user_percentage_increase_expenses_for_month(
         category_id=activity["category"].id,
         time=filter_date,
     )
-    data = user_total_expenses(
+    data = read_user_total_expenses(
         db=session,
         user_id=factories["first_user"].id,
         filter_date=filter_date,
@@ -101,7 +101,7 @@ def test_user_percentage_increase_expenses_for_range_time(
         category_id=activity["category"].id,
         time=end_date,
     )
-    data = user_total_expenses(
+    data = read_user_total_expenses(
         db=session,
         user_id=factories["first_user"].id,
         start_date=start_date,
@@ -132,7 +132,7 @@ def test_user_percentage_increase_replenishments_for_range_time(
         user_id=factories["first_user"].id,
         time=end_date,
     )
-    data = user_total_replenishments(
+    data = read_user_total_replenishments(
         db=session,
         user_id=factories["first_user"].id,
         start_date=start_date,

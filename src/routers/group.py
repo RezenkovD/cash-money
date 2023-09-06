@@ -106,7 +106,7 @@ def read_group_history(
     current_user: User = Depends(get_current_user),
     group_id: int,
 ) -> Page[GroupHistory]:
-    return paginate(db, services.group_history(db, current_user.id, group_id))
+    return paginate(db, services.read_group_history(db, current_user.id, group_id))
 
 
 @router.get("/{group_id}/info/", response_model=GroupInfo)
@@ -141,17 +141,17 @@ def read_group_total_expenses(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.group_total_expenses(
+        return services.read_group_total_expenses(
             db, current_user.id, group_id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.group_total_expenses(
+        return services.read_group_total_expenses(
             db, current_user.id, group_id, start_date=start_date, end_date=end_date
         )
     else:
-        return services.group_total_expenses(db, current_user.id, group_id)
+        return services.read_group_total_expenses(db, current_user.id, group_id)
 
 
 @router.get("/{group_id}/my-total-expenses/", response_model=GroupUserTotalExpenses)
@@ -176,17 +176,17 @@ def read_group_user_total_expenses(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.group_user_total_expenses(
+        return services.read_group_user_total_expenses(
             db, current_user.id, group_id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.group_user_total_expenses(
+        return services.read_group_user_total_expenses(
             db, current_user.id, group_id, start_date=start_date, end_date=end_date
         )
     else:
-        return services.group_user_total_expenses(db, current_user.id, group_id)
+        return services.read_group_user_total_expenses(db, current_user.id, group_id)
 
 
 @router.get("/{group_id}/users-spenders/", response_model=List[UserSpender])
@@ -211,17 +211,17 @@ def read_group_users_spenders(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.group_users_spenders(
+        return services.read_group_users_spenders(
             db, current_user.id, group_id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.group_users_spenders(
+        return services.read_group_users_spenders(
             db, current_user.id, group_id, start_date=start_date, end_date=end_date
         )
     else:
-        return services.group_users_spenders(db, current_user.id, group_id)
+        return services.read_group_users_spenders(db, current_user.id, group_id)
 
 
 @router.get("/{group_id}/category-expenses/", response_model=List[CategoryExpenses])
@@ -246,17 +246,17 @@ def read_group_category_expenses(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.group_category_expenses(
+        return services.read_group_category_expenses(
             db, current_user.id, group_id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.group_category_expenses(
+        return services.read_group_category_expenses(
             db, current_user.id, group_id, start_date=start_date, end_date=end_date
         )
     else:
-        return services.group_category_expenses(db, current_user.id, group_id)
+        return services.read_group_category_expenses(db, current_user.id, group_id)
 
 
 @router.get(
@@ -368,13 +368,13 @@ def read_group_member_info(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.group_member_info(
+        return services.read_group_member_info(
             db, current_user.id, group_id, member_id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.group_member_info(
+        return services.read_group_member_info(
             db,
             current_user.id,
             group_id,
@@ -383,14 +383,14 @@ def read_group_member_info(
             end_date=end_date,
         )
     else:
-        return services.group_member_info(db, current_user.id, group_id, member_id)
+        return services.read_group_member_info(db, current_user.id, group_id, member_id)
 
 
 @router.get(
     "/{group_id}/member/{member_id}/category-expenses/",
     response_model=List[CategoryExpenses],
 )
-def read_group_category_expenses(
+def read_group_member_category_expenses(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -412,13 +412,13 @@ def read_group_category_expenses(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.group_member_category_expenses(
+        return services.read_group_member_category_expenses(
             db, current_user.id, group_id, member_id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.group_member_category_expenses(
+        return services.read_group_member_category_expenses(
             db,
             current_user.id,
             group_id,
@@ -427,7 +427,7 @@ def read_group_category_expenses(
             end_date=end_date,
         )
     else:
-        return services.group_member_category_expenses(
+        return services.read_group_member_category_expenses(
             db, current_user.id, group_id, member_id
         )
 
@@ -458,13 +458,13 @@ def read_group_member_daily_expenses(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.group_member_daily_expenses(
+        return services.read_group_member_daily_expenses(
             db, current_user.id, group_id, member_id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.group_member_daily_expenses(
+        return services.read_group_member_daily_expenses(
             db,
             current_user.id,
             group_id,
@@ -473,7 +473,7 @@ def read_group_member_daily_expenses(
             end_date=end_date,
         )
     else:
-        return services.group_member_daily_expenses(
+        return services.read_group_member_daily_expenses(
             db, current_user.id, group_id, member_id
         )
 
@@ -504,13 +504,13 @@ def read_group_member_daily_expenses_detail(
         )
     elif year_month:
         filter_date = transform_date_or_422(year_month)
-        return services.group_member_daily_expenses_detail(
+        return services.read_group_member_daily_expenses_detail(
             db, current_user.id, group_id, member_id, filter_date=filter_date
         )
     elif start_date and end_date:
         start_date = transform_exact_date_or_422(start_date)
         end_date = transform_exact_date_or_422(end_date)
-        return services.group_member_daily_expenses_detail(
+        return services.read_group_member_daily_expenses_detail(
             db,
             current_user.id,
             group_id,
@@ -519,7 +519,7 @@ def read_group_member_daily_expenses_detail(
             end_date=end_date,
         )
     else:
-        return services.group_member_daily_expenses_detail(
+        return services.read_group_member_daily_expenses_detail(
             db, current_user.id, group_id, member_id
         )
 
@@ -527,7 +527,7 @@ def read_group_member_daily_expenses_detail(
 @router.get(
     "/{group_id}/member/{member_id}/history/", response_model=Page[GroupHistory]
 )
-def read_group_history(
+def read_group_member_history(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -535,5 +535,5 @@ def read_group_history(
     member_id: int,
 ) -> Page[GroupHistory]:
     return paginate(
-        db, services.group_member_history(db, current_user.id, group_id, member_id)
+        db, services.read_group_member_history(db, current_user.id, group_id, member_id)
     )

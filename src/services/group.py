@@ -32,7 +32,7 @@ from schemas import (
 )
 
 
-def group_history(db: Session, user_id: int, group_id: int) -> List[GroupHistory]:
+def read_group_history(db: Session, user_id: int, group_id: int) -> List[GroupHistory]:
     try:
         (
             db.query(UserGroup)
@@ -375,7 +375,7 @@ def get_group_expenses_for_time_range(
     ).one()[0]
 
 
-def group_total_expenses(
+def read_group_total_expenses(
     db: Session,
     user_id: int,
     group_id: int,
@@ -484,7 +484,7 @@ def get_group_user_expenses_for_time_range(
     ).one()[0]
 
 
-def group_user_total_expenses(
+def read_group_user_total_expenses(
     db: Session,
     user_id: int,
     group_id: int,
@@ -556,7 +556,7 @@ def group_user_total_expenses(
     return total_expenses
 
 
-def group_users_spenders(
+def read_group_users_spenders(
     db: Session,
     user_id: int,
     group_id: int,
@@ -655,7 +655,7 @@ def group_users_spenders(
     return users_spenders
 
 
-def group_category_expenses(
+def read_group_category_expenses(
     db: Session,
     user_id: int,
     group_id: int,
@@ -923,7 +923,7 @@ def read_group_daily_expenses_detail(
     return result_structure
 
 
-def group_member_info(
+def read_group_member_info(
     db: Session,
     current_user: int,
     group_id: int,
@@ -967,7 +967,7 @@ def group_member_info(
         )
     user_info = db.query(User).filter_by(id=member_id).one()
     if filter_date:
-        total_expenses = group_user_total_expenses(
+        total_expenses = read_group_user_total_expenses(
             db, member_id, group_id, filter_date=filter_date
         )
         try:
@@ -1024,7 +1024,7 @@ def group_member_info(
         except:
             best_category = None
     elif start_date and end_date:
-        total_expenses = group_user_total_expenses(
+        total_expenses = read_group_user_total_expenses(
             db,
             member_id,
             group_id,
@@ -1085,7 +1085,7 @@ def group_member_info(
         except:
             best_category = None
     else:
-        total_expenses = group_user_total_expenses(db, member_id, group_id)
+        total_expenses = read_group_user_total_expenses(db, member_id, group_id)
         try:
             (count_expenses,) = (
                 db.query(count(Expense.id))
@@ -1148,7 +1148,7 @@ def group_member_info(
     return group_member
 
 
-def group_member_category_expenses(
+def read_group_member_category_expenses(
     db: Session,
     current_user: int,
     group_id: int,
@@ -1263,7 +1263,7 @@ def group_member_category_expenses(
     return categories_expenses
 
 
-def group_member_daily_expenses(
+def read_group_member_daily_expenses(
     db: Session,
     current_user: int,
     group_id: int,
@@ -1356,7 +1356,7 @@ def group_member_daily_expenses(
     return member_daily_expenses
 
 
-def group_member_daily_expenses_detail(
+def read_group_member_daily_expenses_detail(
     db: Session,
     current_user: int,
     group_id: int,
@@ -1474,7 +1474,7 @@ def group_member_daily_expenses_detail(
     return result_list
 
 
-def group_member_history(
+def read_group_member_history(
     db: Session,
     current_user: int,
     group_id: int,
