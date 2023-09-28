@@ -148,19 +148,15 @@ class GroupTestCase(unittest.TestCase):
         users_group_data = {
             "items": [
                 {
-                    "users_group": [
-                        {
-                            "status": GroupStatusEnum.ACTIVE,
-                            "date_join": datetime.date.today().strftime("%Y-%m-%d"),
-                            "user": {
-                                "id": self.user.id,
-                                "first_name": self.user.first_name,
-                                "last_name": self.user.last_name,
-                                "login": self.user.login,
-                                "picture": self.user.picture,
-                            },
-                        }
-                    ],
+                    "status": GroupStatusEnum.ACTIVE,
+                    "date_join": datetime.date.today().strftime("%Y-%m-%d"),
+                    "user": {
+                        "id": self.user.id,
+                        "first_name": self.user.first_name,
+                        "last_name": self.user.last_name,
+                        "login": self.user.login,
+                        "picture": self.user.picture,
+                    },
                 }
             ],
             "total": 1,

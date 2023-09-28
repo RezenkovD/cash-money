@@ -96,7 +96,7 @@ def create_invitation(
     except exc.NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="You are not admin in this group!",
+            detail="You are not admin of this group!",
         )
     if db_group.status == GroupStatusEnum.INACTIVE:
         raise HTTPException(

@@ -128,7 +128,7 @@ def test_create_expense_another_category(session, dependence_factory) -> None:
         create_expense(
             session, factories["first_user"].id, factories["first_group"].id, expense
         )
-    assert "The group has no such category!" in str(ex_info.value.detail)
+    assert "The group does not have such a category!" in str(ex_info.value.detail)
 
 
 def test_read_expenses_by_another_group(session) -> None:

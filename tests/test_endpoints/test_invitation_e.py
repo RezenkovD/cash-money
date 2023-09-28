@@ -192,7 +192,7 @@ class InvitationTestCase(unittest.TestCase):
         users = [self.second_user, self.first_user]
         group_users = client.get(f"/groups/{self.second_group.id}/users/")
         assert group_users.status_code == 200
-        group_users = group_users.json()["items"][0]["users_group"]
+        group_users = group_users.json()["items"]
         assert len(group_users) == len(users)
         for group_user, user in zip(group_users, users):
             assert group_user["user"]["id"] == user.id
