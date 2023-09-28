@@ -70,7 +70,7 @@ def test_create_category_not_admin(session, dependence_factory) -> None:
     category = CategoryCreate(title="Book", color_code="string", icon_url="string")
     with pytest.raises(HTTPException) as ex_info:
         create_category(session, 9999, factories["first_group"].id, category)
-    assert "You are not admin in this group!" in str(ex_info.value.detail)
+    assert "You are not admin of this group!" in str(ex_info.value.detail)
 
 
 def test_create_category_inactive_group(session) -> None:

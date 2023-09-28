@@ -279,7 +279,7 @@ def test_remove_user_as_non_admin(
             factories["first_group"].id,
             factories["first_user"].id,
         )
-    assert "You are not admin in this group!" in str(ex_info.value.detail)
+    assert "You are not admin of this group!" in str(ex_info.value.detail)
 
 
 def test_remove_inactive_user(session, dependence_factory) -> None:

@@ -38,7 +38,7 @@ def test_create_invitation_as_non_admin(session, dependence_factory) -> None:
     data = InvitationCreate(recipient_id=factories["second_user"].id, group_id=9999)
     with pytest.raises(HTTPException) as ex_info:
         create_invitation(session, factories["first_user"].id, data)
-    assert "You are not admin in this group!" in str(ex_info.value.detail)
+    assert "You are not admin of this group!" in str(ex_info.value.detail)
 
 
 def test_create_invitation_to_inactive_group(session, dependence_factory) -> None:

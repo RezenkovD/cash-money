@@ -43,7 +43,7 @@ def validate_input_data(
         except exc.NoResultFound:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="The group has no such category!",
+                detail="The group does not have such a category!",
             )
     if expense_id:
         try:
