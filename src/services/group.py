@@ -30,6 +30,7 @@ from schemas import (
     UserDailyExpenses,
     UserDailyExpensesDetail,
 )
+from enums import GroupStatusEnum
 
 
 def user_validate_input_date(
@@ -127,7 +128,14 @@ def read_group_info(db: Session, user_id: int, group_id: int) -> GroupInfo:
         db.query(Group).options(joinedload(Group.admin)).filter_by(id=group_id).one()
     )
     group_users_count = (
-        db.query(func.count(UserGroup.user_id)).filter_by(group_id=group_id).scalar()
+        db.query(func.count(UserGroup.user_id))
+        .filter(
+            and_(
+                UserGroup.group_id == group_id,
+                UserGroup.status == GroupStatusEnum.ACTIVE,
+            )
+        )
+        .scalar()
     )
     group_expenses_count = (
         db.query(func.count(Expense.id)).filter_by(group_id=group_id).scalar()
@@ -318,10 +326,17 @@ def add_user_in_group(db: Session, user_id: int, group_id: int) -> None:
         db.add(db_user_group)
 
 
-def read_users_group(db: Session, user_id: int, group_id: int) -> UsersGroup:
+def read_users_group(db: Session, user_id: int, group_id: int) -> List[AboutUser]:
     user_validate_input_date(db, user_id, group_id)
     db_query = (
-        select(Group).options(joinedload(Group.users_group)).filter_by(id=group_id)
+        select(UserGroup)
+        .options(joinedload(UserGroup.user))
+        .filter(
+            and_(
+                UserGroup.group_id == group_id,
+                UserGroup.status == GroupStatusEnum.ACTIVE,
+            )
+        )
     )
     return db_query
 

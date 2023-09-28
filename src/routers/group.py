@@ -65,13 +65,13 @@ def update_group(
     return services.update_group(db, current_user.id, group, group_id)
 
 
-@router.get("/{group_id}/users/", response_model=Page[UsersGroup])
+@router.get("/{group_id}/users/", response_model=Page[AboutUser])
 def read_users_group(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-) -> Page[UsersGroup]:
+) -> Page[AboutUser]:
     return paginate(db, services.read_users_group(db, current_user.id, group_id))
 
 
