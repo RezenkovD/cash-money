@@ -167,15 +167,6 @@ jobs:
                 export ALLOWED_HOSTS='${{ secrets.ALLOWED_HOSTS }}'
                 export DOMAIN_NAME='${{ secrets.DOMAIN_NAME }}'
               
-                uvicorn_pid=$(pgrep -f "uvicorn main:app")
-
-                if [ -n "$uvicorn_pid" ]; then
-                    echo "Stopping uvicorn process..."
-                    kill -15 "$uvicorn_pid"  # Send SIGTERM
-                else
-                    echo "No uvicorn process running."
-                fi
-            
                 git pull
                 pip3 install -r requirements.txt
                 alembic upgrade head
