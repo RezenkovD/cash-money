@@ -166,6 +166,8 @@ jobs:
                 export GOOGLE_SECRET='${{ secrets.GOOGLE_SECRET }}'
                 export ALLOWED_HOSTS='${{ secrets.ALLOWED_HOSTS }}'
                 export DOMAIN_NAME='${{ secrets.DOMAIN_NAME }}'
+              
+                pkill -f "uvicorn main:app"
             
                 git pull
                 pip3 install -r requirements.txt
