@@ -92,6 +92,21 @@ def group_member_validate_input_data(
 
 def read_group_history(db: Session, user_id: int, group_id: int) -> List[GroupHistory]:
     user_validate_input_date(db, user_id, group_id)
+    try:
+        (
+            db.query(UserGroup)
+            .filter_by(
+                user_id=user_id,
+                group_id=group_id,
+                status=GroupStatusEnum.ACTIVE,
+            )
+            .one()
+        )
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            detail="The user is not active in this group!",
+        )
     history = (
         select(
             Expense.id,
