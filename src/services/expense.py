@@ -19,6 +19,7 @@ def validate_input_data(
     group_id: int,
     expense: ExpenseCreate = None,
     expense_id: int = None,
+    is_create: bool = False,
 ) -> None:
     try:
         db_user_group = (
@@ -29,11 +30,12 @@ def validate_input_data(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You are not a user of this group!",
         )
-    if db_user_group.status == GroupStatusEnum.INACTIVE:
-        raise HTTPException(
-            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-            detail="The user is not active in this group!",
-        )
+    if is_create:
+        if db_user_group.status == GroupStatusEnum.INACTIVE:
+            raise HTTPException(
+                status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                detail="The user is not active in this group!",
+            )
     if expense:
         try:
             db.query(CategoryGroup).filter_by(
@@ -58,7 +60,9 @@ def validate_input_data(
 def create_expense(
     db: Session, user_id: int, group_id: int, expense: ExpenseCreate
 ) -> ExpenseModel:
-    validate_input_data(db=db, user_id=user_id, group_id=group_id, expense=expense)
+    validate_input_data(
+        db=db, user_id=user_id, group_id=group_id, expense=expense, is_create=True
+    )
     db_expense = Expense(**expense.dict())
     db_expense.user_id = user_id
     db_expense.group_id = group_id
