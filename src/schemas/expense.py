@@ -10,6 +10,11 @@ class ExpenseCreate(BaseModel):
     category_id: int
 
 
+class ExpenseUpdate(ExpenseCreate):
+    group_id: int
+    time: datetime.datetime
+
+
 class CategoryGroup(BaseModel):
     group: ShortGroup
     category: CategoryModel
