@@ -97,7 +97,9 @@ class ExpensesTestCase(unittest.TestCase):
             json={
                 "descriptions": date_update_expense.descriptions,
                 "amount": date_update_expense.amount,
-                "category_id": date_update_expense.category_id,
+                "category_id": self.category.id,
+                "group_id": self.second_group.id,
+                "time": "2018-08-03T10:51:42.990",
             },
         )
         expense_data = {
@@ -107,9 +109,9 @@ class ExpensesTestCase(unittest.TestCase):
             "time": data.json()["time"],
             "category_group": {
                 "group": {
-                    "id": self.first_group.id,
-                    "title": self.first_group.title,
-                    "color_code": self.first_group.color_code,
+                    "id": self.second_group.id,
+                    "title": self.second_group.title,
+                    "color_code": self.second_group.color_code,
                 },
                 "category": {"title": self.category.title, "id": self.category.id},
                 "icon_url": self.icon_url,
@@ -119,6 +121,48 @@ class ExpensesTestCase(unittest.TestCase):
         }
         assert data.status_code == 200
         assert data.json() == expense_data
+
+    def test_update_expense_on_other_group(self) -> None:
+        expense = ExpenseFactory(
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+        )
+        date_update_expense = ExpenseCreate(
+            descriptions="descriptions", amount=999.9, category_id=self.category.id
+        )
+        data = client.put(
+            f"/groups/{self.first_group.id}/expenses/{expense.id}/",
+            json={
+                "descriptions": date_update_expense.descriptions,
+                "amount": date_update_expense.amount,
+                "category_id": date_update_expense.category_id,
+                "group_id": 99999,
+                "time": "2018-08-03T10:51:42.990",
+            },
+        )
+        assert data.status_code == 404
+
+    def test_update_expense_on_other_group_category(self) -> None:
+        expense = ExpenseFactory(
+            user_id=self.user.id,
+            group_id=self.first_group.id,
+            category_id=self.category.id,
+        )
+        date_update_expense = ExpenseCreate(
+            descriptions="descriptions", amount=999.9, category_id=self.category.id
+        )
+        data = client.put(
+            f"/groups/{self.first_group.id}/expenses/{expense.id}/",
+            json={
+                "descriptions": date_update_expense.descriptions,
+                "amount": date_update_expense.amount,
+                "category_id": 9999,
+                "group_id": self.first_group.id,
+                "time": "2018-08-03T10:51:42.990",
+            },
+        )
+        assert data.status_code == 404
 
     def test_delete_expense(self) -> None:
         expense = ExpenseFactory(

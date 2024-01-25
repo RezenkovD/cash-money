@@ -5,7 +5,7 @@ from starlette.exceptions import HTTPException
 
 from models import Expense
 from enums import GroupStatusEnum
-from schemas import ExpenseCreate
+from schemas import ExpenseCreate, ExpenseUpdate
 from services import create_expense
 from services.expense import update_expense, delete_expense, read_expenses
 from tests.factories import UserGroupFactory
@@ -35,8 +35,12 @@ def test_create_expense(session, dependence_factory, activity) -> None:
 def test_update_expense(session, dependence_factory, activity) -> None:
     factories = dependence_factory
     activity = activity
-    date_update_expense = ExpenseCreate(
-        descriptions="descriptions", amount=999.9, category_id=activity["category"].id
+    date_update_expense = ExpenseUpdate(
+        descriptions="descriptions",
+        amount=999.9,
+        category_id=activity["category"].id,
+        group_id=dependence_factory["first_group"].id,
+        time=activity["first_expense"].time,
     )
     data = update_expense(
         session,
@@ -50,7 +54,7 @@ def test_update_expense(session, dependence_factory, activity) -> None:
     assert data.time == activity["first_expense"].time
     assert data.user.id == factories["first_user"].id
     assert data.category_group.category.id == activity["category"].id
-    assert data.category_group.group.id == factories["first_group"].id
+    assert data.category_group.group.id == dependence_factory["first_group"].id
 
 
 def test_delete_expense(session, dependence_factory, activity) -> None:
