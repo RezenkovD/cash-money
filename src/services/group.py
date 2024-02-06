@@ -29,6 +29,7 @@ from schemas import (
     GroupMember,
     UserDailyExpenses,
     UserDailyExpensesDetail,
+    CategoriesGroupDetail,
 )
 from enums import GroupStatusEnum
 
@@ -359,6 +360,25 @@ def read_users_group(db: Session, user_id: int, group_id: int) -> List[AboutUser
 def read_user_groups(db: Session, user_id: int) -> UserGroups:
     db_query = (
         db.query(User).options(joinedload(User.user_groups)).filter_by(id=user_id).one()
+    )
+    return db_query
+
+
+def read_categories_group_detail(
+    db: Session, user_id: int
+) -> List[CategoriesGroupDetail]:
+    db_query = (
+        db.query(Group)
+        .options(joinedload(Group.categories_group))
+        .join(UserGroup)
+        .filter(
+            and_(
+                UserGroup.group_id == Group.id,
+                UserGroup.user_id == user_id,
+                UserGroup.status == GroupStatusEnum.ACTIVE,
+            )
+        )
+        .all()
     )
     return db_query
 
