@@ -27,6 +27,7 @@ from .group import (
     UserSpender,
     GroupDailyExpenses,
     GroupDailyExpensesDetail,
+    CategoriesGroupDetail,
 )
 from .invintation import BaseInvitation, InvitationCreate, InvitationModel
 from .category import CategoryModel, CategoryCreate, IconColor
