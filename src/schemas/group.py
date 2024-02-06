@@ -68,7 +68,7 @@ class CategoriesGroupDetail(BaseModel):
     title: str
     icon_url: str
     color_code: str
-    categories: List[AboutCategory]
+    categories_group: List[AboutCategory]
 
 
 class GroupInfo(GroupModel):
