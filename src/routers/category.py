@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -5,12 +7,27 @@ import services
 from database import get_db
 from dependencies import get_current_user
 from models import User
-from schemas import CategoryModel, CategoryCreate, IconColor, CategoriesGroup
+from schemas import (
+    CategoryModel,
+    CategoryCreate,
+    IconColor,
+    CategoriesGroup,
+    CategoriesGroupDetail,
+)
 
 router = APIRouter(
     prefix="/groups",
     tags=["categories"],
 )
+
+
+@router.get("/categories/", response_model=List[CategoriesGroupDetail])
+def read_categories_group_detail(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> List[CategoriesGroupDetail]:
+    return services.read_categories_group_detail(db, current_user.id)
 
 
 @router.get("/{group_id}/categories/", response_model=CategoriesGroup)

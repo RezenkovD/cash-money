@@ -63,6 +63,14 @@ class CategoriesGroup(BaseModel):
     categories_group: List[AboutCategory]
 
 
+class CategoriesGroupDetail(BaseModel):
+    id: int
+    title: str
+    icon_url: str
+    color_code: str
+    categories_group: List[AboutCategory]
+
+
 class GroupInfo(GroupModel):
     members: int
     expenses: int

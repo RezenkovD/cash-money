@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic.schema import date
 from sqlalchemy import and_, exc, extract
@@ -10,17 +10,10 @@ from starlette.exceptions import HTTPException
 
 from models import CategoryGroup, Expense, UserGroup
 from enums import GroupStatusEnum
-from schemas import ExpenseCreate, ExpenseModel, UserExpense
+from schemas import ExpenseCreate, ExpenseModel, UserExpense, ExpenseUpdate
 
 
-def validate_input_data(
-    db: Session,
-    user_id: int,
-    group_id: int,
-    expense: ExpenseCreate = None,
-    expense_id: int = None,
-    is_create: bool = False,
-) -> None:
+def validate_user_group(db: Session, user_id: int, group_id: int) -> UserGroup:
     try:
         db_user_group = (
             db.query(UserGroup).filter_by(group_id=group_id, user_id=user_id).one()
@@ -30,39 +23,87 @@ def validate_input_data(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You are not a user of this group!",
         )
-    if is_create:
-        if db_user_group.status == GroupStatusEnum.INACTIVE:
+    return db_user_group
+
+
+def validate_expense(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    expense_id: int,
+) -> None:
+    try:
+        db.query(Expense).filter_by(id=expense_id, user_id=user_id).one()
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="It's not your expense!",
+        )
+    try:
+        db.query(Expense).filter_by(
+            id=expense_id, user_id=user_id, group_id=group_id
+        ).one()
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="The expense does not belong to this group!",
+        )
+
+
+def validate_expense_update(
+    db: Session,
+    user_id: int,
+    group_id: int,
+    expense: ExpenseUpdate,
+) -> None:
+    try:
+        db_user_group = (
+            db.query(UserGroup)
+            .filter_by(group_id=expense.group_id, user_id=user_id)
+            .one()
+        )
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You are not a user of the group specified to update expenses!",
+        )
+    if db_user_group.status == GroupStatusEnum.INACTIVE:
+        if group_id != expense.group_id:
             raise HTTPException(
                 status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-                detail="The user is not active in this group!",
+                detail="The user is not active in group specified to update expenses!",
             )
-    if expense:
-        try:
-            db.query(CategoryGroup).filter_by(
-                category_id=expense.category_id,
-                group_id=group_id,
-            ).one()
-        except exc.NoResultFound:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="The group does not have such a category!",
-            )
-    if expense_id:
-        try:
-            db.query(Expense).filter_by(id=expense_id, user_id=user_id).one()
-        except exc.NoResultFound:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="It's not your expense!",
-            )
+    try:
+        db.query(CategoryGroup).filter_by(
+            category_id=expense.category_id,
+            group_id=expense.group_id,
+        ).one()
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="The group specified to update expenses does not contain this category!",
+        )
 
 
 def create_expense(
     db: Session, user_id: int, group_id: int, expense: ExpenseCreate
 ) -> ExpenseModel:
-    validate_input_data(
-        db=db, user_id=user_id, group_id=group_id, expense=expense, is_create=True
-    )
+    db_user_group = validate_user_group(db=db, user_id=user_id, group_id=group_id)
+    if db_user_group.status == GroupStatusEnum.INACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            detail="The user is not active in this group!",
+        )
+    try:
+        db.query(CategoryGroup).filter_by(
+            category_id=expense.category_id,
+            group_id=group_id,
+        ).one()
+    except exc.NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="The group does not have such a category!",
+        )
     db_expense = Expense(**expense.dict())
     db_expense.user_id = user_id
     db_expense.group_id = group_id
@@ -80,15 +121,11 @@ def create_expense(
 
 
 def update_expense(
-    db: Session, user_id: int, group_id: int, expense: ExpenseCreate, expense_id: int
+    db: Session, user_id: int, group_id: int, expense: ExpenseUpdate, expense_id: int
 ) -> ExpenseModel:
-    validate_input_data(
-        db=db,
-        user_id=user_id,
-        group_id=group_id,
-        expense=expense,
-        expense_id=expense_id,
-    )
+    validate_user_group(db=db, user_id=user_id, group_id=group_id)
+    validate_expense(db=db, user_id=user_id, group_id=group_id, expense_id=expense_id)
+    validate_expense_update(db=db, user_id=user_id, group_id=group_id, expense=expense)
     db.query(Expense).filter_by(id=expense_id).update(values={**expense.dict()})
     db_expense = db.query(Expense).filter_by(id=expense_id).one()
     try:
@@ -103,9 +140,8 @@ def update_expense(
 
 
 def delete_expense(db: Session, user_id: int, group_id: int, expense_id: int) -> None:
-    validate_input_data(
-        db=db, user_id=user_id, group_id=group_id, expense_id=expense_id
-    )
+    validate_user_group(db=db, user_id=user_id, group_id=group_id)
+    validate_expense(db=db, user_id=user_id, group_id=group_id, expense_id=expense_id)
     db.query(Expense).filter_by(id=expense_id).delete()
     try:
         db.commit()

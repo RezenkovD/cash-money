@@ -16,7 +16,7 @@ from dependencies import (
     Page,
 )
 from models import User
-from schemas import ExpenseCreate, ExpenseModel, UserExpense
+from schemas import ExpenseCreate, ExpenseModel, UserExpense, ExpenseUpdate
 
 router = APIRouter(
     prefix="/groups",
@@ -41,7 +41,7 @@ def update_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     group_id: int,
-    expense: ExpenseCreate,
+    expense: ExpenseUpdate,
     expense_id: int,
 ) -> ExpenseModel:
     return services.update_expense(db, current_user.id, group_id, expense, expense_id)
