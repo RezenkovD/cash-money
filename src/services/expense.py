@@ -68,11 +68,10 @@ def validate_expense_update(
             detail="You are not a user of the group specified to update expenses!",
         )
     if db_user_group.status == GroupStatusEnum.INACTIVE:
-        if group_id != expense.group_id:
-            raise HTTPException(
-                status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-                detail="The user is not active in group specified to update expenses!",
-            )
+        raise HTTPException(
+            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            detail="The user is not active in group specified to update expenses!",
+        )
     try:
         db.query(CategoryGroup).filter_by(
             category_id=expense.category_id,
