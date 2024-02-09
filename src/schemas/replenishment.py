@@ -9,6 +9,10 @@ class ReplenishmentCreate(BaseModel):
     descriptions: str
 
 
+class ReplenishmentUpdate(ReplenishmentCreate):
+    time: datetime.datetime
+
+
 class ReplenishmentModel(ReplenishmentCreate):
     id: int
     time: datetime.datetime

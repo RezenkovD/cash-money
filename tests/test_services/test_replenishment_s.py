@@ -4,7 +4,7 @@ import pytest
 from starlette.exceptions import HTTPException
 
 from models import Replenishment
-from schemas import ReplenishmentCreate
+from schemas import ReplenishmentCreate, ReplenishmentUpdate
 from services import (
     create_replenishment,
     read_replenishments,
@@ -31,17 +31,16 @@ def test_create_replenishment(session) -> None:
 def test_update_replenishment(session) -> None:
     user = UserFactory()
     replenishment = ReplenishmentFactory(user_id=user.id)
-    date_update_replenishment = ReplenishmentCreate(
-        descriptions="descriptions", amount=999.9
+    time = datetime.datetime.now()
+    date_update_replenishment = ReplenishmentUpdate(
+        descriptions="descriptions", amount=999.9, time=time
     )
     data = update_replenishment(
         session, user.id, date_update_replenishment, replenishment.id
     )
     assert data.descriptions == date_update_replenishment.descriptions
     assert float(data.amount) == date_update_replenishment.amount
-    assert data.time.strftime("%Y-%m-%d %H:%M") == datetime.datetime.utcnow().strftime(
-        "%Y-%m-%d %H:%M"
-    )
+    assert data.time == time
     assert data.user.id == user.id
 
 
