@@ -16,7 +16,12 @@ from dependencies import (
     Page,
 )
 from models import User
-from schemas import ReplenishmentCreate, ReplenishmentModel, UserReplenishment
+from schemas import (
+    ReplenishmentCreate,
+    ReplenishmentUpdate,
+    ReplenishmentModel,
+    UserReplenishment,
+)
 
 router = APIRouter(
     prefix="/replenishments",
@@ -39,7 +44,7 @@ def update_replenishment(
     *,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    replenishment: ReplenishmentCreate,
+    replenishment: ReplenishmentUpdate,
     replenishment_id: int,
 ) -> ReplenishmentModel:
     return services.update_replenishment(

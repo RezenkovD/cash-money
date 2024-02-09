@@ -9,7 +9,12 @@ from starlette import status
 from starlette.exceptions import HTTPException
 
 from models import Replenishment
-from schemas import ReplenishmentCreate, ReplenishmentModel, UserReplenishment
+from schemas import (
+    ReplenishmentCreate,
+    ReplenishmentUpdate,
+    ReplenishmentModel,
+    UserReplenishment,
+)
 
 
 def create_replenishment(
@@ -31,8 +36,8 @@ def create_replenishment(
 
 
 def update_replenishment(
-    db: Session, user_id: int, replenishment: ReplenishmentCreate, replenishment_id: int
-):
+    db: Session, user_id: int, replenishment: ReplenishmentUpdate, replenishment_id: int
+) -> ReplenishmentModel:
     try:
         db.query(Replenishment).filter_by(id=replenishment_id, user_id=user_id).one()
     except exc.NoResultFound:
