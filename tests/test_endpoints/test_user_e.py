@@ -21,14 +21,12 @@ class UserTestCase(unittest.TestCase):
         self.users_data = [
             {
                 "id": self.first_user.id,
-                "login": self.first_user.login,
                 "first_name": self.first_user.first_name,
                 "last_name": self.first_user.last_name,
                 "picture": self.first_user.picture,
             },
             {
                 "id": self.second_user.id,
-                "login": self.second_user.login,
                 "first_name": self.second_user.first_name,
                 "last_name": self.second_user.last_name,
                 "picture": self.second_user.picture,

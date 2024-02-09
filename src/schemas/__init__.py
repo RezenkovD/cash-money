@@ -1,6 +1,7 @@
 from .user import (
     BaseUser,
     UserModel,
+    HiddenUserModel,
     UserTotalExpenses,
     UserTotalReplenishments,
     UserHistory,

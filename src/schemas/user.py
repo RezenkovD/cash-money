@@ -15,6 +15,13 @@ class UserModel(BaseUser):
     picture: Optional[str]
 
 
+class HiddenUserModel(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    picture: Optional[str]
+
+
 class UserTotalExpenses(BaseModel):
     amount: float
     percentage_increase: float

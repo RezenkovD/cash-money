@@ -20,6 +20,7 @@ from models import User, Expense
 from schemas import (
     UserBalance,
     UserModel,
+    HiddenUserModel,
     UserTotalExpenses,
     UserTotalReplenishments,
     UserHistory,
@@ -39,8 +40,11 @@ def check_authentication(authenticated: bool = Depends(is_user_authenticated)):
     return authenticated
 
 
-@router.get("/", response_model=Page[UserModel])
-def read_users(db: Session = Depends(get_db)) -> Page[UserModel]:
+@router.get("/", response_model=Page[HiddenUserModel])
+def read_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Page[HiddenUserModel]:
     return paginate(db, select(User))
 
 
