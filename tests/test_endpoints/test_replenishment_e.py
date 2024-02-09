@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import Mock
 
 from dependencies import oauth
-from schemas import ReplenishmentCreate
+from schemas import ReplenishmentCreate, ReplenishmentUpdate
 from tests.conftest import async_return, client
 from tests.factories import ReplenishmentFactory, UserFactory
 
@@ -45,21 +45,25 @@ class ReplenishmentsTestCase(unittest.TestCase):
 
     def test_update_replenishment(self) -> None:
         replenishment = ReplenishmentFactory(user_id=self.user.id)
-        date_update_replenishment = ReplenishmentCreate(
-            descriptions="descriptions", amount=999.9
+        time = "2018-08-03T10:51:42"
+        date_update_replenishment = ReplenishmentUpdate(
+            descriptions="descriptions",
+            amount=999.9,
+            time=time,
         )
         data = client.put(
             f"/replenishments/{replenishment.id}/",
             json={
                 "descriptions": date_update_replenishment.descriptions,
                 "amount": date_update_replenishment.amount,
+                "time": time,
             },
         )
         replenishments_data = {
             "id": data.json()["id"],
             "descriptions": date_update_replenishment.descriptions,
             "amount": date_update_replenishment.amount,
-            "time": data.json()["time"],
+            "time": time,
             "user": {"id": self.user.id, "login": self.user.login},
         }
         assert data.status_code == 200
